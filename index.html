@@ -38,6 +38,7 @@ const SHED_X = CX - 72;
 const BENCH_X = CX - 50;
 const PILE_X = CX + 44;
 const SITE_COST = 15;
+const BUILD_TIME = 7; // seconds of hammering before a site finishes
 
 const STAGES = [
   { name: "Stone Ring", cost: 8, desc: "Stones shield the flames. Wind drains the fire much less." },
@@ -438,11 +439,43 @@ function drawSite(ctx: any, g: any, bx: number, logs: number) {
   if (n >= 3) drawLog(ctx, bx - 3, y - 6, 7);
 }
 
+// a structure under construction: stacked logs, a hammer, and fog that clears as it rises
+function drawConstruction(ctx: any, g: any, bx: number, isBench: boolean) {
+  const y = 152;
+  const prog = clamp((isBench ? g.benchBuildT : g.pileBuildT) / BUILD_TIME, 0, 1);
+  drawSite(ctx, g, bx, SITE_COST);
+  ctx.globalAlpha = 0.2 + prog * 0.8;
+  if (isBench) drawBench(ctx, g); else drawPile(ctx, g);
+  ctx.globalAlpha = 1;
+  const swing = Math.sin(g.animT * 13) > 0 ? 0 : 1;
+  px(ctx, bx + 2, y - 17 + swing, 2, 5, "#8a6a3a");
+  px(ctx, bx + 1, y - 18 + swing, 4, 2, "#8a92a0");
+  px(ctx, bx + 1, y - 18 + swing, 4, 1, "#b8c2d0");
+  const fog = (1 - prog) * 0.55;
+  for (let i = 0; i < 6; i++) {
+    const fx = bx - 12 + i * 4.4 + Math.sin(g.animT * 1.2 + i * 2.3) * 2.5;
+    const fy = y - 4 - ((i * 31 + Math.floor(g.animT * 8)) % 13);
+    ctx.fillStyle = "rgba(222,230,240," + fog + ")";
+    ctx.fillRect(Math.round(fx), Math.round(fy), 7, 3);
+  }
+  const pw = 18, bxp = Math.round(bx - pw / 2);
+  ctx.fillStyle = "rgba(8,12,28,0.8)";
+  ctx.fillRect(bxp - 1, 131, pw + 2, 5);
+  ctx.fillStyle = "rgba(60,70,100,0.8)";
+  ctx.fillRect(bxp, 132, pw, 3);
+  ctx.fillStyle = "#ffd98a";
+  ctx.fillRect(bxp, 132, Math.round(prog * pw), 3);
+}
+
 function drawStructures(ctx: any, g: any) {
   const st = g.stage;
   const x0 = CX - 42;
-  if (g.builtBench) drawBench(ctx, g); else drawSite(ctx, g, BENCH_X, g.benchLogs);
-  if (g.builtPile) drawPile(ctx, g); else drawSite(ctx, g, PILE_X, g.pileLogs);
+  if (g.builtBench) drawBench(ctx, g);
+  else if (g.benchBuildT >= 0) drawConstruction(ctx, g, BENCH_X, true);
+  else drawSite(ctx, g, BENCH_X, g.benchLogs);
+  if (g.builtPile) drawPile(ctx, g);
+  else if (g.pileBuildT >= 0) drawConstruction(ctx, g, PILE_X, false);
+  else drawSite(ctx, g, PILE_X, g.pileLogs);
   if (st >= 2 && st < 6) {
     px(ctx, CX + 16, 142, 18, 3, "#8a5a34");
     px(ctx, CX + 17, 145, 2, 5, "#6b4a32");
@@ -615,6 +648,7 @@ function createEngine(): any {
     won: false, endlessMode: false, endlessN: 0, over: false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
+    benchBuildT: -1, pileBuildT: -1, dust: [] as any[],
     keys: {}, pressE: false, pressT: false,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
@@ -841,9 +875,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (p.chopT <= 0) {
       if (nearBench && !g.builtBench) {
         g.keys.act = false;
-        if (g.benchLogs >= SITE_COST) {
-          g.builtBench = true; g.benchLogs = 0;
-          cb.toast("The workbench is built. Craft gear with wood.");
+        if (g.benchBuildT >= 0) {
+          cb.toast("Hammering away. It is almost up.");
+        } else if (g.benchLogs >= SITE_COST) {
+          g.benchBuildT = 0;
+          cb.toast("You start raising the workbench. Hammer, hammer...");
         } else if (p.wood > 0) {
           const add = Math.min(p.wood, SITE_COST - g.benchLogs);
           p.wood -= add; g.benchLogs += add;
@@ -877,9 +913,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
         }
       } else if (nearPile && !g.builtPile) {
         g.keys.act = false;
-        if (g.pileLogs >= SITE_COST) {
-          g.builtPile = true; g.pileLogs = 0;
-          cb.toast("The wood pile is ready. Store your wood here.");
+        if (g.pileBuildT >= 0) {
+          cb.toast("Hammering away. It is almost up.");
+        } else if (g.pileLogs >= SITE_COST) {
+          g.pileBuildT = 0;
+          cb.toast("You start stacking the wood pile. Hammer, hammer...");
         } else if (p.wood > 0) {
           const add = Math.min(p.wood, SITE_COST - g.pileLogs);
           p.wood -= add; g.pileLogs += add;
@@ -961,6 +999,34 @@ function update(g: any, meta: any, dt: number, cb: any) {
     }
   }
 
+  // ---- construction: workbench and wood pile rise over a few seconds ----
+  const stepBuild = (isBench: boolean) => {
+    const t = isBench ? g.benchBuildT : g.pileBuildT;
+    if (t < 0) return;
+    const nt = t + dt;
+    if (isBench) g.benchBuildT = nt; else g.pileBuildT = nt;
+    const bx = isBench ? BENCH_X : PILE_X;
+    if (Math.random() < dt * 9) {
+      g.dust.push({ x: bx + (Math.random() * 20 - 10), y: 149 - Math.random() * 8, vx: Math.random() * 12 - 6, vy: -(3 + Math.random() * 10), life: 0.8 + Math.random() * 0.6 });
+    }
+    if (Math.random() < dt * 2) g.shake = Math.max(g.shake, 0.05);
+    if (nt >= BUILD_TIME) {
+      for (let k = 0; k < 14; k++) {
+        g.dust.push({ x: bx + (Math.random() * 22 - 11), y: 148, vx: Math.random() * 40 - 20, vy: -(10 + Math.random() * 40), life: 0.9 });
+      }
+      g.shake = Math.max(g.shake, 0.12);
+      if (isBench) { g.benchBuildT = -1; g.builtBench = true; g.benchLogs = 0; cb.toast("The workbench is built. Craft gear with wood."); }
+      else { g.pileBuildT = -1; g.builtPile = true; g.pileLogs = 0; cb.toast("The wood pile is ready. Store your wood here."); }
+    }
+  };
+  stepBuild(true);
+  stepBuild(false);
+  for (let i = g.dust.length - 1; i >= 0; i--) {
+    const du = g.dust[i];
+    du.life -= dt; du.x += du.vx * dt; du.y += du.vy * dt; du.vy += 14 * dt;
+    if (du.life <= 0) g.dust.splice(i, 1);
+  }
+
   // movement: hold sides of screen or A/D
   p.moving = false;
   if (p.chopT <= 0) {
@@ -1027,8 +1093,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- meters ----
   const f = g.fireLit ? g.fuel / 100 : 0;
-  let drain = g.isNight ? 1.55 + g.depth * 0.12 : 0.55;
-  if (g.weather === "coldsnap") drain += g.isNight ? 0.7 : 0.15;
+  let drain = g.isNight ? 2.1 + g.depth * 0.15 : 0.85;
+  if (g.weather === "coldsnap") drain += g.isNight ? 0.7 : 0.3;
   if (g.weather === "blizzard") drain += g.isNight ? 1.5 : 0.3;
   drain *= 1 - 0.15 * (meta.up.blood || 0);
   if (p.torchT > 0) drain *= 0.5;
@@ -1061,10 +1127,10 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
-  else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
+  else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
   else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
-  else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : p.wood > 0 ? "STORE" : g.stored > 0 ? "TAKE" : "PILE";
+  else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : p.wood > 0 ? "STORE" : g.stored > 0 ? "TAKE" : "PILE";
   else if (tree) g.actionLabel = "CHOP";
   else g.actionLabel = "-";
 
@@ -1481,8 +1547,8 @@ function drawHelpMenu(ctx: any, g: any) {
     ["", "#c8d2e8"],
     ["THE WORKBENCH AND WOOD PILE SITES", "#ffd977"],
     ["ARE MARKED BY STAKES. CARRY 15", "#ffd977"],
-    ["LOGS TO A SITE AND PRESS ACT TO", "#ffd977"],
-    ["STACK THEM - THEN ACT AGAIN TO BUILD", "#ffd977"],
+    ["LOGS TO A SITE AND ACT TO STACK THEM.", "#ffd977"],
+    ["ACT AGAIN - HAMMERING TAKES A WHILE", "#ffd977"],
     ["", "#c8d2e8"],
     ["WORKBENCH: CRAFT GEAR", "#ffd977"],
     ["WOOD PILE: STORE WOOD", "#ffd977"],
@@ -1830,6 +1896,10 @@ function draw(g: any, ctx: any, off: any, octx: any, meta: any) {
     ctx.fillStyle = `rgba(180,130,80,${clamp(c.life, 0, 1)})`;
     ctx.fillRect(Math.round(c.x), Math.round(c.y), 1, 2);
   }
+  for (const du of g.dust) {
+    ctx.fillStyle = "rgba(222,230,240," + clamp(du.life, 0, 1) * 0.7 + ")";
+    ctx.fillRect(Math.round(du.x), Math.round(du.y), 2, 2);
+  }
 
   // context prompts above interactables
   if (inRun && g.player.chopT <= 0 && !g.over && !g.menu) {
@@ -1840,14 +1910,14 @@ function draw(g: any, ctx: any, off: any, octx: any, meta: any) {
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
     const tr = nearestTree(g, p);
     if (nearBench2) {
-      const lbl = g.builtBench ? "CRAFT" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
+      const lbl = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");
     }
     else if (nearPit2) {
       const lbl = !g.fireLit ? (g.firestarter > 0 ? "LIGHT" : "RELIGHT") : "STOKE";
       drawTextO(ctx, lbl, CX - 9, 118 - bob, "#ffe9a0", "#060a18");
     } else if (nearPile2) {
-      const lbl = !g.builtPile ? (g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : p.wood > 0 ? "STORE" : g.stored > 0 ? "TAKE" : "PILE";
+      const lbl = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : p.wood > 0 ? "STORE" : g.stored > 0 ? "TAKE" : "PILE";
       drawTextO(ctx, lbl, PILE_X - 7, 120 - bob, "#ffe9a0", "#060a18");
     } else if (tr) drawTextO(ctx, "CHOP", tr.x - 7, tr.y - 40 - bob, "#ffe9a0", "#060a18");
   }

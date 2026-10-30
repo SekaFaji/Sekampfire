@@ -404,6 +404,14 @@ function toast(g: any, text: string) {
 // ============ optional procedural audio ============
 // Browser audio unlocks only after a user gesture. No assets, no autoplay,
 // and no impact on simulation. Mute is saved locally.
+const FX_KEY = "sekampfire-fx-v1";
+const GRAPHICS = {
+  high: (() => { try { return localStorage.getItem(FX_KEY) !== "low"; } catch (_e) { return true; } })(),
+  toggle() {
+    this.high = !this.high;
+    try { localStorage.setItem(FX_KEY, this.high ? "high" : "low"); } catch (_e) {}
+  }
+};
 const SOUND_KEY = "sekampfire-sound-v1";
 const AUDIO_LEVEL_KEY = "sekampfire-audio-v2";
 const AUDIO = (() => {
@@ -1647,7 +1655,7 @@ function updateAmbient(g: any, dt: number) {
   }
   // snow
   const winter = visualSeason(g) === "winter";
-  const target = !winter ? 0 : Math.round(45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind"));
+  const target = !winter ? 0 : Math.round((45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind")) * (GRAPHICS.high ? 1 : 0.55));
   while (g.snow.length < target) g.snow.push({ x: Math.random() * W, y: Math.random() * H, v: 12 + Math.random() * 18, ph: Math.random() * 6 });
   while (g.snow.length > target) g.snow.pop();
   const gust = weatherIntensity(g, "wind") + weatherIntensity(g, "blizzard") * 2;
@@ -1981,8 +1989,8 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
     g.zones.push({ x: x0 + 3, y, w: pw - 6, h: r.h, onDown: () => { g.menuSel = idx; rows[idx].onDown(); } });
     if (r.onAdjust) {
       // Separate +/- touch targets; full row still increments for convenience.
-      g.zones.push({ x: x0 + pw - 54, y, w: 15, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(-1); } });
-      g.zones.push({ x: x0 + pw - 18, y, w: 15, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(1); } });
+      g.zones.push({ x: x0 + pw - 39, y, w: 12, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(-1); } });
+      g.zones.push({ x: x0 + pw - 17, y, w: 12, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(1); } });
     }
     y += r.h;
   }
@@ -2037,6 +2045,11 @@ function settingsRows(g: any, meta: any) {
       label: "FULLSCREEN", right: g.fs ? "ON" : "OFF",
       desc: "TAP HERE OR PRESS F TO TOGGLE", h: 15, enabled: true,
       onDown: () => { if (g.fsToggle) g.fsToggle(); }
+    },
+    {
+      label: "VISUAL FX", right: GRAPHICS.high ? "HIGH" : "LOW",
+      desc: "LOW USES FEWER PARTICLES/REFLECTIONS", h: 15, enabled: true,
+      onDown: () => GRAPHICS.toggle()
     },
     {
       label: "PRIVACY POLICY", right: "", desc: "LOCAL SAVES AND THIRD PARTY HOSTING",
@@ -2156,8 +2169,7 @@ function drawInfoMenu(ctx: any, g: any, title: string, lines: string[], hasPolic
       onDown: () => {
         // User gesture allows a new tab without losing the current run.
         const url = new URL("./privacy.html", window.location.href).href;
-        const opened = window.open(url, "_blank", "noopener,noreferrer");
-        if (!opened) window.location.href = url;
+        window.open(url, "_blank", "noopener,noreferrer");
       }
     });
   } else {
@@ -2493,7 +2505,8 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
   ctx.fillStyle = waterBase;
   ctx.fillRect(0, WATER_Y - 2, W, H - WATER_Y + 2);
   ctx.save();
-  for (let i = 0; i < height; i++) {
+  const pixelStep = GRAPHICS.high ? 1 : 2;
+  for (let i = 0; i < height; i += pixelStep) {
     // Exact vertical mirror of the aligned sprites: no 18px source offset.
     const srcY = WATER_Y - 1 - i;
     if (srcY < 0) break;
@@ -2505,7 +2518,7 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     const dx = Math.max(0, shift);
     ctx.globalAlpha = (0.53 - 0.28 * i / height) * (g.weather === "blizzard" ? 0.75 : 1);
     ctx.drawImage(reflection, sx, srcY, W - Math.abs(shift), 1,
-      dx, WATER_Y + i, W - Math.abs(shift), 1);
+      dx, WATER_Y + i, W - Math.abs(shift), Math.min(pixelStep, height - i));
   }
   ctx.restore();
   for (let i = 0; i < 14; i++) {

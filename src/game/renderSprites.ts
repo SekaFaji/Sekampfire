@@ -128,6 +128,43 @@ function drawFrontIdle(ctx: any, g: any, x: number, y: number) {
  * metal head; the existing maul craft visually becomes a Wood Axe, while the
  * permanent Grandpa's Axe shows a darker reinforced blade.
  */
+/** The hand owns the tool pivot. Move shoulder, elbow and wrist together
+ * through wind-up, impact and recovery, instead of animating a loose axe.
+ */
+function drawChopArm(ctx: any, x: number, y: number, dir: number, progress: number) {
+  const p = clamp(progress, 0, 1);
+  const keyframes = [
+    { t: 0, x: 7, y: -17, elbowX: 6, elbowY: -17 },
+    { t: 0.34, x: 5, y: -27, elbowX: 7, elbowY: -22 },
+    { t: 0.77, x: 12, y: -11, elbowX: 8, elbowY: -13 },
+    { t: 1, x: 8, y: -18, elbowX: 7, elbowY: -16 },
+  ];
+  let a = keyframes[0], b = keyframes[1];
+  for (let i = 0; i < keyframes.length - 1; i++) {
+    if (p <= keyframes[i + 1].t) { a = keyframes[i]; b = keyframes[i + 1]; break; }
+  }
+  const t = clamp((p - a.t) / (b.t - a.t), 0, 1);
+  const mix = (left: number, right: number) => Math.round(left + (right - left) * t);
+  const shoulderX = x + dir * 4, shoulderY = y - 14;
+  const elbowX = x + dir * mix(a.elbowX, b.elbowX);
+  const elbowY = y + mix(a.elbowY, b.elbowY);
+  const handX = x + dir * mix(a.x, b.x);
+  const handY = y + mix(a.y, b.y);
+  const segment = (x1: number, y1: number, x2: number, y2: number, color: string, size: number) => {
+    const steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1), 1);
+    for (let i = 0; i <= steps; i++) {
+      px(ctx, Math.round(x1 + (x2 - x1) * i / steps),
+        Math.round(y1 + (y2 - y1) * i / steps), size, size, color);
+    }
+  };
+  segment(shoulderX, shoulderY, elbowX, elbowY, "#2b2430", 3);
+  segment(shoulderX + (dir < 0 ? 1 : 0), shoulderY, elbowX, elbowY, "#b27649", 2);
+  segment(elbowX, elbowY, handX, handY, "#5a3829", 3);
+  segment(elbowX, elbowY, handX, handY, "#a46d43", 2);
+  px(ctx, handX - 1, handY - 1, 3, 3, "#dfac84");
+  return { x: handX, y: handY };
+}
+
 function drawSwingTool(ctx: any, x: number, y: number, dir: number, progress: number, tier: number) {
   const p = clamp(progress, 0, 1);
   const angle = p < 0.34
@@ -136,7 +173,7 @@ function drawSwingTool(ctx: any, x: number, y: number, dir: number, progress: nu
       ? -0.95 + ((p - 0.34) / 0.43) * 2.35
       : 1.4 - ((p - 0.77) / 0.23) * 0.45;
   ctx.save();
-  ctx.translate(x + dir * 6, y - 16);
+  ctx.translate(x, y);
   ctx.scale(dir, 1);
   ctx.rotate(angle);
   // Grip by the player's raised hand, shaft rises above the head.
@@ -199,13 +236,18 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx - 4, by - 8, 8, 2, coatShade);
   px(ctx, bx + (dir > 0 ? -3 : 2), by - 14, 2, 6, coatLight);
   px(ctx, bx - 2, by - 7, 4, 1, "#c29b65");
-  // arms with opposing stride; lead arm grips the axe on chop
+  // The rear arm keeps a normal silhouette; the lead arm is driven
+  // by drawChopArm during wind-up, impact and recovery.
   const armSwing = walking ? Math.round(stride * 2) : 0;
-  px(ctx, bx - 6, by - 14 + armSwing, 2, 7, outline);
-  px(ctx, bx - 5, by - 13 + armSwing, 2, 5, coatLight);
-  px(ctx, bx + 4, by - 14 - armSwing, 2, 7, outline);
-  px(ctx, bx + 4, by - 13 - armSwing, 1, 5, coatShade);
-  px(ctx, bx + dir * 5 - 1, by - 8 - armSwing, 2, 2, skin);
+  if (!chopping || dir > 0) {
+    px(ctx, bx - 6, by - 14 + armSwing, 2, 7, outline);
+    px(ctx, bx - 5, by - 13 + armSwing, 2, 5, coatLight);
+  }
+  if (!chopping || dir < 0) {
+    px(ctx, bx + 4, by - 14 - armSwing, 2, 7, outline);
+    px(ctx, bx + 4, by - 13 - armSwing, 1, 5, coatShade);
+  }
+  if (!chopping) px(ctx, bx + dir * 5 - 1, by - 8 - armSwing, 2, 2, skin);
   // No hat equipment currently exists; leave the starting head uncovered.
   // A short, shaded hairstyle keeps the face readable in 320x180 pixel art.
   px(ctx, bx - 4, by - 23, 8, 8, outline);
@@ -223,10 +265,8 @@ function drawPlayer(ctx: any, g: any) {
   const scarfFlutter = Math.sin(g.animT * (walking ? 9 : 3)) * (walking ? 2 : 1);
   px(ctx, bx - dir * (6 + Math.round(scarfFlutter)), by - 15, 4, 2, "#bc3d30");
   if (chopping) {
-    // Raised hand follows the tool pivot and the upper body leans into hit.
-    px(ctx, bx + dir * 4 - 1, by - 16, 3, 5, "#b27649");
-    px(ctx, bx + dir * 6 - 1, by - 17, 2, 2, skin);
-    drawSwingTool(ctx, bx, by, dir, chopProgress, g.toolTier || 0);
+    const hand = drawChopArm(ctx, bx, by, dir, chopProgress);
+    drawSwingTool(ctx, hand.x, hand.y, dir, chopProgress, g.toolTier || 0);
   }
   if (p.torchT > 0) {
     px(ctx, bx + dir * 7, by - 21, 2, 9, "#6b4a32");

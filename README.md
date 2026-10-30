@@ -34,7 +34,10 @@ npm run preview    # verify production output
 - `src/game/config.ts`: immutable world and crafting configuration
 - `src/game/rules.ts`: extracted pure gameplay formulas with unit tests
 - `src/game/math.ts`: pure math utilities with unit tests
-- `src/game/game.ts`: **preserved game simulation, rendering, UI, saving, audio** — still large and scheduled for incremental extraction
+- `src/game/audio.ts`: procedural action sound, wind ambience and saved mixer preferences
+- `src/game/graphics.ts`: standalone visual-effects preference
+- `src/game/weather.ts`: pure weather blending function and unit tests
+- `src/game/game.ts`: **preserved game simulation, rendering, UI and saving** — still large and scheduled for incremental extraction
 - `src/main.tsx` and `src/styles.css`: application bootstrap and built styles
 - `public/privacy.html`: published data-handling policy
 - `docs/ARCHITECTURE.md`: engineering rules and staged extraction plan

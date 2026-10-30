@@ -404,12 +404,38 @@ function toast(g: any, text: string) {
 // ============ optional procedural audio ============
 // Browser audio unlocks only after a user gesture. No assets, no autoplay,
 // and no impact on simulation. Mute is saved locally.
+const FX_KEY = "sekampfire-fx-v1";
+const GRAPHICS = {
+  high: (() => { try { return localStorage.getItem(FX_KEY) !== "low"; } catch (_e) { return true; } })(),
+  toggle() {
+    this.high = !this.high;
+    try { localStorage.setItem(FX_KEY, this.high ? "high" : "low"); } catch (_e) {}
+  }
+};
 const SOUND_KEY = "sekampfire-sound-v1";
+const AUDIO_LEVEL_KEY = "sekampfire-audio-v2";
 const AUDIO = (() => {
   let enabled = true;
-  try { enabled = localStorage.getItem(SOUND_KEY) !== "off"; } catch (_e) {}
+  let masterLevel = 90, ambienceLevel = 90, effectsLevel = 90;
+  try {
+    enabled = localStorage.getItem(SOUND_KEY) !== "off";
+    const settings = JSON.parse(localStorage.getItem(AUDIO_LEVEL_KEY) || "{}");
+    const safe = (v: any, fallback: number) =>
+      typeof v === "number" && Number.isFinite(v) ? clamp(Math.round(v / 10) * 10, 0, 100) : fallback;
+    masterLevel = safe(settings.master, 90);
+    ambienceLevel = safe(settings.ambience, 90);
+    effectsLevel = safe(settings.effects, 90);
+  } catch (_e) { /* Use safe default settings. */ }
   let ac: any = null, master: any = null, wind: any = null, fire: any = null, noiseBuffer: any = null;
   let lastCrackle = -1;
+  function saveLevels() {
+    try {
+      localStorage.setItem(AUDIO_LEVEL_KEY, JSON.stringify({
+        master: masterLevel, ambience: ambienceLevel, effects: effectsLevel
+      }));
+    } catch (_e) {}
+  }
+  function outputGain() { return enabled ? 0.96 * masterLevel / 100 : 0; }
   function touch() {
     if (!enabled) return;
     try {
@@ -418,7 +444,7 @@ const AUDIO = (() => {
         if (!Ctor) return;
         ac = new Ctor();
         master = ac.createGain();
-        master.gain.value = 0.34;
+        master.gain.value = outputGain();
         master.connect(ac.destination);
         const buf = ac.createBuffer(1, Math.round(ac.sampleRate * 2), ac.sampleRate);
         noiseBuffer = buf;
@@ -433,10 +459,10 @@ const AUDIO = (() => {
         fire.gain.value = 0;
         const windFilter = ac.createBiquadFilter();
         windFilter.type = "lowpass";
-        windFilter.frequency.value = 450;
+        windFilter.frequency.value = 620;
         const fireFilter = ac.createBiquadFilter();
         fireFilter.type = "highpass";
-        fireFilter.frequency.value = 1100;
+        fireFilter.frequency.value = 750;
         source.connect(windFilter);
         source.connect(fireFilter);
         windFilter.connect(wind);
@@ -446,61 +472,79 @@ const AUDIO = (() => {
         source.start();
       }
       if (ac.state === "suspended") ac.resume().catch(() => {});
-    } catch (_e) { /* Audio should never break the game. */ }
+    } catch (_e) { /* Gameplay works even if Web Audio is unavailable. */ }
   }
-  function setEnabled(next: boolean) {
-    enabled = next;
+  function setEnabled(value: boolean) {
+    enabled = value;
     try { localStorage.setItem(SOUND_KEY, enabled ? "on" : "off"); } catch (_e) {}
     if (enabled) touch();
-    if (ac && master) master.gain.setTargetAtTime(enabled ? 0.34 : 0, ac.currentTime, 0.04);
+    if (ac && master) master.gain.setTargetAtTime(outputGain(), ac.currentTime, 0.035);
+  }
+  function getLevel(kind: string): number {
+    return kind === "master" ? masterLevel : kind === "ambience" ? ambienceLevel : effectsLevel;
+  }
+  function adjust(kind: string, direction: number) {
+    const next = clamp(getLevel(kind) + (direction < 0 ? -10 : 10), 0, 100);
+    if (kind === "master") masterLevel = next;
+    else if (kind === "ambience") ambienceLevel = next;
+    else if (kind === "effects") effectsLevel = next;
+    saveLevels();
+    if (ac && master) master.gain.setTargetAtTime(outputGain(), ac.currentTime, 0.035);
   }
   function sync(g: any) {
     if (!ac || !wind || !fire) return;
     const active = enabled && g.ui === "run" && !g.over && !g.menu;
-    const gusts = 0.013 + weatherIntensity(g, "blizzard") * 0.087 + weatherIntensity(g, "wind") * 0.052;
-    wind.gain.setTargetAtTime(active ? gusts : 0, ac.currentTime, 0.45);
-    const proximity = clamp(1 - Math.abs(g.player.x - CX) / 180, 0.1, 1);
-    fire.gain.setTargetAtTime(active && g.fireLit ? 0.03 * proximity : 0, ac.currentTime, 0.4);
-    if (active && g.fireLit && proximity > 0.2 && ac.currentTime - lastCrackle > 0.35 + Math.random() * 0.7) {
+    const gusts = 0.028 + weatherIntensity(g, "blizzard") * 0.16 +
+      weatherIntensity(g, "wind") * 0.095;
+    const ambience = ambienceLevel / 100;
+    wind.gain.setTargetAtTime(active ? gusts * ambience : 0, ac.currentTime, 0.38);
+    const proximity = clamp(1 - Math.abs(g.player.x - CX) / 180, 0.12, 1);
+    fire.gain.setTargetAtTime(active && g.fireLit ? 0.12 * proximity * ambience : 0, ac.currentTime, 0.3);
+    if (active && g.fireLit && ambience > 0 && proximity > 0.2 &&
+        ac.currentTime - lastCrackle > 0.45 + Math.random() * 0.7) {
       lastCrackle = ac.currentTime;
-      effect("crackle");
+      effect("crackle", true);
     }
   }
-  function effect(kind: string) {
+  function effect(kind: string, ambient = false) {
     if (!enabled || !ac || !master || ac.state !== "running") return;
+    const mix = (ambient ? ambienceLevel : effectsLevel) / 100;
+    if (mix <= 0 || masterLevel <= 0) return;
     try {
       const now = ac.currentTime;
       const step = kind === "step", crackle = kind === "crackle";
       const light = kind === "light", build = kind === "build";
-      const dur = step ? 0.065 : crackle ? 0.026 : light ? 0.19 : 0.105;
+      const duration = step ? 0.09 : crackle ? 0.035 : light ? 0.20 : 0.12;
       const gain = ac.createGain();
-      const volume = step ? 0.025 : crackle ? 0.023 : build ? 0.07 : 0.055;
+      const volume = (step ? 0.14 : crackle ? 0.085 : build ? 0.26 : 0.22) * mix;
       gain.gain.setValueAtTime(volume, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       gain.connect(master);
       if (!light && noiseBuffer) {
-        // Filtered noise is less electronic than the earlier triangle tones.
         const source = ac.createBufferSource();
         source.buffer = noiseBuffer;
         const filter = ac.createBiquadFilter();
         filter.type = crackle ? "highpass" : step ? "lowpass" : "bandpass";
-        filter.frequency.value = crackle ? 1900 : step ? 380 : build ? 600 : 830;
+        filter.frequency.value = crackle ? 1900 : step ? 370 : build ? 610 : 850;
         source.connect(filter);
         filter.connect(gain);
-        source.start(now, Math.random() * 1.5, dur);
-        source.stop(now + dur + 0.015);
+        source.start(now, Math.random() * 1.5, duration);
+        source.stop(now + duration + 0.015);
       } else {
         const osc = ac.createOscillator();
         osc.type = "sine";
         osc.frequency.setValueAtTime(580, now);
-        osc.frequency.exponentialRampToValueAtTime(350, now + dur);
+        osc.frequency.exponentialRampToValueAtTime(340, now + duration);
         osc.connect(gain);
         osc.start(now);
-        osc.stop(now + dur + 0.015);
+        osc.stop(now + duration + 0.015);
       }
-    } catch (_e) { /* Browser audio support is optional. */ }
+    } catch (_e) {}
   }
-  return { touch, sync, effect, setEnabled, get enabled() { return enabled; } };
+  return {
+    touch, sync, effect, setEnabled, getLevel, adjust,
+    get enabled() { return enabled; }
+  };
 })();
 
 // Visual weather crossfades are independent from gameplay/weather balance.
@@ -585,61 +629,92 @@ function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
 }
 
 function drawPlayer(ctx: any, g: any) {
+  // Compact but recognisable silhouette: hooded coat, face, scarf, pack,
+  // individually animated legs and arms, deliberate axe arc and idle blink.
+  // All animation is decorative; world coordinates/hitboxes stay unchanged.
   const p = g.player;
   const x = Math.round(p.x), y = Math.round(p.y);
-  const step = p.moving ? Math.floor(g.animT * 12) % 2 : 0;
-  const dir = p.dir || 1;
-  const bob = p.moving && step ? -1 : 0;
-  ctx.fillStyle = "rgba(20,20,40,0.35)";
-  ctx.fillRect(x - 5, y - 1, 10, 2);
-  // legs
-  if (step) { px(ctx, x - 4, y - 3, 2, 3, "#3a2a1e"); px(ctx, x + 2, y - 4, 2, 3, "#3a2a1e"); }
-  else { px(ctx, x - 4, y - 4, 2, 3, "#3a2a1e"); px(ctx, x + 2, y - 3, 2, 3, "#3a2a1e"); }
-  px(ctx, x - 4, y - 2, 2, 2, "#241810");
-  px(ctx, x + 2, y - 2, 2, 2, "#241810");
-  // coat
-  px(ctx, x - 4, y - 9 + bob, 8, 6, "#7a4a2a");
-  px(ctx, x - 4, y - 9 + bob, 8, 1, "#8a5a34");
-  // arms (swing while walking)
-  const armY = y - 8 + bob + (step ? 1 : 0);
-  px(ctx, x - 5, armY, 1, 4, "#7a4a2a");
-  px(ctx, x + 4, y - 8 + bob - (step ? 1 : 0), 1, 4, "#7a4a2a");
-  // scarf
-  px(ctx, x - 3, y - 10 + bob, 6, 2, "#c23b2e");
-  if (p.moving) px(ctx, x - dir * 5, y - 10 + bob + step, 2, 1, "#c23b2e");
-  // head + beanie
-  px(ctx, x - 3, y - 14 + bob, 6, 4, "#e8b88a");
-  px(ctx, x - 3, y - 15 + bob, 6, 2, "#3a5a8c");
-  px(ctx, x - 1, y - 16 + bob, 3, 1, "#3a5a8c");
-  px(ctx, dir > 0 ? x + 1 : x - 2, y - 13 + bob, 1, 1, "#221208");
-  // carried logs - little log bundle with cut ends over the pack
+  const dir = p.dir === -1 ? -1 : 1;
+  const walking = !!p.moving && p.chopT <= 0;
+  const phase = g.animT * 9.5;
+  const stride = walking ? Math.sin(phase) : 0;
+  const otherStride = walking ? Math.sin(phase + Math.PI) : 0;
+  const bob = walking ? -Math.max(0, Math.sin(phase * 2)) * 1.1 :
+    Math.sin(g.animT * 1.7) * 0.35;
+  const chopping = p.chopT > 0 && !!p.chopTree;
+  const chopProgress = chopping ? clamp(1 - p.chopT / Math.max(p.chopTime, 0.001), 0, 1) : 0;
+  const lean = chopping ? (chopProgress > 0.58 && chopProgress < 0.83 ? dir : -dir * 0.4) : 0;
+  const bx = Math.round(x + lean), by = Math.round(y + bob);
+  const dark = "#241d23", outline = "#2b2430";
+  const coat = "#885334", coatShade = "#5a3829", coatLight = "#b27649";
+  const trouser = "#414350", boot = "#322a27", skin = "#dfac84";
+  // feet and grounded shadow (same foot position as the original character)
+  ctx.fillStyle = "rgba(20,20,40,0.28)";
+  ctx.fillRect(x - 6, y - 1, 12, 2);
+  for (const [dx, movement] of [[-3, stride], [2, otherStride]]) {
+    const legLift = walking ? Math.max(0, movement) * 1.6 : 0;
+    const legShift = walking ? Math.round(movement * 2.2) : 0;
+    px(ctx, x + dx + legShift, y - 7 - legLift, 3, 5, trouser);
+    px(ctx, x + dx + legShift - 1, y - 3 - legLift, 4, 3, boot);
+    px(ctx, x + dx + legShift - 1, y - 1 - legLift, 4, 1, dark);
+  }
+  // backpack and log load read clearly at 320x180
+  px(ctx, bx - dir * 6 - 2, by - 16, 5, 9, outline);
+  px(ctx, bx - dir * 6 - 1, by - 15, 3, 7, "#6d5c3b");
+  px(ctx, bx - dir * 6, by - 14, 1, 5, "#a98a52");
+  px(ctx, bx - 5, by - 16, 10, 10, outline);
+  px(ctx, bx - 4, by - 15, 8, 9, coat);
+  px(ctx, bx - 4, by - 8, 8, 2, coatShade);
+  px(ctx, bx + (dir > 0 ? -3 : 2), by - 14, 2, 6, coatLight);
+  px(ctx, bx - 2, by - 7, 4, 1, "#c29b65");
+  // arms with opposing stride; lead arm grips the axe on chop
+  const armSwing = walking ? Math.round(stride * 2) : 0;
+  px(ctx, bx - 6, by - 14 + armSwing, 2, 7, outline);
+  px(ctx, bx - 5, by - 13 + armSwing, 2, 5, coatLight);
+  px(ctx, bx + 4, by - 14 - armSwing, 2, 7, outline);
+  px(ctx, bx + 4, by - 13 - armSwing, 1, 5, coatShade);
+  px(ctx, bx + dir * 5 - 1, by - 8 - armSwing, 2, 2, skin);
+  // head: dark hair, a visible nose/eye, winter beanie and animated scarf
+  px(ctx, bx - 4, by - 23, 8, 8, outline);
+  px(ctx, bx - 3, by - 22, 6, 7, skin);
+  px(ctx, bx - 3, by - 22, 2, 5, "#bb7b60");
+  px(ctx, bx - 4, by - 24, 8, 4, "#385d87");
+  px(ctx, bx - 5, by - 21, 10, 2, "#567eab");
+  px(ctx, bx - 2, by - 25, 5, 1, "#668db6");
+  px(ctx, bx - 1, by - 26, 3, 1, "#456a95");
+  const blink = Math.sin(g.animT * 1.23) > 0.994;
+  px(ctx, bx + dir * 2 - 1, by - 19, 1, 1, blink ? "#aa7c64" : dark);
+  px(ctx, bx + dir * 3 - 1, by - 17, 2, 1, "#ba8063");
+  px(ctx, bx - 4, by - 16, 8, 2, "#bc3d30");
+  px(ctx, bx - 3, by - 15, 6, 1, "#f1784d");
+  const scarfFlutter = Math.sin(g.animT * (walking ? 9 : 3)) * (walking ? 2 : 1);
+  px(ctx, bx - dir * (6 + Math.round(scarfFlutter)), by - 15, 4, 2, "#bc3d30");
+  // drawn above the shoulders, the load changes its apparent silhouette
   const n = Math.min(3, Math.ceil(p.wood / 3));
-  for (let i = 0; i < n; i++) drawLog(ctx, x - 4, y - 20 + bob - i * 3, 8);
-  // axe swing (windup, strike, recover)
-  if (p.chopT > 0 && p.chopTree) {
-    const prog = 1 - p.chopT / p.chopTime;
-    let ang: number;
-    if (prog < 0.55) ang = -0.3 - (prog / 0.55) * 1.1;
-    else if (prog < 0.7) ang = -1.4 + ((prog - 0.55) / 0.15) * 2.2;
-    else ang = 0.8 - ((prog - 0.7) / 0.3) * 1.1;
+  for (let i = 0; i < n; i++) drawLog(ctx, bx - dir * 6 - 4, by - 17 - i * 3, 8);
+  if (chopping) {
+    const arc = chopProgress < 0.45
+      ? -0.2 - (chopProgress / 0.45) * 1.25
+      : chopProgress < 0.74
+        ? -1.45 + ((chopProgress - 0.45) / 0.29) * 2.55
+        : 1.1 - ((chopProgress - 0.74) / 0.26) * 1.2;
     ctx.save();
-    ctx.translate(x + dir * 5, y - 9 + bob);
-    ctx.rotate(-dir * ang);
-    px(ctx, -1, -1, 1, 8, "#8a6a3a");
-    px(ctx, -2, -3, 3, 2, "#cfd6dd");
-    px(ctx, -2, -2, 1, 2, "#9aa2ac");
+    ctx.translate(bx + dir * 6, by - 12);
+    ctx.rotate(-dir * arc);
+    px(ctx, -1, -2, 2, 10, "#745338");
+    px(ctx, -3, -5, 6, 3, "#abbac4");
+    px(ctx, -2, -5, 3, 1, "#e1eaf0");
+    px(ctx, dir > 0 ? -3 : 1, -3, 2, 2, "#65747d");
     ctx.restore();
   }
-  // torch
   if (p.torchT > 0) {
-    px(ctx, x + dir * 6, y - 16 + bob, 1, 6, "#6b4a32");
-    drawFlame(ctx, x + dir * 6, y - 16 + bob, g.animT, 0.25);
+    px(ctx, bx + dir * 7, by - 21, 2, 9, "#6b4a32");
+    drawFlame(ctx, bx + dir * 7, by - 21, g.animT, 0.25);
   }
-  // Small breath wisps in cold weather: decorative, no warmth or stamina effects.
   if (visualSeason(g) === "winter" || g.weather === "coldsnap") {
-    const b = (g.animT * 1.8) % 1;
-    ctx.fillStyle = "rgba(226,239,243," + (0.3 * (1 - b)).toFixed(3) + ")";
-    ctx.fillRect(x + dir * (5 + b * 6), y - 13 - b * 5, 2, 1);
+    const breath = (g.animT * 1.5) % 1;
+    ctx.fillStyle = "rgba(226,239,243," + (0.28 * (1 - breath)).toFixed(3) + ")";
+    ctx.fillRect(bx + dir * (5 + breath * 6), by - 18 - breath * 5, 2, 1);
   }
 }
 
@@ -1580,7 +1655,7 @@ function updateAmbient(g: any, dt: number) {
   }
   // snow
   const winter = visualSeason(g) === "winter";
-  const target = !winter ? 0 : Math.round(45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind"));
+  const target = !winter ? 0 : Math.round((45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind")) * (GRAPHICS.high ? 1 : 0.55));
   while (g.snow.length < target) g.snow.push({ x: Math.random() * W, y: Math.random() * H, v: 12 + Math.random() * 18, ph: Math.random() * 6 });
   while (g.snow.length > target) g.snow.pop();
   const gust = weatherIntensity(g, "wind") + weatherIntensity(g, "blizzard") * 2;
@@ -1761,6 +1836,11 @@ function closeZone(ctx: any, g: any, x: number, y: number) {
 
 // close the open menu; settings opened from pause returns to the pause menu
 function closeMenu(g: any) {
+  if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
+    g.menu = "settings";
+    g.menuSel = 0;
+    return;
+  }
   if (g.menu === "settings" && g.settingsFrom === "pause") {
     g.settingsFrom = null;
     g.menu = "pause";
@@ -1849,6 +1929,8 @@ function menuRows(g: any, meta: any): any[] {
   if (g.menu === "shop") return shopRows(g, meta);
   if (g.menu === "build") return buildRows(g, meta);
   if (g.menu === "settings") return settingsRows(g, meta);
+  if (g.menu === "audio") return audioRows(g);
+  if (g.menu === "reset1" || g.menu === "reset2") return resetRows(g, meta);
   if (g.menu === "pause") return pauseRows(g, meta);
   return [];
 }
@@ -1899,12 +1981,17 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
   let y = y0 + 16;
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
-    if (i === g.menuSel) px(ctx, x0 + 3, y, pw - 6, r.h, "rgba(255,217,138,0.14)");
-    drawText(ctx, r.label, x0 + 9, y + 1, r.enabled ? "#ffe9c8" : "#5a6480");
-    drawText(ctx, r.right, x0 + pw - 9 - textW(r.right), y + 1, r.enabled ? "#d9c9a0" : "#5a6480");
+    if (i === g.menuSel) px(ctx, x0 + 3, y, pw - 6, r.h, r.red ? "rgba(211,65,65,0.28)" : "rgba(255,217,138,0.14)");
+    drawText(ctx, r.label, x0 + 9, y + 1, !r.enabled ? "#5a6480" : r.red ? "#ff7272" : "#ffe9c8");
+    drawText(ctx, r.right, x0 + pw - 9 - textW(r.right), y + 1, !r.enabled ? "#5a6480" : r.red ? "#ff7272" : "#d9c9a0");
     drawText(ctx, r.desc, x0 + 9, y + 8, "#8a94ac");
     const idx = i;
     g.zones.push({ x: x0 + 3, y, w: pw - 6, h: r.h, onDown: () => { g.menuSel = idx; rows[idx].onDown(); } });
+    if (r.onAdjust) {
+      // Separate +/- touch targets; full row still increments for convenience.
+      g.zones.push({ x: x0 + pw - 39, y, w: 12, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(-1); } });
+      g.zones.push({ x: x0 + pw - 17, y, w: 12, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(1); } });
+    }
     y += r.h;
   }
   const foot = "W/S PICK - E SELECT - ESC CLOSE";
@@ -1930,23 +2017,112 @@ function buildRows(g: any, meta: any) {
   return rows;
 }
 
+function resetAllProgress(g: any, meta: any) {
+  // Delete only our own progress keys; leave sound preferences untouched.
+  clearRunSnapshot();
+  try { localStorage.removeItem(META_KEY); } catch (_e) {}
+  for (const key of LEGACY_KEYS) {
+    try { localStorage.removeItem(key); } catch (_e) {}
+  }
+  Object.assign(meta, {
+    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}
+  });
+  setupTitleScene(g);
+  g.resumeData = null;
+  g.settingsFrom = null;
+  g.menu = null;
+  g.menuSel = 0;
+  g.titleSel = 0;
+}
 function settingsRows(g: any, meta: any) {
   return [
     {
-      label: "SOUND", right: AUDIO.enabled ? "ON" : "OFF",
-      desc: "TOGGLE FIRE WIND AND ACTION SOUNDS", h: 15, enabled: true,
-      onDown: () => { AUDIO.setEnabled(!AUDIO.enabled); },
+      label: "AUDIO", right: "", desc: "MASTER AMBIENCE AND EFFECTS VOLUME",
+      h: 15, enabled: true,
+      onDown: () => { g.menu = "audio"; g.menuSel = 0; }
     },
     {
-      label: "FULLSCREEN", right: g.fs ? "ON" : "OFF", desc: "TAP HERE OR PRESS F TO TOGGLE", h: 15, enabled: true,
-      onDown: () => { if (g.fsToggle) g.fsToggle(); },
+      label: "FULLSCREEN", right: g.fs ? "ON" : "OFF",
+      desc: "TAP HERE OR PRESS F TO TOGGLE", h: 15, enabled: true,
+      onDown: () => { if (g.fsToggle) g.fsToggle(); }
     },
     {
-      label: "BACK", right: "", desc: g.settingsFrom === "pause" ? "RETURN TO PAUSE MENU" : "CLOSE SETTINGS", h: 15, enabled: true,
-      onDown: () => closeMenu(g),
+      label: "VISUAL FX", right: GRAPHICS.high ? "HIGH" : "LOW",
+      desc: "LOW USES FEWER PARTICLES/REFLECTIONS", h: 15, enabled: true,
+      onDown: () => GRAPHICS.toggle()
+    },
+    {
+      label: "PRIVACY POLICY", right: "", desc: "LOCAL SAVES AND THIRD PARTY HOSTING",
+      h: 15, enabled: true,
+      onDown: () => { g.menu = "privacy"; g.menuSel = 0; }
+    },
+    {
+      label: "CREDITS", right: "", desc: "MAKERS AND SOFTWARE LIBRARIES",
+      h: 15, enabled: true,
+      onDown: () => { g.menu = "credits"; g.menuSel = 0; }
+    },
+    {
+      label: "RESET SAVE", right: "!", desc: "PERMANENTLY ERASE ALL GAME PROGRESS",
+      h: 15, enabled: true, red: true,
+      onDown: () => { g.menu = "reset1"; g.menuSel = 1; }
+    },
+    {
+      label: "BACK", right: "", desc: "RETURN TO PREVIOUS SCREEN",
+      h: 15, enabled: true,
+      onDown: () => closeMenu(g)
     },
   ];
 }
+function audioRows(g: any) {
+  return [
+    {
+      label: "SOUND", right: AUDIO.enabled ? "ON" : "OFF",
+      desc: "ALL GAME AUDIO ON OR OFF", h: 15, enabled: true,
+      onDown: () => AUDIO.setEnabled(!AUDIO.enabled)
+    },
+    ...[
+      { key: "master", label: "MASTER", desc: "OVERALL GAME LOUDNESS" },
+      { key: "ambience", label: "AMBIENCE", desc: "WIND AND FIRE BACKGROUND AUDIO" },
+      { key: "effects", label: "EFFECTS", desc: "STEPS CHOPPING BUILDING AND MORE" }
+    ].map((v: any) => ({
+      label: v.label, right: "- " + AUDIO.getLevel(v.key) + "% +",
+      desc: v.desc, h: 15, enabled: true, volumeKey: v.key,
+      onAdjust: (dir: number) => AUDIO.adjust(v.key, dir),
+      onDown: () => AUDIO.adjust(v.key, 1)
+    })),
+    {
+      label: "BACK", right: "", desc: "RETURN TO SETTINGS",
+      h: 15, enabled: true, onDown: () => closeMenu(g)
+    }
+  ];
+}
+function resetRows(g: any, meta: any) {
+  if (g.menu === "reset1") {
+    return [
+      {
+        label: "CANCEL", right: "", desc: "KEEP ALL YOUR PROGRESS",
+        h: 15, enabled: true, onDown: () => closeMenu(g)
+      },
+      {
+        label: "CONTINUE", right: "!", desc: "GO TO FINAL DELETION CONFIRMATION",
+        h: 15, enabled: true, red: true,
+        onDown: () => { g.menu = "reset2"; g.menuSel = 0; }
+      }
+    ];
+  }
+  return [
+    {
+      label: "CANCEL", right: "", desc: "KEEP ALL YOUR PROGRESS",
+      h: 15, enabled: true, onDown: () => closeMenu(g)
+    },
+    {
+      label: "ERASE SAVE", right: "!", desc: "FINAL STEP - CANNOT BE UNDONE",
+      h: 15, enabled: true, red: true,
+      onDown: () => resetAllProgress(g, meta)
+    }
+  ];
+}
+
 
 function drawHelpMenu(ctx: any, g: any) {
   panel(ctx, 34, 18, 252, 146);
@@ -1979,6 +2155,28 @@ function drawHelpMenu(ctx: any, g: any) {
   }
 }
 
+function drawInfoMenu(ctx: any, g: any, title: string, lines: string[], hasPolicyLink: boolean) {
+  panel(ctx, 23, 10, 274, 160);
+  drawText(ctx, title, 31, 17, "#ffd98a");
+  closeZone(ctx, g, 283, 17);
+  let y = 32;
+  for (const line of lines) {
+    if (line) drawText(ctx, line, 31, y, "#c5d2e2");
+    y += 8;
+  }
+  if (hasPolicyLink) {
+    uiButton(ctx, g, 77, 141, 166, 16, "OPEN FULL POLICY", {
+      onDown: () => {
+        // User gesture allows a new tab without losing the current run.
+        const url = new URL("./privacy.html", window.location.href).href;
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    });
+  } else {
+    uiButton(ctx, g, 118, 143, 84, 15, "BACK", { onDown: () => closeMenu(g) });
+  }
+}
+
 function drawMenu(ctx: any, g: any, meta: any) {
   ctx.fillStyle = "rgba(4,6,16,0.5)";
   ctx.fillRect(0, 0, W, H);
@@ -1990,10 +2188,45 @@ function drawMenu(ctx: any, g: any, meta: any) {
     drawListMenu(ctx, g, "BUILD", "WOOD " + (g.player.wood + g.stored), buildRows(g, meta));
   } else if (g.menu === "settings") {
     drawListMenu(ctx, g, "SETTINGS", "", settingsRows(g, meta));
+  } else if (g.menu === "audio") {
+    drawListMenu(ctx, g, "AUDIO", "", audioRows(g));
+  } else if (g.menu === "reset1" || g.menu === "reset2") {
+    drawListMenu(ctx, g, g.menu === "reset1" ? "RESET SAVE? 1/2" : "FINAL WARNING 2/2",
+      "!", resetRows(g, meta));
   } else if (g.menu === "pause") {
     drawListMenu(ctx, g, "PAUSED", "ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
   } else if (g.menu === "help") {
     drawHelpMenu(ctx, g);
+  } else if (g.menu === "privacy") {
+    drawInfoMenu(ctx, g, "PRIVACY POLICY", [
+      "THIS GAME DOES NOT REQUIRE AN ACCOUNT.",
+      "GAME PROGRESS AND SOUND PREFERENCES",
+      "ARE STORED LOCALLY IN THIS BROWSER.",
+      "NO IN-GAME ANALYTICS OR ADS ARE",
+      "IMPLEMENTED IN THE GAME SOURCE.",
+      "",
+      "GITHUB PAGES HOSTS THE GAME. EXTERNAL",
+      "LIBRARIES ARE LOADED FROM UNPKG AND",
+      "TAILWIND CDN. THOSE PROVIDERS MAY",
+      "RECEIVE IP/REQUEST DATA UNDER THEIR",
+      "OWN POLICIES.",
+      "",
+      "FULL POLICY AVAILABLE ONLINE BELOW."
+    ], true);
+  } else if (g.menu === "credits") {
+    drawInfoMenu(ctx, g, "CREDITS", [
+      "SEKAMPFIRE",
+      "A GAME BY SEKAFAJI.",
+      "",
+      "PROCEDURAL PIXEL ART AND AUDIO.",
+      "BUILT WITH HTML CANVAS AND REACT.",
+      "REACT DOM / BABEL / TAILWIND CSS.",
+      "",
+      "INSPIRED BY ATMOSPHERIC PIXEL GAMES.",
+      "NO THIRD PARTY GAME SPRITES USED.",
+      "",
+      "THANK YOU FOR PLAYING!"
+    ], false);
   }
 }
 
@@ -2023,31 +2256,17 @@ function drawRunChrome(ctx: any, g: any) {
 // Large, restrained directional feedback behind the EXISTING movement chevrons.
 // Pointer and keyboard input both work; the arrow geometry itself is unchanged.
 function drawMovementFeedback(ctx: any, g: any) {
+  // Entire pressed half of the gameplay viewport, no second arrows,
+  // chevrons, framing, or directional artwork.
   const left = !!(g.pleft || g.keys.left);
   const right = !!(g.pright || g.keys.right);
   if (!left && !right) return;
-  const paint = (isLeft: boolean) => {
-    const x0 = isLeft ? 0 : W - 56;
-    const grad = ctx.createLinearGradient(isLeft ? 0 : W, 0, isLeft ? 56 : W - 56, 0);
-    grad.addColorStop(0, "rgba(187,225,239,0.23)");
-    grad.addColorStop(1, "rgba(187,225,239,0)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(x0, 47, 56, WATER_Y - 51);
-    const edge = isLeft ? 32 : W - 32;
-    const dir = isLeft ? -1 : 1;
-    ctx.fillStyle = "rgba(229,245,250,0.22)";
-    ctx.beginPath();
-    ctx.moveTo(edge + dir * 12, 71);
-    ctx.lineTo(edge - dir * 10, 92);
-    ctx.lineTo(edge + dir * 12, 113);
-    ctx.lineTo(edge + dir * 4, 113);
-    ctx.lineTo(edge - dir * 18, 92);
-    ctx.lineTo(edge + dir * 4, 71);
-    ctx.closePath();
-    ctx.fill();
+  const fillSide = (x: number) => {
+    ctx.fillStyle = g.isNight ? "rgba(187,206,226,0.105)" : "rgba(51,79,101,0.115)";
+    ctx.fillRect(x, 0, W / 2, H);
   };
-  if (left) paint(true);
-  if (right) paint(false);
+  if (left) fillSide(0);
+  if (right) fillSide(W / 2);
 }
 
 // movement chevrons mid-screen on both sides - movement hint, not a button
@@ -2160,13 +2379,18 @@ function drawScreen(ctx: any, g: any, meta: any) {
 
 // ============ input ============
 function handleKey(g: any, meta: any, k: string, down: boolean) {
-  if (k === "arrowleft" || k === "a") g.keys.left = down;
-  if (k === "arrowright" || k === "d") g.keys.right = down;
+  if (g.menu === "audio" && down && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
+    const row = audioRows(g)[g.menuSel];
+    if (row && row.onAdjust) row.onAdjust(k === "arrowleft" || k === "a" ? -1 : 1);
+    return;
+  }
+  if (k === "arrowleft" || k === "a") g.keys.left = !g.menu && down;
+  if (k === "arrowright" || k === "d") g.keys.right = !g.menu && down;
   if (!down) {
     if (k === "e" || k === " ") g.keys.act = false;
     return;
   }
-  const isList = g.menu === "bench" || g.menu === "shop" || g.menu === "build" || g.menu === "settings" || g.menu === "pause";
+  const isList = ["bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause"].includes(g.menu);
   if (k === "arrowup" || k === "w") {
     if (isList) moveSel(g, meta, -1);
     else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + titleActions(g, meta).length - 1) % titleActions(g, meta).length;
@@ -2178,6 +2402,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   if (k === "e" || k === "enter" || k === " ") {
     if (isList) activateSel(g, meta);
     else if (g.menu === "help") { g.menu = null; }
+    else if (g.menu === "privacy" || g.menu === "credits") closeMenu(g);
     else if (g.ui === "title") activateTitleItem(g, meta, g.titleSel);
     else if (g.ui === "dead") startRun(g, meta);
     else if (g.ui === "win") goEndless(g);
@@ -2280,7 +2505,8 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
   ctx.fillStyle = waterBase;
   ctx.fillRect(0, WATER_Y - 2, W, H - WATER_Y + 2);
   ctx.save();
-  for (let i = 0; i < height; i++) {
+  const pixelStep = GRAPHICS.high ? 1 : 2;
+  for (let i = 0; i < height; i += pixelStep) {
     // Exact vertical mirror of the aligned sprites: no 18px source offset.
     const srcY = WATER_Y - 1 - i;
     if (srcY < 0) break;
@@ -2292,7 +2518,7 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     const dx = Math.max(0, shift);
     ctx.globalAlpha = (0.53 - 0.28 * i / height) * (g.weather === "blizzard" ? 0.75 : 1);
     ctx.drawImage(reflection, sx, srcY, W - Math.abs(shift), 1,
-      dx, WATER_Y + i, W - Math.abs(shift), 1);
+      dx, WATER_Y + i, W - Math.abs(shift), Math.min(pixelStep, height - i));
   }
   ctx.restore();
   for (let i = 0; i < 14; i++) {

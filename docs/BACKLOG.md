@@ -20,6 +20,10 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] **Detailed procedural trees in source**: separate anchored renderer with three evergreen silhouettes, bark, branches, shading and winter-only snow; tests for geometry/season. **Final premium art quality still requires visual approval on real devices**.
 
 ## Priority 1 — visual/audio polish requests
+- [x] Patch #18 workbench crafting requires second tap / second keyboard activation before wood is spent; changes of item or menu cancel confirmation (source-tested).
+- [x] Patch #18 day/night chevrons use pale fill with dark pixel outline for visibility across skies/forests (source-tested; needs phone QA).
+- [x] Patch #18 season-coloured shoreline and broken reflection glints, with bounded fade and unchanged water world geometry (source-tested; needs phone QA).
+
 - [x] **Wilderness art polish #17 (source)**: mixed pine/fir/broadleaf forest silhouettes, mountain peaks, season-aware distant foliage, sparse ground cover, horizon haze and smoother firelight. Tests verify geometry; phone visual approval remains outstanding.
 - [ ] Review actual 320×180 captured frames for all seasons at dawn/day/night across meadow, forest and mountain regions; tune tree density and haze based on screenshots.
 

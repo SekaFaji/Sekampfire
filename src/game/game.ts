@@ -5,7 +5,8 @@ import { carryCap, pileCap, choppingToolTier } from "./rules";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
-import { completedNights, visualSeason, visualPalette } from "./palette";
+import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
+import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
@@ -163,7 +164,7 @@ function startRunEngine(g: any, meta: any) {
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
-  toast(g, "Survive the nights. Build a cabin. Outlast the winter.");
+  toast(g, "Survive the seasons. Build a cabin. Face the Long Night.");
 }
 
 function startRun(g: any, meta: any) {
@@ -222,6 +223,7 @@ function spawnEvent(g: any) {
   const day = !g.isNight;
   const r = Math.random();
   const run = g.ui === "run";
+  const seasonal = wildlifeForSeason(visualSeason(g));
   if (!day && g.weather === "clear" && r < 0.25) {
     g.meteors.push({ x: 60 + Math.random() * 200, y: 8 + Math.random() * 26, vx: -(70 + Math.random() * 40), vy: 34 + Math.random() * 18, life: 1 });
     if (run) toast(g, "A shooting star crosses the sky.");
@@ -230,8 +232,12 @@ function spawnEvent(g: any) {
   if (!day && r < 0.4) {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = clamp(g.player.x + side * (80 + Math.random() * 40), 20, WORLD_W - 20);
-    g.critters.push({ type: "fox", x, y: 150 + Math.random() * 8, state: "watch", t: 12 + Math.random() * 8, dir: -side });
-    if (run && Math.random() < 0.15) toast(g, "A fox watches from the treeline.");
+    const species = seasonal.nocturnal;
+    const type = wildlifeMovementType(species);
+    g.critters.push({ type, species, x, y: 150 + Math.random() * 8,
+      state: type === "fox" ? "watch" : "sit", t: 12 + Math.random() * 8,
+      ph: Math.random() * 6, dir: -side });
+    if (run && Math.random() < 0.15) toast(g, "Wildlife stirs near the treeline.");
     return;
   }
   if (day && r < 0.55) {
@@ -241,7 +247,7 @@ function spawnEvent(g: any) {
     const vx = (fromLeft ? 1 : -1) * (16 + Math.random() * 12);
     const by = 34 + Math.random() * 26;
     for (let i = 0; i < n; i++) {
-      g.critters.push({ type: "bird", x: bx - i * 7 * (fromLeft ? 1 : -1), y: by + Math.sin(i * 2.1) * 4, state: "fly", vx, t: -1, ph: i * 1.3, dir: vx > 0 ? 1 : -1 });
+      g.critters.push({ type: "bird", species: seasonal.flying, x: bx - i * 7 * (fromLeft ? 1 : -1), y: by + Math.sin(i * 2.1) * 4, state: "fly", vx, t: -1, ph: i * 1.3, dir: vx > 0 ? 1 : -1 });
     }
     if (run && Math.random() < 0.12) toast(g, "Birds cross the pale sky.");
     return;
@@ -249,11 +255,11 @@ function spawnEvent(g: any) {
   if (r < 0.78) {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = clamp(g.player.x + side * (46 + Math.random() * 50), 20, WORLD_W - 20);
-    if (Math.random() < 0.5) {
-      g.critters.push({ type: "bunny", x, y: 146 + Math.random() * 12, state: "sit", t: 10 + Math.random() * 10, ph: Math.random() * 6, dir: -side });
-    } else {
-      g.critters.push({ type: "bird", x, y: 146 + Math.random() * 12, state: "sit", t: 8 + Math.random() * 8, ph: Math.random() * 6, dir: -side });
-    }
+    const species = seasonal.ground;
+    const type = wildlifeMovementType(species);
+    g.critters.push({ type, species, x, y: 146 + Math.random() * 12,
+      state: "sit", t: 10 + Math.random() * 10,
+      ph: Math.random() * 6, dir: -side });
     return;
   }
   if (run && g.moveT > 0) {
@@ -694,7 +700,7 @@ function updateAmbient(g: any, dt: number) {
     if (g.footprints[i].life <= 0 || visualSeason(g) !== "winter") g.footprints.splice(i, 1);
   }
   // snow
-  const winter = visualSeason(g) === "winter";
+  const winter = visualSeason(g) === "winter" || g.longNightActive;
   const target = !winter ? 0 : Math.round((45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind")) * (GRAPHICS.high ? 1 : 0.55));
   while (g.snow.length < target) g.snow.push({ x: Math.random() * W, y: Math.random() * H, v: 12 + Math.random() * 18, ph: Math.random() * 6 });
   while (g.snow.length > target) g.snow.pop();
@@ -829,7 +835,7 @@ function drawHUD(ctx: any, g: any, meta: any) {
   const rx = W - 81;
   drawText(ctx, g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1), rx, 22, "#e0e5ef");
   drawText(ctx, WEATHER_TEXT[g.weather] || "", rx, 30, "#c8d2e8");
-  drawText(ctx, visualSeason(g).toUpperCase(), rx, 38, "#dfc99a");
+  drawText(ctx, visualSeason(g).toUpperCase() + " " + seasonDay(g) + "/7", rx, 38, "#dfc99a");
   if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 46, "#8fd0ff");
   if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
     const t = "THE LONG NIGHT";

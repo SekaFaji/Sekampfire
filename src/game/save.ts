@@ -77,4 +77,4 @@ function loadRunSnapshot(): any {
   } catch (_e) { return null; }
 }
 
-export { loadMeta, saveMeta, clearRunSnapshot, captureRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange };
+export { loadMeta, saveMeta, clearRunSnapshot, captureRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS };

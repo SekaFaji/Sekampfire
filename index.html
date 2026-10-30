@@ -540,7 +540,7 @@ function drawConstruction(ctx: any, g: any, bx: number, isBench: boolean) {
 function drawStructures(ctx: any, g: any) {
   const st = g.stage;
   const colors = visualPalette(g);
-  const roofTrim = colors.name === "winter" ? roofTrim : colors.ridge;
+  const roofTrim = colors.name === "winter" ? "#eef4fa" : colors.ridge;
   const x0 = CX - 42;
   if (g.builtBench) drawBench(ctx, g);
   else if (g.benchBuildT >= 0) drawConstruction(ctx, g, BENCH_X, true);

@@ -23,6 +23,13 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 - The left, middle and right regions reveal hills, forest and mountains with smoothly blended backgrounds.
 - The camp now shares continuous ground with the world; the workbench no longer emits an artificial light halo.
 
+## Living-world polish
+
+- The river reflects the player's walking and chopping poses, animated trees, camp structures, the fire and the dog. The land/ground overlay is excluded from the reflection to avoid false stripes.
+- The waterline now blends into the world, and the game canvas has no black frame beneath the river.
+- Snowy footsteps fade behind the player in winter. Existing rabbits, foxes, the fire and weather have more subtle ambient movement.
+- Gentle fire and wind ambience, footsteps, chopping and building cues use browser-generated sound (no downloaded audio files). Sound starts only after a tap or key press and can be muted in **Settings → Sound**.
+
 ## Tech
 
 - Everything runs in a single React canvas: custom 3x5 pixel font, immediate-mode in-canvas UI, procedurally drawn pixel art - no image or audio assets.

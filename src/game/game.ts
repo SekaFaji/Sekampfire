@@ -1335,10 +1335,10 @@ function drawMovementFeedback(ctx: any, g: any) {
   const drawSide = (side: "left" | "right", intensity: number) => {
     if (intensity < 0.015) return;
     const x = side === "left" ? 0 : W - width;
-    const alpha = (g.isNight ? 0.18 : 0.25) * clamp(intensity, 0, 1);
-    // Daylight now uses a warm light wash instead of the previous dim
-    // dark-blue tint that disappeared against tree and meadow details.
-    const bright = g.isNight ? "194,215,230" : "250,222,157";
+    const alpha = (g.isNight ? 0.18 : 0.28) * clamp(intensity, 0, 1);
+    // During daylight the entire pressed side darkens softly. No amber
+    // overlay remains; nighttime colour and time-based fading are unchanged.
+    const bright = g.isNight ? "194,215,230" : "24,37,43";
     const fill = ctx.createLinearGradient(x, 0, x + width, 0);
     fill.addColorStop(0, side === "left" ? `rgba(${bright},${alpha})` : `rgba(${bright},0)`);
     fill.addColorStop(1, side === "left" ? `rgba(${bright},0)` : `rgba(${bright},${alpha})`);
@@ -1357,16 +1357,15 @@ function drawSideArrows(ctx: any, g: any) {
   const pulse = 0.5 + 0.5 * Math.sin(g.animT * 2);
   const cy = 92;
   const drawChev = (dir: number, active: boolean) => {
-    // Daytime pressed arrows use dark charcoal with a pale pixel outline,
-    // readable against both bright skies and shaded foliage. The night
-    // palette and idle guidance remain unchanged.
+    // Daytime pressed arrows use charcoal with a cool pale pixel outline,
+    // rather than any yellow. Nighttime and idle guidance remain unchanged.
     const pressedDay = active && !g.isNight;
     const main = active
       ? (g.isNight ? "rgba(255,219,147,0.96)" : "rgba(29,43,49,0.98)")
       : g.isNight
         ? `rgba(236,245,250,${(0.56 + pulse * 0.13).toFixed(3)})`
         : `rgba(255,246,218,${(0.78 + pulse * 0.13).toFixed(3)})`;
-    const outline = pressedDay ? "rgba(250,240,218,0.90)" : "rgba(14,23,34,0.82)";
+    const outline = pressedDay ? "rgba(219,230,234,0.90)" : "rgba(14,23,34,0.82)";
     for (let i = 0; i < 7; i++) {
       const ind = Math.abs(i - 3);
       const xx = dir < 0 ? 14 + ind * 3 : W - 16 - ind * 3;

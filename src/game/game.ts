@@ -1335,8 +1335,10 @@ function drawMovementFeedback(ctx: any, g: any) {
   const drawSide = (side: "left" | "right", intensity: number) => {
     if (intensity < 0.015) return;
     const x = side === "left" ? 0 : W - width;
-    const alpha = (g.isNight ? 0.18 : 0.15) * clamp(intensity, 0, 1);
-    const bright = g.isNight ? "194,215,230" : "48,75,96";
+    const alpha = (g.isNight ? 0.18 : 0.25) * clamp(intensity, 0, 1);
+    // Daylight now uses a warm light wash instead of the previous dim
+    // dark-blue tint that disappeared against tree and meadow details.
+    const bright = g.isNight ? "194,215,230" : "250,222,157";
     const fill = ctx.createLinearGradient(x, 0, x + width, 0);
     fill.addColorStop(0, side === "left" ? `rgba(${bright},${alpha})` : `rgba(${bright},0)`);
     fill.addColorStop(1, side === "left" ? `rgba(${bright},0)` : `rgba(${bright},${alpha})`);

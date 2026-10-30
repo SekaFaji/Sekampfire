@@ -391,7 +391,8 @@ const SOUND_KEY = "sekampfire-sound-v1";
 const AUDIO = (() => {
   let enabled = true;
   try { enabled = localStorage.getItem(SOUND_KEY) !== "off"; } catch (_e) {}
-  let ac: any = null, master: any = null, wind: any = null, fire: any = null;
+  let ac: any = null, master: any = null, wind: any = null, fire: any = null, noiseBuffer: any = null;
+  let lastCrackle = -1;
   function touch() {
     if (!enabled) return;
     try {
@@ -403,6 +404,7 @@ const AUDIO = (() => {
         master.gain.value = 0.34;
         master.connect(ac.destination);
         const buf = ac.createBuffer(1, Math.round(ac.sampleRate * 2), ac.sampleRate);
+        noiseBuffer = buf;
         const data = buf.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
         const source = ac.createBufferSource();
@@ -438,30 +440,48 @@ const AUDIO = (() => {
   function sync(g: any) {
     if (!ac || !wind || !fire) return;
     const active = enabled && g.ui === "run" && !g.over && !g.menu;
-    const gusts = g.weather === "blizzard" ? 0.1 : g.weather === "wind" ? 0.065 : 0.013;
+    const gusts = 0.013 + weatherIntensity(g, "blizzard") * 0.087 + weatherIntensity(g, "wind") * 0.052;
     wind.gain.setTargetAtTime(active ? gusts : 0, ac.currentTime, 0.45);
     const proximity = clamp(1 - Math.abs(g.player.x - CX) / 180, 0.1, 1);
-    fire.gain.setTargetAtTime(active && g.fireLit ? 0.045 * proximity : 0, ac.currentTime, 0.4);
+    fire.gain.setTargetAtTime(active && g.fireLit ? 0.03 * proximity : 0, ac.currentTime, 0.4);
+    if (active && g.fireLit && proximity > 0.2 && ac.currentTime - lastCrackle > 0.35 + Math.random() * 0.7) {
+      lastCrackle = ac.currentTime;
+      effect("crackle");
+    }
   }
   function effect(kind: string) {
-    if (!enabled || !ac || ac.state !== "running") return;
+    if (!enabled || !ac || !master || ac.state !== "running") return;
     try {
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
       const now = ac.currentTime;
-      const step = kind === "step", light = kind === "light";
-      const dur = step ? 0.055 : light ? 0.22 : 0.095;
-      const freq = step ? 95 : light ? 580 : kind === "build" ? 185 : 145;
-      osc.type = light ? "sine" : "triangle";
-      osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(35, freq * (light ? 0.7 : 0.45)), now + dur);
-      gain.gain.setValueAtTime(step ? 0.025 : light ? 0.055 : 0.07, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      osc.connect(gain);
+      const step = kind === "step", crackle = kind === "crackle";
+      const light = kind === "light", build = kind === "build";
+      const dur = step ? 0.065 : crackle ? 0.026 : light ? 0.19 : 0.105;
+      const gain = ac.createGain();
+      const volume = step ? 0.025 : crackle ? 0.023 : build ? 0.07 : 0.055;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
       gain.connect(master);
-      osc.start(now);
-      osc.stop(now + dur + 0.01);
-    } catch (_e) {}
+      if (!light && noiseBuffer) {
+        // Filtered noise is less electronic than the earlier triangle tones.
+        const source = ac.createBufferSource();
+        source.buffer = noiseBuffer;
+        const filter = ac.createBiquadFilter();
+        filter.type = crackle ? "highpass" : step ? "lowpass" : "bandpass";
+        filter.frequency.value = crackle ? 1900 : step ? 380 : build ? 600 : 830;
+        source.connect(filter);
+        filter.connect(gain);
+        source.start(now, Math.random() * 1.5, dur);
+        source.stop(now + dur + 0.015);
+      } else {
+        const osc = ac.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(580, now);
+        osc.frequency.exponentialRampToValueAtTime(350, now + dur);
+        osc.connect(gain);
+        osc.start(now);
+        osc.stop(now + dur + 0.015);
+      }
+    } catch (_e) { /* Browser audio support is optional. */ }
   }
   return { touch, sync, effect, setEnabled, get enabled() { return enabled; } };
 })();
@@ -612,15 +632,16 @@ function drawDog(ctx: any, g: any) {
   const x = Math.round(d.x), y = Math.round(d.y);
   const dir = d.dir || 1;
   const bob = d.phase !== "idle" ? Math.floor(g.animT * 8) % 2 : 0;
+  const idleBreath = d.phase === "idle" && Math.sin(g.animT * 2.2) > 0.6 ? -1 : 0;
   ctx.fillStyle = "rgba(20,20,40,0.3)";
   ctx.fillRect(x - 4, y - 1, 8, 1);
-  px(ctx, x - 4, y - 4, 8, 3, "#d8dee4");
+  px(ctx, x - 4, y - 4 + idleBreath, 8, 3, "#d8dee4");
   px(ctx, x - 4, y - 1 - bob, 1, 2, "#b8bec6");
   px(ctx, x + 3, y - 2 + bob, 1, 2, "#b8bec6");
   px(ctx, dir > 0 ? x + 3 : x - 6, y - 6, 3, 3, "#d8dee4");
   px(ctx, dir > 0 ? x + 5 : x - 6, y - 7, 1, 2, "#c2c8ce");
   px(ctx, dir > 0 ? x + 6 : x - 6, y - 5, 1, 1, "#2a2a2e");
-  const wag = Math.sin(g.animT * 12) > 0 ? -1 : 0;
+  const wag = Math.sin(g.animT * (d.phase === "idle" ? 5 : 12)) > 0 ? -1 : 0;
   px(ctx, dir > 0 ? x - 5 : x + 4, y - 5 + wag, 1, 2, "#c2c8ce");
 }
 
@@ -920,13 +941,13 @@ function drawCritter(ctx: any, c: any, g: any) {
   const rabbitFur = visualSeason(g) === "winter" ? "#e8eef4" : "#bda184";
   if (c.type === "bird") {
     if (c.state === "fly") {
-      const flap = Math.sin(g.animT * 20 + c.ph) > 0 ? -1 : 1;
+      const flap = Math.sin(g.animT * (17 + (c.ph || 0) % 5) + c.ph) > 0 ? -1 : 1;
       ctx.fillStyle = "#39435a";
       ctx.fillRect(x - 1, y, 3, 1);
       ctx.fillRect(x - 2, y + flap, 2, 1);
       ctx.fillRect(x + 1, y + flap, 2, 1);
     } else {
-      const hop = Math.sin(g.animT * 5 + c.ph) > 0.7 ? -1 : 0;
+      const hop = Math.sin(g.animT * 4 + c.ph) > 0.82 ? -1 : 0;
       ctx.fillStyle = "rgba(20,20,40,0.25)";
       ctx.fillRect(x - 2, y - 1, 4, 1);
       px(ctx, x - 2, y - 3 + hop, 4, 2, "#39435a");
@@ -947,10 +968,11 @@ function drawCritter(ctx: any, c: any, g: any) {
     px(ctx, x + d * 3, y - 4 + hop, 1, 1, "#d87a8a");
   } else if (c.type === "fox") {
     const bob = c.state === "trot" ? Math.floor(g.animT * 10) % 2 : 0;
+    const headTilt = c.state === "watch" && Math.sin(g.animT * 1.8 + c.x) > 0.8 ? -1 : 0;
     ctx.fillStyle = "rgba(20,20,40,0.25)";
     ctx.fillRect(x - 4, y - 1, 8, 1);
     px(ctx, x - 3, y - 3 - bob, 7, 3, "#c9703a");
-    px(ctx, x + d * 3, y - 5 - bob, 3, 3, "#c9703a");
+    px(ctx, x + d * 3, y - 5 - bob + headTilt, 3, 3, "#c9703a");
     px(ctx, x + d * 3, y - 6 - bob, 1, 2, "#8a4a28");
     px(ctx, x + d * 5, y - 4 - bob, 1, 1, "#2a2a2e");
     const wag = Math.sin(g.animT * 4 + c.x * 0.13) > 0.2 ? -1 : 0;
@@ -1092,7 +1114,7 @@ function spawnEvent(g: any) {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = clamp(g.player.x + side * (80 + Math.random() * 40), 20, WORLD_W - 20);
     g.critters.push({ type: "fox", x, y: 150 + Math.random() * 8, state: "watch", t: 12 + Math.random() * 8, dir: -side });
-    if (run) toast(g, "A fox watches from the treeline.");
+    if (run && Math.random() < 0.15) toast(g, "A fox watches from the treeline.");
     return;
   }
   if (day && r < 0.55) {
@@ -1104,7 +1126,7 @@ function spawnEvent(g: any) {
     for (let i = 0; i < n; i++) {
       g.critters.push({ type: "bird", x: bx - i * 7 * (fromLeft ? 1 : -1), y: by + Math.sin(i * 2.1) * 4, state: "fly", vx, t: -1, ph: i * 1.3, dir: vx > 0 ? 1 : -1 });
     }
-    if (run && Math.random() < 0.6) toast(g, "Birds cross the pale sky.");
+    if (run && Math.random() < 0.12) toast(g, "Birds cross the pale sky.");
     return;
   }
   if (r < 0.78) {
@@ -1118,7 +1140,7 @@ function spawnEvent(g: any) {
     return;
   }
   if (run && g.moveT > 0) {
-    const dayP = ["Birdsong in the pines.", "Snow settles softly on the branches.", "The wind carries woodsmoke.", "Somewhere a branch snaps in the cold.", "The snow squeaks under your boots."];
+    const dayP = ["Birdsong in the trees.", "The wind stirs the branches.", "The wind carries woodsmoke.", "Somewhere a branch snaps.", "The forest grows quiet."];
     const nightP = ["An owl calls far away.", "Ice sings across the lake.", "The pines groan in the dark.", "The stars feel close tonight."];
     const pool = day ? dayP : nightP;
     toast(g, pool[Math.floor(Math.random() * pool.length)]);
@@ -1571,7 +1593,7 @@ function updateAmbient(g: any, dt: number) {
           c.state = "fly";
           c.vx = (c.x > pxr ? 1 : -1) * (26 + Math.random() * 14);
           c.dir = c.vx > 0 ? 1 : -1;
-          if (g.ui === "run" && Math.random() < 0.5) toast(g, "A bird flutters away.");
+          if (g.ui === "run" && Math.random() < 0.1) toast(g, "A bird flutters away.");
         } else if (c.t <= 0) { g.critters.splice(i, 1); continue; }
       } else {
         c.x += c.vx * dt;
@@ -1584,7 +1606,7 @@ function updateAmbient(g: any, dt: number) {
           c.state = "hop";
           c.dir = c.x > pxr ? 1 : -1;
           c.t = 2.2;
-          if (g.ui === "run" && Math.random() < 0.7) toast(g, "A rabbit bursts from the snow.");
+          if (g.ui === "run" && Math.random() < 0.12) toast(g, "A rabbit darts away.");
         } else if (c.t <= 0) { g.critters.splice(i, 1); continue; }
       } else {
         c.x += c.dir * 52 * dt;

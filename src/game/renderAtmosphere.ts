@@ -11,7 +11,7 @@ function noise(n: number, salt = 0): number {
 
 export function drawWoodlandSilhouettes(
   ctx: any, camX: number, parallax: number, base: number,
-  color: string, spacing: number, seed: number,
+  color: string, spacing: number, seed: number, season = "autumn",
 ): void {
   const scroll = Math.round(camX * parallax);
   const start = Math.floor((scroll - 40) / spacing);
@@ -45,27 +45,50 @@ export function drawWoodlandSilhouettes(
         px(ctx, x - width, y + 3, 2, 2, shadow);
         px(ctx, x + width - 1, y + 3, 2, 2, shadow);
       }
-      px(ctx, x, top - 2, 1, 4, color);
+      px(ctx, x, top - 2, 1, 4, season === "winter" ? "#abbac6" : color);
+      if (season === "winter") px(ctx, x - 3, top + 6, 6, 1, "#abbac6");
     } else if (kind === 1) {
-      // Broadleaf: rounded overlapping clumps, clearly unlike evergreens.
+      // Broadleaf: bare forked winter branches, summer fullness, compact
+      // spring growth, and broken amber clumps in autumn.
       const crownY = top + 5;
-      px(ctx, x - spread + 2, crownY, spread * 2 - 3, 12, shadow);
-      px(ctx, x - spread, crownY + 3, spread * 2 + 1, 8, color);
-      px(ctx, x - spread + 2, crownY + 11, spread * 2 - 3, 4, shadow);
-      px(ctx, x - spread + 3, crownY - 2, spread - 1, 5, color);
-      px(ctx, x + 1, crownY - 3, spread - 1, 6, color);
-      px(ctx, x - spread + 2, crownY + 4, Math.max(2, spread - 2), 2, highlight);
-      px(ctx, x + 1, crownY + 2, Math.max(2, spread - 3), 2, highlight);
+      if (season === "winter") {
+        for (const side of [-1, 1]) {
+          for (let branch = 0; branch < 4; branch++) {
+            const bx = x + side * (branch + 1);
+            px(ctx, bx, top + 8 + branch * 2, 2, 2, shadow);
+          }
+          px(ctx, x + side * 5, crownY + 2, 1, 4, shadow);
+          px(ctx, x + side * 3, crownY - 1, 1, 3, color);
+        }
+        px(ctx, x - 2, crownY - 3, 4, 2, "#aab7c4");
+      } else {
+        const dense = season === "summer" ? 2 : season === "spring" ? -2 : 0;
+        const width = Math.max(4, spread + dense);
+        const bright = season === "spring" ? lerpHex(color, "#b4c797", 0.40)
+          : season === "autumn" ? lerpHex(color, "#c39155", 0.36) : highlight;
+        px(ctx, x - width + 2, crownY, width * 2 - 3, 12, shadow);
+        px(ctx, x - width, crownY + 3, width * 2 + 1, 8, color);
+        px(ctx, x - width + 2, crownY + 11, width * 2 - 3, 4, shadow);
+        px(ctx, x - width + 3, crownY - 2, Math.max(2, width - 1), 5, color);
+        px(ctx, x + 1, crownY - 3, Math.max(2, width - 1), 6, color);
+        px(ctx, x - width + 2, crownY + 4, Math.max(2, width - 2), 2, bright);
+        px(ctx, x + 1, crownY + 2, Math.max(2, width - 3), 2, bright);
+        if (season === "autumn") {
+          px(ctx, x - width + 1, crownY + 10, 3, 2, shadow);
+          px(ctx, x + width - 4, crownY + 7, 2, 2, "#a17750");
+        }
+      }
     } else {
       // Pine: asymmetric wide steps, separated dark undersides.
-      px(ctx, x, top - 1, 1, 4, color);
+      px(ctx, x, top - 1, 1, 4, season === "winter" ? "#abbac6" : color);
       for (let row = 0; row < 4; row++) {
         const y = top + row * 7;
         const left = Math.max(2, Math.round(spread * (row + 2) / 5));
         const right = Math.max(2, left + (row % 2 === 0 ? 1 : -1));
         px(ctx, x - left, y + 2, left + right + 1, 3, shadow);
         px(ctx, x - left + 1, y + 1, left + right - 1, 2, color);
-        px(ctx, x - Math.max(1, left - 2), y, Math.max(2, left), 1, highlight);
+        px(ctx, x - Math.max(1, left - 2), y, Math.max(2, left), 1,
+          season === "winter" ? "#a5b5c3" : highlight);
         px(ctx, x - left, y + 5, 2, 2, shadow);
         px(ctx, x + right - 1, y + 5, 2, 2, shadow);
       }
@@ -130,7 +153,7 @@ export function drawGroundAccents(ctx: any, camX: number, time: number, colors: 
 /** Warm horizon light at sunrise/sunset with restrained atmospheric separation.
  * The existing darkness overlay remains the authority for night lighting.
  */
-export function drawSkyHaze(ctx: any, dayProgress: number, sky: string): void {
+export function drawSkyHaze(ctx: any, dayProgress: number): void {
   const dawn = clamp(1 - Math.abs(dayProgress - 0.06) / 0.13, 0, 1);
   const dusk = clamp(1 - Math.abs(dayProgress - 0.54) / 0.12, 0, 1);
   const strength = Math.max(dawn, dusk);

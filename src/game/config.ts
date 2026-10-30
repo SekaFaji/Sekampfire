@@ -25,7 +25,7 @@ const STAGES = [
 const CRAFTS = [
   { id: "pack", name: "Timber Pack", cost: 6, desc: "CARRY 8 MORE WOOD" },
   { id: "boots", name: "Warm Boots", cost: 4, desc: "WALK FASTER THROUGH SNOW" },
-  { id: "maul", name: "Wood Axe", cost: 5, desc: "CARVED WOOD AXE - CHOP FASTER" },
+  { id: "maul", name: "Wood Axe", cost: 5, desc: "CHOP FASTER" },
   { id: "refl", name: "Fire Reflector", cost: 8, desc: "THE FIRE BURNS SLOWER" },
 ];
 

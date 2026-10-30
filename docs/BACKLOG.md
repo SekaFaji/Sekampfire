@@ -3,6 +3,13 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 — user-approved unfinished features / fixes
+- [x] Redesign main title: four-season subtitle, tighten dynamic menu, SHOP label, preserve main actions and social links.
+- [x] Functional Shop with existing permanent Ash upgrades and a neutral inactive Coming Soon tab; no premium/payment hint.
+- [x] Replace text-only How to Play with seven illustrated real-sprite steps and touchscreen/keyboard paging (device QA still pending).
+- [ ] Full four-season calendar: **seven completed in-game days per season**, beginning in autumn; all four ecosystems change tree foliage/weather and wildlife.
+- [ ] Seven-day seasonal wildlife spawns with appropriate appearance, differentiated from ambience-only critters.
+- [ ] Movement pressed-edge feedback: gradual spatial fade and short fade-out on release.
+- [ ] Shoreline waves should advance/recede subtly and independently of mirrored player/animals, without harsh seams.
 - [x] **End screen navigation**: win, death and retirement offer Main Menu with no second ash banking, plus keyboard shortcut M. Needs mobile tap verification.
 - [x] **Adaptive fullscreen source implementation**: measured 16:9 canvas, safe-area insets and immersive browser fallback. **Real Android/iOS viewport testing still required** before declaring device-perfect.
 - [x] **Player camera-facing idle in source**: character faces camera when not moving/chopping, with breathing/blinking/scarf animation; still requires phone visual QA.

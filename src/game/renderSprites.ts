@@ -134,6 +134,94 @@ function drawBackpack(ctx: any, x: number, y: number, dir: number,
   px(ctx, bx, by + h - 2, w, 1, trim);
 }
 
+/** Player identity: the resting sprite looks toward the camera, showing
+ * both eyes, clear hair, breathing and a subtle scarf motion. Boots and pack
+ * remain tied to the player's actual crafted items/upgrades.
+ */
+function drawFrontIdle(ctx: any, g: any, x: number, y: number) {
+  const p = g.player;
+  const breath = Math.sin(g.animT * 2) * 0.35;
+  const by = Math.round(y + breath);
+  const blink = Math.sin(g.animT * 1.23) > 0.994;
+  const boots = !!g.crafts?.boots;
+  const shoe = boots ? "#624b35" : "#545056";
+  ctx.fillStyle = "rgba(20,20,40,0.28)";
+  ctx.fillRect(x - 6, y - 1, 12, 2);
+  // Two clearly separated feet rather than a merged block.
+  for (const dx of [-4, 2]) {
+    px(ctx, x + dx, y - 7, 3, 5, "#414350");
+    px(ctx, x + dx - 1, y - (boots ? 5 : 3), 4, boots ? 5 : 3, shoe);
+    if (boots) px(ctx, x + dx - 1, y - 5, 4, 1, "#c39c58");
+    px(ctx, x + dx - 1, y - 1, 4, 1, "#302b2c");
+  }
+  // Gear is behind the body, peeking out at the right shoulder.
+  drawBackpack(ctx, x, by, -1, p.wood, g.packTier);
+  px(ctx, x - 6, by - 16, 12, 10, "#2b2430");
+  px(ctx, x - 5, by - 15, 10, 8, "#885334");
+  px(ctx, x - 4, by - 13, 3, 4, "#b27649");
+  px(ctx, x + 3, by - 13, 2, 5, "#5a3829");
+  px(ctx, x - 3, by - 8, 6, 2, "#5a3829");
+  px(ctx, x - 2, by - 7, 4, 1, "#c29b65");
+  // Loose sleeves, relaxed but visually separate from the torso.
+  px(ctx, x - 7, by - 14, 2, 7, "#5a3829");
+  px(ctx, x - 7, by - 8, 2, 2, "#dfac84");
+  px(ctx, x + 5, by - 14, 2, 7, "#b27649");
+  px(ctx, x + 5, by - 8, 2, 2, "#dfac84");
+  // Bare head (no craftable hat), bilateral eyes and little mouth.
+  px(ctx, x - 5, by - 23, 10, 8, "#2b2430");
+  px(ctx, x - 4, by - 22, 8, 7, "#dfac84");
+  px(ctx, x - 4, by - 24, 8, 4, "#302722");
+  px(ctx, x - 3, by - 25, 6, 2, "#47352a");
+  px(ctx, x - 4, by - 21, 1, 3, "#302722");
+  px(ctx, x + 3, by - 21, 1, 3, "#302722");
+  px(ctx, x - 2, by - 19, 1, 1, blink ? "#ac7d63" : "#241d23");
+  px(ctx, x + 2, by - 19, 1, 1, blink ? "#ac7d63" : "#241d23");
+  px(ctx, x - 1, by - 16, 2, 1, "#ba8063");
+  px(ctx, x - 5, by - 16, 10, 2, "#bc3d30");
+  px(ctx, x - 4, by - 15, 8, 1, "#f1784d");
+  px(ctx, x + 5, by - 15 + Math.round(Math.sin(g.animT * 3)), 4, 2, "#bc3d30");
+  if (p.torchT > 0) {
+    px(ctx, x + 8, by - 21, 2, 10, "#6b4a32");
+    drawFlame(ctx, x + 8, by - 21, g.animT, 0.25);
+  }
+  if (visualSeason(g) === "winter" || g.weather === "coldsnap") {
+    const t = (g.animT * 1.5) % 1;
+    ctx.fillStyle = "rgba(226,239,243," + (0.28 * (1 - t)).toFixed(3) + ")";
+    ctx.fillRect(x + t * 5, by - 19 - t * 5, 2, 1);
+  }
+}
+
+/** One readable overhead swing across both facings. A starter branch has no
+ * metal head; the existing maul craft visually becomes a Wood Axe, while the
+ * permanent Grandpa's Axe shows a darker reinforced blade.
+ */
+function drawSwingTool(ctx: any, x: number, y: number, dir: number, progress: number, tier: number) {
+  const p = clamp(progress, 0, 1);
+  const angle = p < 0.34
+    ? -0.3 - (p / 0.34) * 0.65
+    : p < 0.77
+      ? -0.95 + ((p - 0.34) / 0.43) * 2.35
+      : 1.4 - ((p - 0.77) / 0.23) * 0.45;
+  ctx.save();
+  ctx.translate(x + dir * 6, y - 16);
+  ctx.scale(dir, 1);
+  ctx.rotate(angle);
+  // Grip by the player's raised hand, shaft rises above the head.
+  px(ctx, -1, -13, 2, 16, tier ? "#6e4328" : "#735034");
+  px(ctx, 0, -12, 1, 10, "#b38a55");
+  if (!tier) {
+    px(ctx, 1, -11, 2, 2, "#937348");  // visible twig branch
+    px(ctx, -2, -6, 2, 2, "#8c6540");
+  } else {
+    px(ctx, -2, -14, 6, 3, tier === 2 ? "#788b9b" : "#91aab4");
+    px(ctx, 2, -16, 4, 5, tier === 2 ? "#c1d5e2" : "#d2e0e5");
+    px(ctx, 5, -15, 2, 3, "#f2f6f4"); // tapered cutting edge, not hammer head
+    px(ctx, -2, -14, 1, 2, "#4b555b");
+    if (tier === 2) px(ctx, 0, -12, 2, 1, "#ddb76b");
+  }
+  ctx.restore();
+}
+
 function drawPlayer(ctx: any, g: any) {
   // Compact but recognisable silhouette: hooded coat, face, scarf, pack,
   // individually animated legs and arms, deliberate axe arc and idle blink.
@@ -148,6 +236,7 @@ function drawPlayer(ctx: any, g: any) {
   const bob = walking ? -Math.max(0, Math.sin(phase * 2)) * 1.1 :
     Math.sin(g.animT * 1.7) * 0.35;
   const chopping = p.chopT > 0 && !!p.chopTree;
+  if (!walking && !chopping) { drawFrontIdle(ctx, g, x, y); return; }
   const chopProgress = chopping ? clamp(1 - p.chopT / Math.max(p.chopTime, 0.001), 0, 1) : 0;
   const lean = chopping ? (chopProgress > 0.58 && chopProgress < 0.83 ? dir : -dir * 0.4) : 0;
   const bx = Math.round(x + lean), by = Math.round(y + bob);
@@ -191,29 +280,20 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx - 3, by - 22, 2, 5, "#bb7b60");
   px(ctx, bx - 4, by - 24, 8, 4, "#302722");
   px(ctx, bx - 3, by - 25, 5, 2, "#47352a");
-  px(ctx, bx - 4, by - 21, 2, 3, "#302722");
-  px(ctx, bx + 1, by - 22, 2, 1, "#514037");
+  px(ctx, bx + (dir > 0 ? -4 : 2), by - 21, 2, 3, "#302722");
+  px(ctx, bx + (dir > 0 ? 1 : -3), by - 22, 2, 1, "#514037");
   const blink = Math.sin(g.animT * 1.23) > 0.994;
-  px(ctx, bx + dir * 2 - 1, by - 19, 1, 1, blink ? "#aa7c64" : dark);
-  px(ctx, bx + dir * 3 - 1, by - 17, 2, 1, "#ba8063");
+  px(ctx, bx + (dir > 0 ? 2 : -2), by - 19, 1, 1, blink ? "#aa7c64" : dark);
+  px(ctx, bx + (dir > 0 ? 3 : -4), by - 17, 2, 1, "#ba8063");
   px(ctx, bx - 4, by - 16, 8, 2, "#bc3d30");
   px(ctx, bx - 3, by - 15, 6, 1, "#f1784d");
   const scarfFlutter = Math.sin(g.animT * (walking ? 9 : 3)) * (walking ? 2 : 1);
   px(ctx, bx - dir * (6 + Math.round(scarfFlutter)), by - 15, 4, 2, "#bc3d30");
   if (chopping) {
-    const arc = chopProgress < 0.45
-      ? -0.2 - (chopProgress / 0.45) * 1.25
-      : chopProgress < 0.74
-        ? -1.45 + ((chopProgress - 0.45) / 0.29) * 2.55
-        : 1.1 - ((chopProgress - 0.74) / 0.26) * 1.2;
-    ctx.save();
-    ctx.translate(bx + dir * 6, by - 12);
-    ctx.rotate(-dir * arc);
-    px(ctx, -1, -2, 2, 10, "#745338");
-    px(ctx, -3, -5, 6, 3, "#abbac4");
-    px(ctx, -2, -5, 3, 1, "#e1eaf0");
-    px(ctx, dir > 0 ? -3 : 1, -3, 2, 2, "#65747d");
-    ctx.restore();
+    // Raised hand follows the tool pivot and the upper body leans into hit.
+    px(ctx, bx + dir * 4 - 1, by - 16, 3, 5, "#b27649");
+    px(ctx, bx + dir * 6 - 1, by - 17, 2, 2, skin);
+    drawSwingTool(ctx, bx, by, dir, chopProgress, g.toolTier || 0);
   }
   if (p.torchT > 0) {
     px(ctx, bx + dir * 7, by - 21, 2, 9, "#6b4a32");

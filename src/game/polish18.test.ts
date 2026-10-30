@@ -100,7 +100,7 @@ describe("daylight and night movement arrows", () => {
     expect(cores.filter(m=>m.x>280).every(m=>m.color==="rgba(29,43,49,0.98)")).toBe(true);
     expect(outlines.filter(m=>m.x>280).every(m=>m.color==="rgba(250,240,218,0.90)")).toBe(true);
     expect(cores.filter(m=>m.x<40).every(m=>m.color.startsWith("rgba(255,246,218,"))).toBe(true);
-    expect(cores.map(m=>m.x)).toEqual([23,20,17,14,17,20,23,281,284,287,290,287,284,281]);
+    expect(cores.map(m=>m.x)).toEqual([23,20,17,14,17,20,23,295,298,301,304,301,298,295]);
   });
   it("brightens the pressed-side gradient in daytime without moving its boundary", () => {
     const g=createEngine(); g.isNight=false;g.moveFeedbackLeft=1;

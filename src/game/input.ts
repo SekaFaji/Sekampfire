@@ -50,6 +50,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     returnToMainMenu(g);
     return;
   }
+  if (k === "h" && g.ui === "title" && !g.menu) g.menu = "help";
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
   if (k === "b") {
     if (g.ui === "run") {

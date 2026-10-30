@@ -26,9 +26,9 @@ npm run preview    # verify production output
 - Base capacity is 5 logs; a permanent and a crafted backpack each add 8 capacity, up to 21. The bag has three visual sizes with one small sprite per carried log.
 - Gather 15 logs for each initial workbench/pile site, then craft boots, pack and other gear at the bench. Build a camp, survive seasonal days and the Long Night, and earn ash for permanent upgrades.
 - Menus include settings, credits, a privacy policy, audio mixer, High/Low visual effects, and a two-step save reset.
-- An unfinished run can be continued from the title menu after reopening the browser. Completed runs bank earned ash and clear the checkpoint.
+- An unfinished run can be continued from the title menu after reopening the browser. Completed runs bank earned ash and clear the checkpoint. Win/death/retirement results now offer **Main Menu** without banking rewards again.
 
-## Professional foundation — first migration phase
+## Professional foundation — modularization phase 2
 
 - `src/App.tsx`: browser/React lifecycle, input and drawing loop
 - `src/game/config.ts`: immutable world and crafting configuration
@@ -37,12 +37,17 @@ npm run preview    # verify production output
 - `src/game/audio.ts`: procedural action sound, wind ambience and saved mixer preferences
 - `src/game/graphics.ts`: standalone visual-effects preference
 - `src/game/weather.ts`: pure weather blending function and unit tests
-- `src/game/game.ts`: **preserved game simulation, rendering, UI and saving** — still large and scheduled for incremental extraction
+- `src/game/save.ts`: permanent-progress and active-run persistence, validated separately
+- `src/game/palette.ts`: season selection and blended palettes
+- `src/game/font.ts`: standalone pixel-font drawing and text measurement
+- `src/game/renderUtils.ts`: shared color, pixel and random helpers
+- `src/game/renderSprites.ts`: all 18 standalone player/tree/camp/world sprite renderers
+- `src/game/game.ts`: **preserved world simulation, remaining scene rendering, and in-canvas UI** — still being separated in small, tested patches
 - `src/main.tsx` and `src/styles.css`: application bootstrap and built styles
 - `public/privacy.html`: published data-handling policy
 - `docs/ARCHITECTURE.md`: engineering rules and staged extraction plan
 - `docs/MOBILE.md`: Android-first / iOS-later packaging readiness
-- `docs/BACKLOG.md`: all approved but unfinished user requests (including player idle, wooden axe, wooden ring, better trees, mobile fullscreen and Main Menu end navigation)
+- `docs/BACKLOG.md`: all approved but unfinished user requests (including player idle, wooden axe, wooden ring, better trees and mobile fullscreen)
 
 ### Important limits
 This is the **foundation restructuring milestone**, not a completed production game or mobile app. Rendering, player art and mobile viewport still need further work. Source restructuring is deliberately behaviour-preserving; the outstanding improvements are tracked in [the backlog](docs/BACKLOG.md), not incorrectly marked done.

@@ -435,6 +435,10 @@ function drawFire(ctx: any, g: any) {
   px(ctx, CX - 1, 148, 7, 2, "#4a2f1a");
   if (g.fireLit) {
     drawFlame(ctx, CX, 148, g.animT, g.fuel / 100);
+    // Tiny ambient embers without artificial spotlights.
+    const flicker = Math.sin(g.animT * 7.1) * 1.5;
+    px(ctx, CX - 4, 140 + flicker, 1, 1, "#ffb452");
+    px(ctx, CX + 3, 137 - flicker, 1, 1, "#e9983b");
   } else if (g.everLit) {
     px(ctx, CX - 3, 148, 5, 1, "#8a2a1a");
     px(ctx, CX - 2, 147, 2, 1, "#c24a1e");
@@ -729,13 +733,14 @@ function drawCritter(ctx: any, c: any, g: any) {
       px(ctx, x + 1, y - 1 + hop, 1, 1, "#8a94ac");
     }
   } else if (c.type === "bunny") {
-    const hop = c.state === "hop" ? -Math.abs(Math.sin(g.animT * 10)) * 2 : (Math.sin(g.animT * 3 + c.ph) > 0.85 ? -1 : 0);
+    const hop = c.state === "hop" ? -Math.abs(Math.sin(g.animT * 10 + c.ph)) * 3 : (Math.sin(g.animT * 3 + c.ph) > 0.85 ? -1 : 0);
+    const ears = Math.sin(g.animT * 4 + c.ph) > 0.4 ? -1 : 0;
     ctx.fillStyle = "rgba(20,20,40,0.25)";
     ctx.fillRect(x - 2, y - 1, 5, 1);
     px(ctx, x - 2, y - 3 + hop, 5, 3, rabbitFur);
     px(ctx, x + d * 2, y - 5 + hop, 2, 2, rabbitFur);
-    px(ctx, x + d * 2, y - 7 + hop, 1, 2, rabbitFur);
-    px(ctx, x + d * 3, y - 7 + hop, 1, 2, "#d8dfe8");
+    px(ctx, x + d * 2, y - 7 + hop + ears, 1, 2, rabbitFur);
+    px(ctx, x + d * 3, y - 7 + hop - ears, 1, 2, "#d8dfe8");
     px(ctx, x + d * 3, y - 4 + hop, 1, 1, "#d87a8a");
   } else if (c.type === "fox") {
     const bob = c.state === "trot" ? Math.floor(g.animT * 10) % 2 : 0;
@@ -745,7 +750,8 @@ function drawCritter(ctx: any, c: any, g: any) {
     px(ctx, x + d * 3, y - 5 - bob, 3, 3, "#c9703a");
     px(ctx, x + d * 3, y - 6 - bob, 1, 2, "#8a4a28");
     px(ctx, x + d * 5, y - 4 - bob, 1, 1, "#2a2a2e");
-    px(ctx, x - d * 4, y - 4 - (c.state === "trot" ? bob : 0), 3, 2, "#c9703a");
+    const wag = Math.sin(g.animT * 4 + c.x * 0.13) > 0.2 ? -1 : 0;
+    px(ctx, x - d * 4, y - 4 - (c.state === "trot" ? bob : wag), 3, 2, "#c9703a");
     px(ctx, x - d * 6, y - 3, 2, 1, "#e8eef4");
   }
 }
@@ -763,7 +769,7 @@ function createEngine(): any {
     won: false, endlessMode: false, endlessN: 0, over: false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
-    benchBuildT: -1, pileBuildT: -1, dust: [] as any[],
+    benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0,
     keys: {}, pressE: false, pressT: false,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
@@ -1154,6 +1160,14 @@ function update(g: any, meta: any, dt: number, cb: any) {
   }
   if (p.moving) g.moveT = 2;
   else g.moveT = Math.max(0, g.moveT - dt);
+  if (p.moving && visualSeason(g) === "winter") {
+    g.footstepT = (g.footstepT || 0) - dt;
+    if (g.footstepT <= 0) {
+      g.footstepT = 0.22;
+      g.footprints.push({ x: p.x - (p.dir || 1) * 3, y: p.y - 1, life: 9 });
+      if (g.footprints.length > 70) g.footprints.shift();
+    }
+  } else g.footstepT = 0.04;
 
   if (p.torchT > 0) p.torchT -= dt;
 
@@ -1296,6 +1310,11 @@ function updateAmbient(g: any, dt: number) {
     if (c.life <= 0) g.chips.splice(i, 1);
   }
   if (g.shake > 0) g.shake = Math.max(0, g.shake - dt);
+  // Melt temporary footprints naturally and clear them outside winter.
+  for (let i = g.footprints.length - 1; i >= 0; i--) {
+    g.footprints[i].life -= dt;
+    if (g.footprints[i].life <= 0 || visualSeason(g) !== "winter") g.footprints.splice(i, 1);
+  }
   // snow
   const winter = visualSeason(g) === "winter";
   const target = !winter ? 0 : g.weather === "blizzard" ? 110 : g.weather === "wind" ? 70 : 45;
@@ -1945,51 +1964,71 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
   }
 }
 
-// ============ reflecting foreground river ============
-// A soft, uneven, seasonal shoreline, without a hard white border.
-// Reflections sample trees and buildings above the shore, not the bright ground strip.
+// ============ world-object reflection ============
+// Render only visible objects into a transparent buffer: mirroring the completed
+// screen previously reflected the bright ground strip instead of the player.
+// The downward offset aligns world feet with the water surface.
+function renderReflectionSubjects(rctx: any, g: any, colors: any, camX: number) {
+  rctx.clearRect(0, 0, W, H);
+  rctx.save();
+  rctx.translate(-Math.round(camX), WATER_Y - PLAYER_Y + 1);
+  if (g.stage > 0 || g.builtBench || g.builtPile || g.benchLogs || g.pileLogs) drawStructures(rctx, g);
+  for (const tree of g.trees) {
+    if (tree.x < camX - 40 || tree.x > camX + W + 40) continue;
+    drawTree(rctx, tree, g.animT, g.windAmt || 0, colors);
+  }
+  for (const tree of g.falling) {
+    if (tree.x >= camX - 40 && tree.x <= camX + W + 40) {
+      drawFallingTree(rctx, tree, g.animT, colors);
+    }
+  }
+  drawFire(rctx, g);
+  if (g.dog && g.dog.x >= camX - 20 && g.dog.x <= camX + W + 20) drawDog(rctx, g);
+  if (g.player.x >= camX - 20 && g.player.x <= camX + W + 20) drawPlayer(rctx, g);
+  rctx.restore();
+}
+
+// Paint the lake to the full canvas bottom, without a separate footer bar.
+// Reflections are object silhouettes and moving firelight, not the solid ground.
 function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
                             darkness: number, camX: number) {
-  rctx.clearRect(0, 0, W, H);
-  rctx.drawImage(ctx.canvas, 0, 0);
   const palette = visualPalette(g);
+  renderReflectionSubjects(rctx, g, palette, camX);
   const height = H - WATER_Y;
   const night = clamp(darkness, 0, 1);
-  ctx.fillStyle = lerpHex(palette.water, "#102335", night * 0.88);
-  ctx.fillRect(0, WATER_Y - 2, W, height + 2);
+  const waterBase = lerpHex(palette.water, "#102335", night * 0.88);
+  ctx.fillStyle = waterBase;
+  ctx.fillRect(0, WATER_Y - 2, W, H - WATER_Y + 2);
   ctx.save();
   for (let i = 0; i < height; i++) {
-    const srcY = WATER_Y - 18 - i;
+    // Exact vertical mirror of the aligned sprites: no 18px source offset.
+    const srcY = WATER_Y - 1 - i;
     if (srcY < 0) break;
-    const ripple = Math.sin(i * 0.59 + g.animT * 1.65) * 1.3 +
-      Math.sin(i * 0.23 - g.animT * 0.75) * 1.6;
-    const shift = Math.round(ripple * (g.weather === "wind" || g.weather === "blizzard" ? 1.6 : 1));
+    const wave = Math.sin(i * 0.49 + g.animT * 1.5) * 1.25 +
+      Math.sin(i * 0.18 - g.animT * 0.76) * 1.4;
+    const wind = g.weather === "wind" || g.weather === "blizzard" ? 1.6 : 1;
+    const shift = Math.round(wave * wind);
     const sx = Math.max(0, -shift);
     const dx = Math.max(0, shift);
-    const width = W - Math.abs(shift);
-    ctx.globalAlpha = (0.31 - 0.16 * i / height) * (g.weather === "blizzard" ? 0.75 : 1);
-    ctx.drawImage(reflection, sx, srcY, width, 1, dx, WATER_Y + i, width, 1);
+    ctx.globalAlpha = (0.53 - 0.28 * i / height) * (g.weather === "blizzard" ? 0.75 : 1);
+    ctx.drawImage(reflection, sx, srcY, W - Math.abs(shift), 1,
+      dx, WATER_Y + i, W - Math.abs(shift), 1);
   }
   ctx.restore();
-  for (let j = 0; j < 18; j++) {
-    const y = WATER_Y + 3 + (j * 13 + 5) % (height - 4);
-    const x = (j * 73 + Math.round(Math.sin(g.animT * 0.75 + j * 2.4) * 18)
-      - Math.round(camX * 0.18) % W + W * 3) % W;
-    ctx.fillStyle = j % 3 === 0 ? "rgba(195,225,232,0.16)" : "rgba(165,209,221,0.09)";
-    ctx.fillRect(x, y, 7 + (j % 4) * 3, 1);
+  for (let i = 0; i < 14; i++) {
+    const y = WATER_Y + 3 + (i * 11) % (height - 3);
+    const x = (i * 71 + Math.floor(Math.sin(g.animT * 0.62 + i) * 14)
+      - Math.floor(camX * 0.16) + 4 * W) % W;
+    ctx.fillStyle = "rgba(178,215,227," + (0.07 + (1 - night) * 0.045) + ")";
+    ctx.fillRect(x, y, 7 + (i % 4) * 4, 1);
   }
-  // Shore darkens with the night: no white stripe across a dark scene.
-  const shoreShade = lerpHex(palette.shore, "#243746", night * 0.85);
-  // Shore details follow the world, not the screen: no continuous bright seam.
+  const bank = lerpHex(palette.shore, "#243746", night * 0.92);
   for (let x = 0; x < W; x += 2) {
     const wx = x + camX;
-    const curve = Math.round(Math.sin(wx * 0.055) * 1.3 + Math.sin(wx * 0.17) * 0.65);
-    const y = WATER_Y - 2 + curve;
-    px(ctx, x, y, 2, 2, shoreShade);
-    if (Math.sin(wx * 0.43) > 0.88) {
-      ctx.fillStyle = "rgba(232,235,221," + (0.15 * (1 - night * 0.75)) + ")";
-      ctx.fillRect(x, y - 1, 2, 1);
-    }
+    const delta = Math.round(Math.sin(wx * 0.05) + Math.sin(wx * 0.13) * 0.7);
+    const y = WATER_Y - 2 + delta;
+    ctx.fillStyle = bank;
+    ctx.fillRect(x, y, 2, 1);
   }
 }
 
@@ -2112,6 +2151,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     if (s.x < camX - 4 || s.x > camX + W + 4) continue;
     px(ctx, s.x, s.y, 1, 1, colors.name === "winter" ? s.c : colors.speckle);
   }
+  for (const f of g.footprints) {
+    ctx.fillStyle = "rgba(67,91,109," + (0.18 * clamp(f.life / 9, 0, 1)) + ")";
+    ctx.fillRect(Math.round(f.x), Math.round(f.y), 3, 1);
+  }
 
   const ents: { y: number; f: () => void }[] = [];
   ents.push({ y: 150, f: () => drawStructures(ctx, g) });
@@ -2221,7 +2264,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
   ctx.restore();
 
-  // Reflect the world before adding HUD, minimap, arrows or buttons.
+  // Reflect animated world objects (not the solid ground or HUD).
   drawReflectiveRiver(ctx, g, reflection, rctx, darkA, camX);
 
   // minimap - a wide strip reaching from beside the warmth bar to the right edge

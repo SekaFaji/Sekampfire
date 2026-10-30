@@ -12,10 +12,13 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] **Detailed procedural trees in source**: separate anchored renderer with three evergreen silhouettes, bark, branches, shading and winter-only snow; tests for geometry/season. **Final premium art quality still requires visual approval on real devices**.
 
 ## Priority 1 — visual/audio polish requests
+
+- [x] Include visible near-shore wildlife in the water reflection and add faint near-treeline reflection without strongly mirroring mountains or sky. Verify on phone.
+- [x] Compact main menu; move How to Play to its right-side plaque and add separate bottom-left Discord/YouTube buttons with exact project links. Verify touch layout on phone.
 - [ ] Validate on real devices: revised tree pixel art, Wood Ring, backpack logs at 5/13/21 and player sprite alignment. Iterate toward premium art quality after screenshot review.
 - [ ] Fix/polish mobile fullscreen HUD layout, menu placement, font hierarchy, user touch hitboxes and water buttons.
 - [ ] Inspect reflection player alignment, water bottom seam and shoreline in day and night on actual mobile displays.
-- [x] Replace hammer-like tool with raised overhand branch/axe swing in both facings; continue visual polish after on-device inspection.
+- [x] Arm and wrist now follow the branch/axe swing in both facings; animation timing has regression coverage. Continue visual polish after on-device inspection.
 - [ ] Refine action sound quality/volumes. Keep harsh static-like fire loops disabled unless a properly produced fire recording has been evaluated.
 - [ ] Refine animal/world ambiance and tree movement only after art/source inspection; avoid feature creep.
 

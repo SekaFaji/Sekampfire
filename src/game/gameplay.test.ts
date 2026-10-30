@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEngine, update } from "./game";
+import { createEngine, update, handleKey } from "./game";
 
 const meta = { up: {} };
 const callbacks = { toast: (_message: string) => {}, end: () => {} };
@@ -53,4 +53,21 @@ describe("chopping and movement", () => {
     expect(g.player.chopT).toBe(0);
     expect(tr.hp).toBe(2);
   });
+});
+
+describe("completed runs: main menu navigation", () => {
+  for (const outcome of ["dead", "win"] as const) {
+    it(`returns from ${outcome} to the main title without banking ash again`, () => {
+      const g = createEngine();
+      g.ui = outcome;
+      g.lastResult = { kind: outcome, ash: 12, nights: 3 };
+      const bank = { ash: 42, up: {} };
+      handleKey(g, bank, "m", true);
+      expect(g.ui).toBe("title");
+      expect(g.menu).toBeNull();
+      expect(g.titleSel).toBe(0);
+      expect(bank.ash).toBe(42);
+      expect(g.resumeData).toBeNull();
+    });
+  }
 });

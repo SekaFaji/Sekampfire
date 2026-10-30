@@ -15,7 +15,11 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/input.ts` — UI-callback-injected pointer, multi-touch and keyboard adapter
 - `src/ui/viewport.ts` — pure aspect-preserving safe-area fit calculation
 - `src/game/save.ts` — versioned run snapshots, permanent progress, legacy fallback
-- `src/game/palette.ts` — seasons and blended colors
+- `src/game/palette.ts` — tested 7-day four-season calendar and blended palette transitions
+- `src/game/wildlife.ts` — season-to-species mappings with compatible ambient motion types
+- `src/game/renderWildlife.ts` — species-specific cosmetic sprites
+- `src/game/water.ts` — bounded tidal wash and sparse foam calculations
+- `docs/SEASONS.md` — seasonal ecology and visual-only balance policy
 - `src/game/font.ts` — independent pixel text system
 - `src/game/renderUtils.ts` — shared primitive/color helpers
 - `src/game/renderSprites.ts` — 18 independent sprite rendering functions

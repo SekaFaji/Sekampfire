@@ -393,7 +393,7 @@ function resumeRun(g: any, data: any) {
   toast(g, "Run restored. The fire is waiting.");
 }
 
-const carryCap = (g: any, meta: any) => 10 + (meta.up.pack ? 8 : 0) + (g.crafts.pack ? 8 : 0);
+const carryCap = (g: any, meta: any) => 5 + (meta.up.pack ? 8 : 0) + (g.crafts.pack ? 8 : 0);
 const pileCap = (g: any) => (g.builtPile ? (g.stage >= 4 ? 40 : 12) : 0);
 
 function toast(g: any, text: string) {
@@ -571,6 +571,14 @@ function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) 
 // cozy pines in three variants: layered pine, tall spire fir, bushy spruce
 function drawTree(ctx: any, tr: any, t: number, windAmt: number, colors: any) {
   const x = Math.round(tr.x), y = Math.round(tr.y);
+  // Art only: anchor taller/larger trees at their original stump position.
+  // Tier 0 is now a proper young tree instead of a bush beside the player.
+  const heightScale = tr.tier === 0 ? 1.9 : tr.tier === 1 ? 1.72 : 1.58;
+  const widthScale = tr.tier === 0 ? 1.48 : tr.tier === 1 ? 1.42 : 1.34;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(widthScale, heightScale);
+  ctx.translate(-x, -y);
   const hit = tr.hitT > 0 ? Math.sin(t * 45) * 2 * tr.hitT : 0;
   const sway = Math.sin(t * (1.35 + (tr.id % 6) * 0.12) + tr.id) * (1 + windAmt * 3) + hit;
   const s = tr.tier, v = ((tr.variant || 0) % 3);
@@ -615,6 +623,7 @@ function drawTree(ctx: any, tr: any, t: number, windAmt: number, colors: any) {
     }
     px(ctx, x - 1, y - th - chh, 3, 1, snowC);
   }
+  ctx.restore();
 }
 
 function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
@@ -626,6 +635,28 @@ function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
   ctx.translate(-Math.round(ft.x), -Math.round(ft.y));
   drawTree(ctx, ft, t, 0, colors);
   ctx.restore();
+}
+
+function drawCarriedLogs(ctx: any, x: number, y: number, dir: number, amount: number) {
+  const count = clamp(Math.floor(Number.isFinite(amount) ? amount : 0), 0, 30);
+  if (!count) return;
+  const columns = count <= 5 ? 2 : 3;
+  const rows = Math.ceil(count / columns);
+  const startX = Math.round(x - dir * 9 - (columns * 4) / 2);
+  const startY = Math.round(y - 10 - rows * 2);
+  // The back straps and log ends visually frame each little wood segment.
+  for (let i = 0; i < count; i++) {
+    const col = i % columns;
+    const row = Math.floor(i / columns);
+    const pxX = startX + col * 4;
+    const pxY = startY + row * 2;
+    px(ctx, pxX, pxY, 4, 2, "#653c21");
+    px(ctx, pxX, pxY, 3, 1, "#b27a43");
+    px(ctx, pxX, pxY + 1, 1, 1, "#e0ae70");
+    px(ctx, pxX + 3, pxY + 1, 1, 1, "#c99152");
+  }
+  const bottom = startY + rows * 2;
+  px(ctx, startX - 1, bottom, columns * 4 + 2, 1, "#a78c60");
 }
 
 function drawPlayer(ctx: any, g: any) {
@@ -647,7 +678,11 @@ function drawPlayer(ctx: any, g: any) {
   const bx = Math.round(x + lean), by = Math.round(y + bob);
   const dark = "#241d23", outline = "#2b2430";
   const coat = "#885334", coatShade = "#5a3829", coatLight = "#b27649";
-  const trouser = "#414350", boot = "#322a27", skin = "#dfac84";
+  const hasCraftedBoots = !!(g.crafts && g.crafts.boots);
+  const trouser = "#414350";
+  const footwear = hasCraftedBoots ? "#624b35" : "#545056";
+  const footwearSole = hasCraftedBoots ? "#251f1d" : "#403c40";
+  const skin = "#dfac84";
   // feet and grounded shadow (same foot position as the original character)
   ctx.fillStyle = "rgba(20,20,40,0.28)";
   ctx.fillRect(x - 6, y - 1, 12, 2);
@@ -655,8 +690,10 @@ function drawPlayer(ctx: any, g: any) {
     const legLift = walking ? Math.max(0, movement) * 1.6 : 0;
     const legShift = walking ? Math.round(movement * 2.2) : 0;
     px(ctx, x + dx + legShift, y - 7 - legLift, 3, 5, trouser);
-    px(ctx, x + dx + legShift - 1, y - 3 - legLift, 4, 3, boot);
-    px(ctx, x + dx + legShift - 1, y - 1 - legLift, 4, 1, dark);
+    px(ctx, x + dx + legShift - 1, y - (hasCraftedBoots ? 5 : 3) - legLift,
+      4, hasCraftedBoots ? 5 : 3, footwear);
+    if (hasCraftedBoots) px(ctx, x + dx + legShift - 1, y - 5 - legLift, 4, 1, "#c39c58");
+    px(ctx, x + dx + legShift - 1, y - 1 - legLift, 4, 1, footwearSole);
   }
   // backpack and log load read clearly at 320x180
   px(ctx, bx - dir * 6 - 2, by - 16, 5, 9, outline);
@@ -674,14 +711,15 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx + 4, by - 14 - armSwing, 2, 7, outline);
   px(ctx, bx + 4, by - 13 - armSwing, 1, 5, coatShade);
   px(ctx, bx + dir * 5 - 1, by - 8 - armSwing, 2, 2, skin);
-  // head: dark hair, a visible nose/eye, winter beanie and animated scarf
+  // No hat equipment currently exists; leave the starting head uncovered.
+  // A short, shaded hairstyle keeps the face readable in 320x180 pixel art.
   px(ctx, bx - 4, by - 23, 8, 8, outline);
   px(ctx, bx - 3, by - 22, 6, 7, skin);
   px(ctx, bx - 3, by - 22, 2, 5, "#bb7b60");
-  px(ctx, bx - 4, by - 24, 8, 4, "#385d87");
-  px(ctx, bx - 5, by - 21, 10, 2, "#567eab");
-  px(ctx, bx - 2, by - 25, 5, 1, "#668db6");
-  px(ctx, bx - 1, by - 26, 3, 1, "#456a95");
+  px(ctx, bx - 4, by - 24, 8, 4, "#302722");
+  px(ctx, bx - 3, by - 25, 5, 2, "#47352a");
+  px(ctx, bx - 4, by - 21, 2, 3, "#302722");
+  px(ctx, bx + 1, by - 22, 2, 1, "#514037");
   const blink = Math.sin(g.animT * 1.23) > 0.994;
   px(ctx, bx + dir * 2 - 1, by - 19, 1, 1, blink ? "#aa7c64" : dark);
   px(ctx, bx + dir * 3 - 1, by - 17, 2, 1, "#ba8063");
@@ -689,9 +727,10 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx - 3, by - 15, 6, 1, "#f1784d");
   const scarfFlutter = Math.sin(g.animT * (walking ? 9 : 3)) * (walking ? 2 : 1);
   px(ctx, bx - dir * (6 + Math.round(scarfFlutter)), by - 15, 4, 2, "#bc3d30");
-  // drawn above the shoulders, the load changes its apparent silhouette
-  const n = Math.min(3, Math.ceil(p.wood / 3));
-  for (let i = 0; i < n; i++) drawLog(ctx, bx - dir * 6 - 4, by - 17 - i * 3, 8);
+  // Exactly one small log mark per carried log: up to 21 at max upgrades.
+  // A 3-column, 7-row bundle sits on the back, growing naturally from 1 to 21.
+  // Old saved runs with more wood still render their full load (capped for safety).
+  drawCarriedLogs(ctx, bx, by, dir, p.wood);
   if (chopping) {
     const arc = chopProgress < 0.45
       ? -0.2 - (chopProgress / 0.45) * 1.25

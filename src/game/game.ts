@@ -1384,7 +1384,6 @@ function titleActions(g: any, meta: any): any[] {
   return run.concat([
     { label: "UPGRADES", act: () => { g.menu = "shop"; g.menuSel = 0; } },
     { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
-    { label: "HOW TO PLAY", act: () => { g.menu = "help"; } },
   ]);
 }
 function returnToMainMenu(g: any) {
@@ -1426,22 +1425,49 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawBig(ctx, "SEKAMPFIRE", W / 2, 18, 5, "#ffd98a");
     drawTextC(ctx, "A COZY WINTER SURVIVAL", W / 2, 50, "#c8d2e8");
     drawTextC(ctx, "ASH " + meta.ash + " - BEST " + (meta.best || 0) + " NIGHTS", W / 2, 60, "#8a94ac");
-    // themed menu panel
-    panel(ctx, 98, 69, 124, 91);
+    // Main decisions stay compact and centred; optional help and socials
+    // occupy separate side areas without cluttering keyboard navigation.
     const items = titleActions(g, meta);
+    const menuTop = 72, rowStep = 17;
+    const menuHeight = items.length * rowStep + 10;
+    panel(ctx, 98, menuTop, 124, menuHeight);
     g.titleSel = clamp(g.titleSel || 0, 0, items.length - 1);
     for (let i = 0; i < items.length; i++) {
-      const y = 76 + i * 16;
+      const y = menuTop + 8 + i * rowStep;
       const sel = i === g.titleSel;
-      if (sel) px(ctx, 102, y - 2, 116, 11, "rgba(255,217,138,0.12)");
-      drawTextC(ctx, items[i].label, W / 2 + (sel ? 4 : 0), y, sel ? "#ffd98a" : "#98a4bc");
+      if (sel) px(ctx, 102, y - 2, 116, 12, "rgba(255,217,138,0.13)");
+      drawTextC(ctx, items[i].label, W / 2 + (sel ? 4 : 0), y, sel ? "#ffd98a" : "#a5b0c5");
       if (sel) drawFlame(ctx, 112, y + 4, g.animT, 0.12);
-      const it = items[i];
-      const idx = i;
-      g.zones.push({ x: 102, y: y - 3, w: 116, h: 12, onDown: () => { g.titleSel = idx; it.act(); } });
+      const idx = i, it = items[i];
+      g.zones.push({ x: 102, y: y - 3, w: 116, h: 14, onDown: () => { g.titleSel = idx; it.act(); } });
     }
-    if (Math.sin(g.animT * 3) > -0.2) drawTextC(ctx, "W/S PICK - E SELECT", W / 2, 163, "#5a6480");
-    drawTextC(ctx, "HOLD A SCREEN SIDE TO WALK", W / 2, 170, "#4a5470");
+    // Standalone tutorial plaque to the right, available regardless of
+    // whether the player has a resumable run.
+    uiButton(ctx, g, 236, 107, 74, 18, "HOW TO PLAY", {
+      onDown: () => { g.menu = "help"; }
+    });
+
+    // A small vertical stack of pixel-framed socials. No new audio, popup
+    // or accounts: these are explicit user-initiated external links only.
+    const socials = [
+      { y: 127, glyph: "D", title: "DISCORD", url: "https://discord.gg/794QQWJEeP", fill: "#5865a5" },
+      { y: 147, glyph: "YT", title: "YOUTUBE", url: "https://youtube.com/@sekafajigames", fill: "#ae3940" },
+    ];
+    for (const social of socials) {
+      px(ctx, 9, social.y, 78, 17, "rgba(10,15,29,0.78)");
+      px(ctx, 9, social.y, 78, 1, "#a48457");
+      px(ctx, 9, social.y + 16, 78, 1, "#625039");
+      px(ctx, 10, social.y + 1, 16, 15, "#222d3e");
+      px(ctx, 12, social.y + 3, 12, 11, social.fill);
+      drawTextC(ctx, social.glyph, 18, social.y + 6, "#fff1d5");
+      drawText(ctx, social.title, 31, social.y + 6, "#cfdaea");
+      g.zones.push({
+        x: 9, y: social.y, w: 78, h: 17,
+        onDown: () => window.open(social.url, "_blank", "noopener,noreferrer"),
+      });
+    }
+    if (Math.sin(g.animT * 3) > -0.2) drawTextC(ctx, "W/S PICK - E SELECT", W / 2, 163, "#65718a");
+    drawTextC(ctx, "HOLD A SCREEN SIDE TO WALK", W / 2, 170, "#53617a");
   } else if (g.ui === "dead" && g.lastResult) {
     ctx.fillStyle = "rgba(8,10,26,0.62)";
     ctx.fillRect(0, 0, W, H);
@@ -1479,6 +1505,13 @@ const { handleKey, handlePointer } = createInputHandlers({
 // The downward offset aligns world feet with the water surface.
 function renderReflectionSubjects(rctx: any, g: any, colors: any, camX: number) {
   rctx.clearRect(0, 0, W, H);
+  // A faint reflection of the nearer shoreline woodland adds depth,
+  // but distant mountains/sky must not mirror as solid scenery.
+  rctx.save();
+  rctx.translate(0, WATER_Y - PLAYER_Y + 1);
+  rctx.globalAlpha = 0.13;
+  drawForestLayer(rctx, camX, 0.48, GROUND + 10, colors.near, 22, 9);
+  rctx.restore();
   rctx.save();
   rctx.translate(-Math.round(camX), WATER_Y - PLAYER_Y + 1);
   drawStructures(rctx, g);
@@ -1492,6 +1525,13 @@ function renderReflectionSubjects(rctx: any, g: any, colors: any, camX: number) 
     }
   }
   drawFire(rctx, g);
+  // Shoreline wildlife belongs in the same reflection buffer as the player.
+  // High flying birds naturally stay out of the mirrored water scanlines.
+  for (const critter of g.critters || []) {
+    if (critter.x >= camX - 20 && critter.x <= camX + W + 20) {
+      drawCritter(rctx, critter, g);
+    }
+  }
   if (g.dog && g.dog.x >= camX - 20 && g.dog.x <= camX + W + 20) drawDog(rctx, g);
   if (g.player.x >= camX - 20 && g.player.x <= camX + W + 20) drawPlayer(rctx, g);
   rctx.restore();

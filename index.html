@@ -416,14 +416,14 @@ const SOUND_KEY = "sekampfire-sound-v1";
 const AUDIO_LEVEL_KEY = "sekampfire-audio-v2";
 const AUDIO = (() => {
   let enabled = true;
-  let masterLevel = 90, ambienceLevel = 85, effectsLevel = 90;
+  let masterLevel = 90, ambienceLevel = 90, effectsLevel = 90;
   try {
     enabled = localStorage.getItem(SOUND_KEY) !== "off";
     const settings = JSON.parse(localStorage.getItem(AUDIO_LEVEL_KEY) || "{}");
     const safe = (v: any, fallback: number) =>
       typeof v === "number" && Number.isFinite(v) ? clamp(Math.round(v / 10) * 10, 0, 100) : fallback;
     masterLevel = safe(settings.master, 90);
-    ambienceLevel = safe(settings.ambience, 85);
+    ambienceLevel = safe(settings.ambience, 90);
     effectsLevel = safe(settings.effects, 90);
   } catch (_e) { /* Use safe default settings. */ }
   let ac: any = null, master: any = null, wind: any = null, fire: any = null, noiseBuffer: any = null;

@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=1 --no-file-parallelism --reporter=dot",
     "validate": "npm run check && npm run test && npm run build"
   },
   "dependencies": {

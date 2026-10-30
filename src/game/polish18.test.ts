@@ -76,15 +76,31 @@ describe("daylight and night movement arrows", () => {
     };
     return {ctx,marks};
   }
-  it("draws outlined pale chevrons visibly on both sides during the day", () => {
+  it("shows charcoal daytime pressed arrows, with pale outlines and unchanged idle hints", () => {
     const g=createEngine();g.animT=1.3;g.isNight=false;g.pleft=true;
     const v=canvas();drawSideArrows(v.ctx,g);
-    expect(v.marks.filter(m=>m.color==="rgba(14,23,34,0.82)")).toHaveLength(14);
+    const outlines=v.marks.filter(m=>m.w===4&&m.h===4);
     const cores=v.marks.filter(m=>m.w===2&&m.h===2);
+    expect(outlines).toHaveLength(14);
     expect(cores).toHaveLength(14);
     expect(cores.some(m=>m.x<40)).toBe(true);
     expect(cores.some(m=>m.x>280)).toBe(true);
-    expect(cores.filter(m=>m.x<40).every(m=>m.color==="rgba(255,235,180,0.98)")).toBe(true);
+    expect(cores.filter(m=>m.x<40).every(m=>m.color==="rgba(29,43,49,0.98)")).toBe(true);
+    expect(outlines.filter(m=>m.x<40).every(m=>m.color==="rgba(250,240,218,0.90)")).toBe(true);
+    // Idle right arrow stays pale to help players discover the controls.
+    expect(cores.filter(m=>m.x>280).every(m=>m.color.startsWith("rgba(255,246,218,"))).toBe(true);
+    expect(outlines.filter(m=>m.x>280).every(m=>m.color==="rgba(14,23,34,0.82)")).toBe(true);
+  });
+
+  it("moves the daytime charcoal active state to the opposite side without changing arrow positions", () => {
+    const g=createEngine();g.animT=1.3;g.isNight=false;g.pright=true;
+    const v=canvas();drawSideArrows(v.ctx,g);
+    const cores=v.marks.filter(m=>m.w===2&&m.h===2);
+    const outlines=v.marks.filter(m=>m.w===4&&m.h===4);
+    expect(cores.filter(m=>m.x>280).every(m=>m.color==="rgba(29,43,49,0.98)")).toBe(true);
+    expect(outlines.filter(m=>m.x>280).every(m=>m.color==="rgba(250,240,218,0.90)")).toBe(true);
+    expect(cores.filter(m=>m.x<40).every(m=>m.color.startsWith("rgba(255,246,218,"))).toBe(true);
+    expect(cores.map(m=>m.x)).toEqual([23,20,17,14,17,20,23,281,284,287,290,287,284,281]);
   });
   it("brightens the pressed-side gradient in daytime without moving its boundary", () => {
     const g=createEngine(); g.isNight=false;g.moveFeedbackLeft=1;

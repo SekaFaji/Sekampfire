@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { fitViewport } from "./ui/viewport";
 import { W, H, loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO } from "./game/game";
 
 function App() {
@@ -6,9 +7,44 @@ function App() {
   const gameRef = useRef<any>(null);
   const metaRef = useRef<any>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const [displaySize, setDisplaySize] = useState({ width: 320, height: 180 });
   if (!metaRef.current) metaRef.current = loadMeta();
   const [fatal, setFatal] = useState<string | null>(null);
   const [fs, setFs] = useState(false);
+
+  // The display rect tracks actual safe-area space, browser UI changes and
+  // landscape/orientation transitions. Logical Canvas resolution stays 320x180.
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const measure = () => {
+      // clientWidth/clientHeight INCLUDE padding: subtract it so the canvas
+      // cannot spill outside the safe touch region on narrow phones.
+      const style = window.getComputedStyle(stage);
+      const horizontal = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const vertical = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const w = stage.clientWidth - horizontal;
+      const h = stage.clientHeight - vertical;
+      if (!w || !h) return;
+      const next = fitViewport(w, h, fs ? Infinity : 960);
+      setDisplaySize(prev =>
+        prev.width === next.width && prev.height === next.height ? prev : next);
+    };
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(measure) : null;
+    observer?.observe(stage);
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    measure();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, [fs]);
 
   useEffect(() => {
     const g = createEngine();
@@ -56,31 +92,43 @@ function App() {
     // let in-canvas menus end the run (pause menu "END RUN")
     g.cb = cb;
 
-    // fullscreen support, driven from the in-canvas settings/pause menu or F key
+    // Prefer native fullscreen; iPhone Safari and embedded browsers may not
+    // expose it. The CSS immersive fallback still uses the measured safe area.
+    let cssImmersive = false;
+    const enterCssImmersive = () => {
+      cssImmersive = true;
+      g.fs = true;
+      setFs(true);
+      toast(g, "Immersive view enabled. Tap FULLSCREEN to exit.");
+    };
     g.fs = false;
     g.fsToggle = () => {
       const el: any = wrapRef.current;
       const doc: any = document;
-      const isFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
-      try {
-        if (!isFs) {
-          const fn = el && (el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen);
-          if (!fn) { toast(g, "Fullscreen is not supported in this browser."); return; }
-          const r = fn.call(el);
-          if (r && typeof r.catch === "function") r.catch(() => toast(g, "Fullscreen was blocked here. Use the browser fullscreen menu."));
-        } else {
-          const fn = doc.exitFullscreen || doc.webkitExitFullscreen || doc.webkitCancelFullScreen;
-          if (fn) { const r = fn.call(doc); if (r && typeof r.catch === "function") r.catch(() => { }); }
-        }
-      } catch (err: any) {
-        toast(g, "Fullscreen failed: " + (err && err.message ? err.message : String(err)));
+      const native = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+      if (native) {
+        const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.webkitCancelFullScreen;
+        if (exit) Promise.resolve(exit.call(doc)).catch(() => {});
+        return;
       }
+      if (cssImmersive) {
+        cssImmersive = false;
+        g.fs = false;
+        setFs(false);
+        return;
+      }
+      const enter = el && (el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen);
+      if (!enter) { enterCssImmersive(); return; }
+      try {
+        Promise.resolve(enter.call(el)).catch(enterCssImmersive);
+      } catch (_err) { enterCssImmersive(); }
     };
     const fsch = () => {
       const doc: any = document;
-      const on = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
-      g.fs = on;
-      setFs(on);
+      const native = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+      if (native) cssImmersive = false;
+      g.fs = native || cssImmersive;
+      setFs(g.fs);
     };
     document.addEventListener("fullscreenchange", fsch);
     document.addEventListener("webkitfullscreenchange", fsch);
@@ -127,6 +175,15 @@ function App() {
     const visibility = () => {
       if (document.visibilityState === "hidden") saveRunSnapshot(g);
     };
+    // Escapes the CSS fallback as well as the in-game pause view.
+    const exitImmersive = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && cssImmersive) {
+        cssImmersive = false;
+        g.fs = false;
+        setFs(false);
+      }
+    };
+    window.addEventListener("keydown", exitImmersive);
     window.addEventListener("keydown", kd);
     window.addEventListener("keyup", ku);
     window.addEventListener("blur", blur);
@@ -160,6 +217,7 @@ function App() {
       cancelAnimationFrame(raf);
       document.removeEventListener("fullscreenchange", fsch);
       document.removeEventListener("webkitfullscreenchange", fsch);
+      window.removeEventListener("keydown", exitImmersive);
       window.removeEventListener("keydown", kd);
       window.removeEventListener("keyup", ku);
       window.removeEventListener("blur", blur);
@@ -174,17 +232,41 @@ function App() {
   }, []);
 
   return (
-    <div ref={wrapRef} className={fs
-      ? "fixed inset-0 bg-[#0a0e1a] flex items-center justify-center"
-      : "min-h-screen bg-[radial-gradient(ellipse_at_top,#182036,#0a0e1a)] flex items-center justify-center p-3 sm:p-6"}>
-      <div className="w-full max-w-[960px]" style={fs ? { maxWidth: "calc(100vh * 16 / 9)" } : undefined}>
-        <div className="relative rounded-xl overflow-hidden shadow-[0_0_70px_rgba(255,150,60,0.10)] bg-[#24455c]">
+    <div ref={wrapRef}
+      className={fs
+        ? "fixed inset-0 z-50 overflow-hidden bg-[#0a0e1a]"
+        : "relative h-[100dvh] min-h-[180px] overflow-hidden bg-[radial-gradient(ellipse_at_top,#182036,#0a0e1a)]"}
+    >
+      <div ref={stageRef}
+        className={fs
+          ? "absolute flex items-center justify-center min-h-0 overflow-hidden"
+          : "absolute inset-0 flex items-center justify-center min-h-0 overflow-hidden p-3 sm:p-6"}
+        style={fs ? {
+          top: "env(safe-area-inset-top, 0px)",
+          bottom: "env(safe-area-inset-bottom, 0px)",
+          left: "env(safe-area-inset-left, 0px)",
+          right: "env(safe-area-inset-right, 0px)"
+        } : {
+          paddingTop: "calc(12px + env(safe-area-inset-top, 0px))",
+          paddingRight: "calc(12px + env(safe-area-inset-right, 0px))",
+          paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
+          paddingLeft: "calc(12px + env(safe-area-inset-left, 0px))",
+        }}
+      >
+        <div className="relative overflow-hidden shadow-[0_0_70px_rgba(255,150,60,0.10)] bg-[#24455c]"
+          style={{
+            width: displaySize.width,
+            height: displaySize.height,
+            flex: "none",
+            borderRadius: fs ? 0 : 12,
+          }}
+        >
           <canvas
             ref={canvasRef}
             width={W}
             height={H}
-            className="w-full h-auto block touch-none select-none"
-            style={{ imageRendering: "pixelated" } as any}
+            className="block w-full h-full touch-none select-none"
+            style={{ imageRendering: "pixelated" }}
           />
           {fatal && (
             <div className="absolute bottom-2 left-2 right-2 bg-red-900/90 border border-red-500/50 rounded-md px-3 py-2 text-[11px] text-red-100">

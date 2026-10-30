@@ -5,7 +5,7 @@ The project is **not yet an Android or iOS app**. The present migration makes th
 ## What is already mobile-friendly
 - Vite bundles React and all CSS/JS into `dist/` rather than relying on runtime CDN access.
 - Vite `base: './'` produces relative asset URLs that work under GitHub Pages' `/Sekampfire/` path and future local mobile web assets.
-- 320×180 Canvas remains logical rendering resolution; wrapper handles display scaling (more responsive fullscreen work remains in backlog).
+- 320×180 Canvas remains logical rendering resolution; viewport-fit now measures safe display space, uses CSS safe-area insets and offers immersive fallback. Cross-device verification remains mandatory.
 - Existing save/checkpoint logic is shared; versioned native storage and lifecycle testing are **not implemented yet**.
 
 ## Android — when release work is authorized

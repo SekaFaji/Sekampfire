@@ -24,6 +24,9 @@ npm run preview    # verify production output
 - Hold the left/right side of the screen or press A/D to walk. Movement immediately interrupts an unfinished chop (and does not damage the tree). To chop again, release and repress ACT.
 - Press ACT or E to chop trees, feed the fire and interact. Hold ACT for repeated chopping while stationary.
 - Base capacity is 5 logs; a permanent and a crafted backpack each add 8 capacity, up to 21. The bag has three visual sizes with one small sprite per carried log.
+- Start with a branch for chopping; craft the **Wood Axe** (existing save-compatible maul craft ID) at the workbench, or earn the permanent Grandpa's Axe upgrade.
+- The player turns toward the camera when idle, with a two-eye face, and retains visible facial detail when moving left.
+- Fullscreen is responsive, with CSS immersive fallback on browsers lacking the fullscreen API and safe-area-aware canvas fitting.
 - Gather 15 logs for each initial workbench/pile site, then craft boots, pack and other gear at the bench. Build a camp, survive seasonal days and the Long Night, and earn ash for permanent upgrades.
 - Menus include settings, credits, a privacy policy, audio mixer, High/Low visual effects, and a two-step save reset.
 - An unfinished run can be continued from the title menu after reopening the browser. Completed runs bank earned ash and clear the checkpoint. Win/death/retirement results now offer **Main Menu** without banking rewards again.
@@ -43,6 +46,8 @@ npm run preview    # verify production output
 - `src/game/renderUtils.ts`: shared color, pixel and random helpers
 - `src/game/renderSprites.ts`: all 18 standalone player/tree/camp/world sprite renderers
 - `src/game/game.ts`: **preserved world simulation, remaining scene rendering, and in-canvas UI** — still being separated in small, tested patches
+- `src/game/input.ts`: isolated keyboard, pointer and multi-touch adapter
+- `src/ui/viewport.ts`: tested aspect-preserving fullscreen dimensions and safe-area fitting
 - `src/main.tsx` and `src/styles.css`: application bootstrap and built styles
 - `public/privacy.html`: published data-handling policy
 - `docs/ARCHITECTURE.md`: engineering rules and staged extraction plan

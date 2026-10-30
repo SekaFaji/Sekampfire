@@ -12,6 +12,8 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/audio.ts` — browser-safe procedural sounds and configurable mixer
 - `src/game/weather.ts` — independently testable weather intensity calculations
 - `src/game/graphics.ts` — visual-quality preference
+- `src/game/input.ts` — UI-callback-injected pointer, multi-touch and keyboard adapter
+- `src/ui/viewport.ts` — pure aspect-preserving safe-area fit calculation
 - `src/game/save.ts` — versioned run snapshots, permanent progress, legacy fallback
 - `src/game/palette.ts` — seasons and blended colors
 - `src/game/font.ts` — independent pixel text system
@@ -32,7 +34,7 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 
 ## Next extraction slices
 - Further save schema validation and migration coverage (core serializer now isolated)
-- Input and interaction cancellation, with pointer + keyboard transition tests
+- Further input/gameplay boundary separation and advanced gesture coverage (keyboard, multi-touch, hit zones now extracted and tested)
 - World simulation, weather and tree/chop logic
 - Remaining scene composition, lighting, UI overlays, and water reflections (individual sprite renderers extracted)
 - In-canvas screens/menus

@@ -8,11 +8,11 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] **Player camera-facing idle in source**: character faces camera when not moving/chopping, with breathing/blinking/scarf animation; still requires phone visual QA.
 - [x] **Left-facing eye in source**: mirrored facial details and hair; needs native-resolution screenshot QA.
 - [x] **Tool appearance/progression**: starter branch -> renamed Wood Axe (`maul` original save ID and 5-wood cost/chop-speed bonus) -> Grandpa's Axe (`axe` upgrade); overhead swing added. Needs real-device quality check.
-- [ ] **Wood Ring name**: change Stone Ring to Wood Ring **and make the visuals/material/cost/description coherent**; inspect how stage-0 stone art and stage costs work before renaming.
-- [ ] **Professional tree sprites**: layered silhouettes, readable trunks and branches, quality seasonal shading, snow caps, tier variants, and testing at actual 320×180 resolution; no more arbitrary scaling as a substitute for quality art.
+- [x] **Wood Ring source update**: stage name, timber windbreak art and description now agree; original 8-wood cost and wind-reduction mechanic preserved. Needs phone screenshot QA.
+- [x] **Detailed procedural trees in source**: separate anchored renderer with three evergreen silhouettes, bark, branches, shading and winter-only snow; tests for geometry/season. **Final premium art quality still requires visual approval on real devices**.
 
 ## Priority 1 — visual/audio polish requests
-- [ ] Verify backpack log readability at 5, 13 and 21 on-device and adjust mini log size/shading if necessary.
+- [ ] Validate on real devices: revised tree pixel art, Wood Ring, backpack logs at 5/13/21 and player sprite alignment. Iterate toward premium art quality after screenshot review.
 - [ ] Fix/polish mobile fullscreen HUD layout, menu placement, font hierarchy, user touch hitboxes and water buttons.
 - [ ] Inspect reflection player alignment, water bottom seam and shoreline in day and night on actual mobile displays.
 - [x] Replace hammer-like tool with raised overhand branch/axe swing in both facings; continue visual polish after on-device inspection.

@@ -13,7 +13,7 @@ const SITE_COST = 15;
 const BUILD_TIME = 7; // seconds of hammering before a site finishes
 
 const STAGES = [
-  { name: "Stone Ring", cost: 8, desc: "Stones shield the flames. Wind drains the fire much less." },
+  { name: "Wood Ring", cost: 8, desc: "A ring of stacked logs blocks the wind. The fire burns slower in gusts." },
   { name: "Log Bench", cost: 12, desc: "A place to rest. Warmth returns faster near the fire." },
   { name: "Lean-to", cost: 20, desc: "A roof over the fire. Rain no longer dampens it." },
   { name: "Woodshed", cost: 30, desc: "A proper shed. The wood pile by the fire holds 40." },

@@ -2,6 +2,7 @@ import { W, H, GROUND, CX, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME } from
 import { clamp } from "./math";
 import { lerpHex, lightenHex, px } from "./renderUtils";
 import { visualSeason, visualPalette } from "./palette";
+import { drawTree, drawFallingTree } from "./renderTrees";
 
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
@@ -19,74 +20,6 @@ function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) 
 }
 
 // cozy pines in three variants: layered pine, tall spire fir, bushy spruce
-function drawTree(ctx: any, tr: any, t: number, windAmt: number, colors: any) {
-  const x = Math.round(tr.x), y = Math.round(tr.y);
-  // Art only: anchor taller/larger trees at their original stump position.
-  // Tier 0 is now a proper young tree instead of a bush beside the player.
-  const heightScale = tr.tier === 0 ? 2.4 : tr.tier === 1 ? 1.85 : 1.7;
-  const widthScale = tr.tier === 0 ? 1.48 : tr.tier === 1 ? 1.42 : 1.34;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(widthScale, heightScale);
-  ctx.translate(-x, -y);
-  const hit = tr.hitT > 0 ? Math.sin(t * 45) * 2 * tr.hitT : 0;
-  const sway = Math.sin(t * (1.35 + (tr.id % 6) * 0.12) + tr.id) * (1 + windAmt * 3) + hit;
-  const s = tr.tier, v = ((tr.variant || 0) % 3);
-  const th = 5 + s * 4, tw = 2 + s;
-  const tc = colors.trunk;
-  px(ctx, x - Math.floor(tw / 2), y - th, tw, th, tc);
-  px(ctx, x - Math.floor(tw / 2) + 1, y - th + 2, 1, th - 3, tr.tier === 2 ? "#5a4232" : "#7a5636");
-  const cw = 6 + s * 4, chh = 6 + s * 5;
-  const cA = v === 2 ? lightenHex(colors.treeLight, 0.14) : colors.treeLight;
-  const cB = v === 1 ? colors.treeDark : lerpHex(colors.treeDark, colors.treeLight, 0.18);
-  const snowC = colors.cap;
-  const showCap = colors.name === "winter";
-  if (v === 0) {
-    // layered pine: three stacked triangle tiers with snow on each
-    const tH = Math.max(2, Math.round(chh / 3) + 1);
-    for (let k = 0; k < 3; k++) {
-      const twid = Math.max(3, Math.round(cw * (0.5 + k * 0.25)));
-      const yb = y - th - 1 - k * (tH - 1);
-      for (let i = 0; i < tH; i++) {
-        const w2 = Math.max(2, Math.round(twid * (1 - i / tH)));
-        px(ctx, x - w2 / 2 + sway * 0.6, yb - i, w2, 1, (i + k) % 3 === 0 ? cA : cB);
-      }
-      if (showCap || k % 2 === 0) px(ctx, x - Math.max(1, Math.floor(twid * 0.25)), yb - tH + 2, Math.max(2, Math.floor(twid * 0.5)), 1, snowC);
-    }
-  } else if (v === 1) {
-    // tall spire fir: narrow, pointed, little snow cap
-    const H2 = chh + 3 + s * 2;
-    for (let i = 0; i < H2; i++) {
-      const w2 = Math.max(2, Math.round((cw - 2) * (1 - (i / H2) * 0.9)));
-      px(ctx, x - w2 / 2 + sway * 0.5, y - th - 1 - i, w2, 1, i % 4 === 0 ? cA : cB);
-    }
-    px(ctx, x - 1, y - th - H2, 2, 1, snowC);
-    px(ctx, x, y - th - H2 - 1, 1, 1, snowC);
-  } else {
-    // bushy spruce: wide drooping boughs with snow patches
-    for (let i = 0; i < chh; i++) {
-      const w2 = Math.max(3, Math.round((cw + 3) * Math.sqrt(Math.max(0, 1 - i / chh))));
-      px(ctx, x - w2 / 2 + sway * 0.7, y - th - 1 - i, w2, 1, i % 2 === 0 ? cA : cB);
-      if (i > chh * 0.45 && w2 > 3 && i % 3 === 0) {
-        px(ctx, x - w2 / 2 + sway * 0.7 + 1, y - th - 1 - i, Math.min(3, w2 - 1), 1, snowC);
-      }
-    }
-    px(ctx, x - 1, y - th - chh, 3, 1, snowC);
-  }
-  ctx.restore();
-}
-
-function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
-  const prog = clamp(ft.t / 0.55, 0, 1);
-  const ang = (ft.dir || 1) * 1.55 * prog * prog;
-  ctx.save();
-  ctx.translate(Math.round(ft.x), Math.round(ft.y));
-  ctx.rotate(ang);
-  ctx.translate(-Math.round(ft.x), -Math.round(ft.y));
-  drawTree(ctx, ft, t, 0, colors);
-  ctx.restore();
-}
-
 function drawBackpack(ctx: any, x: number, y: number, dir: number,
                       amount: number, upgrades: number) {
   // The permanent +8 and crafted +8 backpacks each enlarge the actual bag.
@@ -327,8 +260,28 @@ function drawDog(ctx: any, g: any) {
 
 function drawFire(ctx: any, g: any) {
   if (g.stage >= 1) {
-    const stones = [[CX - 12, 149], [CX + 10, 149], [CX - 9, 152], [CX + 7, 152], [CX - 2, 153], [CX + 2, 153]];
-    for (const s of stones) px(ctx, s[0], s[1], 3, 2, "#9aa2ac");
+    // A low wooden windbreak sits outside the fire's ember bed.
+    // Alternating rough-cut logs and pegs distinguish it from a stone ring.
+    const sideWood = "#6b4529", cutEnd = "#d6a46d", bark = "#49321f";
+    for (const side of [-1, 1]) {
+      const outer = CX + side * 13;
+      px(ctx, outer - 2, 146, 4, 2, bark);
+      px(ctx, outer - 2, 147, 4, 2, sideWood);
+      px(ctx, outer - 2, 147, 1, 2, cutEnd);
+      px(ctx, outer + 1, 147, 1, 2, "#8a5e37");
+      px(ctx, outer - 2, 150, 4, 2, bark);
+      px(ctx, outer - 1, 150, 3, 2, sideWood);
+      px(ctx, outer - 1, 150, 1, 2, cutEnd);
+      px(ctx, outer, 144, 1, 7, "#6c482c"); // windbreak stake
+      px(ctx, outer, 144, 1, 1, "#c39a66");
+    }
+    // Rear logs behind the flame, still visually separate from its fuel.
+    px(ctx, CX - 10, 143, 7, 2, bark);
+    px(ctx, CX - 9, 143, 6, 1, sideWood);
+    px(ctx, CX + 3, 143, 7, 2, bark);
+    px(ctx, CX + 3, 143, 6, 1, sideWood);
+    px(ctx, CX - 10, 144, 1, 1, cutEnd);
+    px(ctx, CX + 9, 144, 1, 1, cutEnd);
   }
   if (g.stage >= 6) {
     px(ctx, CX - 12, 144, 24, 2, "#7a828c");

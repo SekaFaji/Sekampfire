@@ -2073,7 +2073,7 @@ function renderReflectionSubjects(rctx: any, g: any, colors: any, camX: number) 
   rctx.clearRect(0, 0, W, H);
   rctx.save();
   rctx.translate(-Math.round(camX), WATER_Y - PLAYER_Y + 1);
-  if (g.stage > 0 || g.builtBench || g.builtPile || g.benchLogs || g.pileLogs) drawStructures(rctx, g);
+  drawStructures(rctx, g);
   for (const tree of g.trees) {
     if (tree.x < camX - 40 || tree.x > camX + W + 40) continue;
     drawTree(rctx, tree, g.animT, g.windAmt || 0, colors);
@@ -2236,6 +2236,16 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   drawForestLayer(ctx, camX, 0.48, GROUND + 10, colors.near, 22, 9);
   ctx.restore();
 
+  // The existing fog/rain weather affects distance, not the sharp foreground.
+  if (g.weather === "fog" || g.weather === "rain") {
+    const density = g.weather === "fog" ? 0.16 : 0.055;
+    const drift = Math.round(Math.sin(g.animT * 0.23) * 11);
+    ctx.fillStyle = "rgba(182,203,214," + density + ")";
+    ctx.fillRect(drift - 12, GROUND - 37, W + 24, 16);
+    ctx.fillStyle = "rgba(195,213,219," + (density * 0.6) + ")";
+    ctx.fillRect(-drift - 12, GROUND - 25, W + 24, 11);
+  }
+
   // Ground and scattered texture share a continuous palette, including camp.
   px(ctx, 0, GROUND, W, 4, colors.ridge);
   px(ctx, 0, GROUND + 4, W, H - GROUND - 4, colors.ground);
@@ -2308,6 +2318,16 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   }
   ctx.restore();
 
+  // A few light wind streaks show motion through the environment.
+  if (g.weather === "wind" || g.weather === "blizzard") {
+    ctx.fillStyle = g.weather === "blizzard"
+      ? "rgba(225,239,246,0.19)" : "rgba(195,219,227,0.09)";
+    for (let i = 0; i < 9; i++) {
+      const x = (i * 57 + Math.floor(g.animT * 58)) % W;
+      const y = 44 + (i * 23) % 71;
+      ctx.fillRect(x, y, 8 + i % 5, 1);
+    }
+  }
   // snow (screen space)
   for (const s of g.snow) {
     ctx.fillStyle = "rgba(238,244,250,0.85)";
@@ -2570,7 +2590,7 @@ function App() {
       ? "fixed inset-0 bg-[#0a0e1a] flex items-center justify-center"
       : "min-h-screen bg-[radial-gradient(ellipse_at_top,#182036,#0a0e1a)] flex items-center justify-center p-3 sm:p-6"}>
       <div className="w-full max-w-[960px]" style={fs ? { maxWidth: "calc(100vh * 16 / 9)" } : undefined}>
-        <div className="relative rounded-xl overflow-hidden border border-slate-700/60 shadow-[0_0_70px_rgba(255,150,60,0.10)] bg-black">
+        <div className="relative rounded-xl overflow-hidden shadow-[0_0_70px_rgba(255,150,60,0.10)] bg-[#24455c]">
           <canvas
             ref={canvasRef}
             width={W}

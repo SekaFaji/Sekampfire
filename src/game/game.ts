@@ -6,7 +6,9 @@ import { carryCap, pileCap, choppingToolTier } from "./rules";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
-import { completedNights, visualSeason, visualPalette } from "./palette";
+import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
+import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
+import { shorelineWaveOffset, shorelineFoam } from "./water";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
@@ -107,7 +109,7 @@ function createEngine(): any {
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, camX: CX - W / 2, shake: 0,
-    pleft: false, pright: false,
+    pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, endlessMode: false, endlessN: 0, over: false,
@@ -164,7 +166,7 @@ function startRunEngine(g: any, meta: any) {
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
-  toast(g, "Survive the nights. Build a cabin. Outlast the winter.");
+  toast(g, "Survive the seasons. Build a cabin. Face the Long Night.");
 }
 
 function startRun(g: any, meta: any) {
@@ -223,6 +225,7 @@ function spawnEvent(g: any) {
   const day = !g.isNight;
   const r = Math.random();
   const run = g.ui === "run";
+  const seasonal = wildlifeForSeason(visualSeason(g));
   if (!day && g.weather === "clear" && r < 0.25) {
     g.meteors.push({ x: 60 + Math.random() * 200, y: 8 + Math.random() * 26, vx: -(70 + Math.random() * 40), vy: 34 + Math.random() * 18, life: 1 });
     if (run) toast(g, "A shooting star crosses the sky.");
@@ -231,8 +234,12 @@ function spawnEvent(g: any) {
   if (!day && r < 0.4) {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = clamp(g.player.x + side * (80 + Math.random() * 40), 20, WORLD_W - 20);
-    g.critters.push({ type: "fox", x, y: 150 + Math.random() * 8, state: "watch", t: 12 + Math.random() * 8, dir: -side });
-    if (run && Math.random() < 0.15) toast(g, "A fox watches from the treeline.");
+    const species = seasonal.nocturnal;
+    const type = wildlifeMovementType(species);
+    g.critters.push({ type, species, x, y: 150 + Math.random() * 8,
+      state: type === "fox" ? "watch" : "sit", t: 12 + Math.random() * 8,
+      ph: Math.random() * 6, dir: -side });
+    if (run && Math.random() < 0.15) toast(g, "Wildlife stirs near the treeline.");
     return;
   }
   if (day && r < 0.55) {
@@ -242,7 +249,7 @@ function spawnEvent(g: any) {
     const vx = (fromLeft ? 1 : -1) * (16 + Math.random() * 12);
     const by = 34 + Math.random() * 26;
     for (let i = 0; i < n; i++) {
-      g.critters.push({ type: "bird", x: bx - i * 7 * (fromLeft ? 1 : -1), y: by + Math.sin(i * 2.1) * 4, state: "fly", vx, t: -1, ph: i * 1.3, dir: vx > 0 ? 1 : -1 });
+      g.critters.push({ type: "bird", species: seasonal.flying, x: bx - i * 7 * (fromLeft ? 1 : -1), y: by + Math.sin(i * 2.1) * 4, state: "fly", vx, t: -1, ph: i * 1.3, dir: vx > 0 ? 1 : -1 });
     }
     if (run && Math.random() < 0.12) toast(g, "Birds cross the pale sky.");
     return;
@@ -250,11 +257,11 @@ function spawnEvent(g: any) {
   if (r < 0.78) {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = clamp(g.player.x + side * (46 + Math.random() * 50), 20, WORLD_W - 20);
-    if (Math.random() < 0.5) {
-      g.critters.push({ type: "bunny", x, y: 146 + Math.random() * 12, state: "sit", t: 10 + Math.random() * 10, ph: Math.random() * 6, dir: -side });
-    } else {
-      g.critters.push({ type: "bird", x, y: 146 + Math.random() * 12, state: "sit", t: 8 + Math.random() * 8, ph: Math.random() * 6, dir: -side });
-    }
+    const species = seasonal.ground;
+    const type = wildlifeMovementType(species);
+    g.critters.push({ type, species, x, y: 146 + Math.random() * 12,
+      state: "sit", t: 10 + Math.random() * 10,
+      ph: Math.random() * 6, dir: -side });
     return;
   }
   if (run && g.moveT > 0) {
@@ -648,6 +655,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
   g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
+  const ease = 1 - Math.exp(-Math.max(0, dt) * 13);
+  g.moveFeedbackLeft += ((g.pleft || g.keys.left) ? 1 - g.moveFeedbackLeft : -g.moveFeedbackLeft) * ease;
+  g.moveFeedbackRight += ((g.pright || g.keys.right) ? 1 - g.moveFeedbackRight : -g.moveFeedbackRight) * ease;
   // toasts
   for (let i = g.toasts.length - 1; i >= 0; i--) {
     g.toasts[i].life -= dt;
@@ -695,7 +705,7 @@ function updateAmbient(g: any, dt: number) {
     if (g.footprints[i].life <= 0 || visualSeason(g) !== "winter") g.footprints.splice(i, 1);
   }
   // snow
-  const winter = visualSeason(g) === "winter";
+  const winter = visualSeason(g) === "winter" || g.longNightActive;
   const target = !winter ? 0 : Math.round((45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind")) * (GRAPHICS.high ? 1 : 0.55));
   while (g.snow.length < target) g.snow.push({ x: Math.random() * W, y: Math.random() * H, v: 12 + Math.random() * 18, ph: Math.random() * 6 });
   while (g.snow.length > target) g.snow.pop();
@@ -830,7 +840,7 @@ function drawHUD(ctx: any, g: any, meta: any) {
   const rx = W - 81;
   drawText(ctx, g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1), rx, 22, "#e0e5ef");
   drawText(ctx, WEATHER_TEXT[g.weather] || "", rx, 30, "#c8d2e8");
-  drawText(ctx, visualSeason(g).toUpperCase(), rx, 38, "#dfc99a");
+  drawText(ctx, visualSeason(g).toUpperCase() + " " + seasonDay(g) + "/7", rx, 38, "#dfc99a");
   if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 46, "#8fd0ff");
   if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
     const t = "THE LONG NIGHT";
@@ -1310,17 +1320,22 @@ function drawRunChrome(ctx: any, g: any) {
 // Large, restrained directional feedback behind the EXISTING movement chevrons.
 // Pointer and keyboard input both work; the arrow geometry itself is unchanged.
 function drawMovementFeedback(ctx: any, g: any) {
-  // Narrow pressed-edge tint (15% width), with NO new arrows or controls.
-  const left = !!(g.pleft || g.keys.left);
-  const right = !!(g.pright || g.keys.right);
-  if (!left && !right) return;
-  const edgeWidth = Math.round(W * 0.15);
-  const fillSide = (x: number) => {
-    ctx.fillStyle = g.isNight ? "rgba(187,206,226,0.105)" : "rgba(51,79,101,0.115)";
-    ctx.fillRect(x, 0, edgeWidth, H);
+  // Smooth 15% edge indicator: soft spatial fade and a short time fade-out.
+  // Never draw extra arrows, and don't alter existing input hit areas.
+  const width = Math.round(W * 0.15);
+  const drawSide = (side: "left" | "right", intensity: number) => {
+    if (intensity < 0.015) return;
+    const x = side === "left" ? 0 : W - width;
+    const alpha = (g.isNight ? 0.18 : 0.15) * clamp(intensity, 0, 1);
+    const bright = g.isNight ? "194,215,230" : "48,75,96";
+    const fill = ctx.createLinearGradient(x, 0, x + width, 0);
+    fill.addColorStop(0, side === "left" ? `rgba(${bright},${alpha})` : `rgba(${bright},0)`);
+    fill.addColorStop(1, side === "left" ? `rgba(${bright},0)` : `rgba(${bright},${alpha})`);
+    ctx.fillStyle = fill;
+    ctx.fillRect(x, 0, width, H);
   };
-  if (left) fillSide(0);
-  if (right) fillSide(W - edgeWidth);
+  drawSide("left", g.moveFeedbackLeft || 0);
+  drawSide("right", g.moveFeedbackRight || 0);
 }
 
 // movement chevrons mid-screen on both sides - movement hint, not a button
@@ -1546,12 +1561,22 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     ctx.fillRect(x, y, 7 + (i % 4) * 4, 1);
   }
   const bank = lerpHex(palette.shore, "#243746", night * 0.92);
-  for (let x = 0; x < W; x += 2) {
+  const breeze = g.weather === "wind" || g.weather === "blizzard" ? 1.28 : 1;
+  // Small bank waves wash back and forth over one or two logical pixels.
+  // Broken foam glints fade out; never a full-width white shoreline stripe.
+  for (let x = 0; x < W; x += 3) {
     const wx = x + camX;
-    const delta = Math.round(Math.sin(wx * 0.05) + Math.sin(wx * 0.13) * 0.7);
-    const y = WATER_Y - 2 + delta;
+    const irregular = Math.round(Math.sin(wx * 0.05) * 0.5 +
+      Math.sin(wx * 0.13) * 0.5);
+    const y = WATER_Y - 2 + irregular +
+      shorelineWaveOffset(g.animT, wx, breeze);
     ctx.fillStyle = bank;
-    ctx.fillRect(x, y, 2, 1);
+    ctx.fillRect(x, y, Math.min(3, W - x), 1);
+    const wash = shorelineFoam(g.animT, wx);
+    if (wash > 0.35 && x % 9 !== 0) {
+      ctx.fillStyle = `rgba(181,211,218,${((0.06 + 0.13 * wash) * (1 - 0.45 * night)).toFixed(3)})`;
+      ctx.fillRect(x, y + 1, Math.min(2, W - x), 1);
+    }
   }
 }
 
@@ -1861,5 +1886,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback };
 export { W, H } from "./config";

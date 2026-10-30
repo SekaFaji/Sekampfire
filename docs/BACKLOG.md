@@ -3,7 +3,7 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 — user-approved unfinished features / fixes
-- [ ] **End screen navigation**: both loss and win offer Main Menu, alongside Try Again/Upgrades or Endless Winter as relevant. Preserve correct ash banking; test navigation and results.
+- [x] **End screen navigation**: win, death and retirement offer Main Menu with no second ash banking, plus keyboard shortcut M. Needs mobile tap verification.
 - [ ] **Truly adaptive fullscreen**: fill the safe usable viewport across mobile screens/orientations while retaining 320×180 logical game pixels; account for letterboxing, edge-to-edge, browser UI changes and notches; don't distort aspect ratio or touch targets.
 - [ ] **Player camera-facing idle**: character faces the camera when not walking, with subtle breathing/blinking/scarf animation, returns to side profile for walking and swing. Verify all directions at native resolution.
 - [ ] **Left-facing eye/face**: ensure the character's eye and readable face appear facing left as well as right, even with backpacks/axes.
@@ -20,8 +20,8 @@ This is a tracked product backlog; **not completed merely because it is document
 - [ ] Refine animal/world ambiance and tree movement only after art/source inspection; avoid feature creep.
 
 ## Priority 1 — engineering and release foundation
-- [ ] Split `src/game/game.ts` into save/, input/, world/, render/, UI/, audio/ modules with one behaviour-verified PR per extraction.
-- [ ] Add unit/integration coverage for interrupted chopping, wood drops, all crafting/upgrades, permanent ash settlements and corrupted checkpoints.
+- [ ] Continue separating `src/game/game.ts` into input/, world/, scene/ and UI/ modules. Save serialization, font, seasons, render helpers, sprite renderers and audio are already extracted.
+- [ ] Expand integration coverage for wood drops, crafting/upgrades and permanent ash settlement. Chopping interruption, save corruption, legacy fallback and snapshots now have tests.
 - [ ] Add Playwright screenshot/input tests for title, run, night, win, loss, pause, audio/settings and resume; confirm pixel art and HUD positions.
 - [ ] Add real Android browser performance, audio/gesture and viewport test matrix; then decide when to create Capacitor native projects.
 - [ ] Complete release/asset licensing, acknowledgements, privacy/data safety and store publishing checklists before submission.

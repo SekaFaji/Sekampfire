@@ -7,7 +7,7 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 ## How it plays
 
 - Hold the left or right side of the screen to walk (or use A / D).
-- Press ACT (big button or E) to chop trees, stoke the fire and interact. Hold it to keep chopping.
+- Press ACT (big button or E) to chop trees, stoke the fire and interact. Hold it to keep chopping. **Walking immediately interrupts an unfinished chop** without damaging the tree; ACT must be released before chopping again.
 - Carry 15 logs to each marked build site to raise the workbench and the wood pile. You initially carry 5 logs; each backpack upgrade adds 8 capacity (up to 21 with both).
 - Craft gear at the workbench, upgrade the camp through six build stages, and keep your warmth up - the cold bites hardest at the start.
 - Survive the nights to earn ash, and spend it on permanent flame-lineage upgrades between runs.
@@ -17,7 +17,7 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 
 - A reflective foreground river and parallax pine silhouettes add depth to the winter landscape.
 - BUILD, ACT and TORCH float over the water; MENU sits at the top right below the minimap.
-- The original left/right movement arrows and hold-a-side movement remain unchanged. Holding a direction now tints only the outer 15% of that screen edge, without extra arrow shapes.
+- The original left/right movement arrows and hold-a-side movement remain unchanged. Holding a direction tints only the outer 15% of that screen edge, without extra arrow shapes. Movement now takes priority over chopping.
 - River controls remain transparent, and the shoreline follows a soft irregular edge rather than a bright straight line.
 - The autumn opening gradually gives way to winter, spring and summer palettes; seasons change visuals, not survival balance.
 - The left, middle and right regions reveal hills, forest and mountains with smoothly blended backgrounds.
@@ -25,7 +25,7 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 
 ## Living-world polish
 
-- Tree art is larger than the player, with saplings and mature trees scaled around their root points without changing tree hit points or chopping rules. The carried wood bundle draws one little log per log held, with miniature rows that fit the backpack.
+- Tree art is larger than the player, with saplings and mature trees scaled around their root points without changing tree hit points or chopping rules. The carried wood bundle draws one small log per log held. The backpack also grows in three visible sizes (base, one +8 upgrade, both +8 upgrades).
 
 - The river reflects the player's walking and chopping poses, animated trees, camp structures, the fire and the dog. The land/ground overlay is excluded from the reflection to avoid false stripes.
 - The waterline now blends into the world, and the game canvas has no black frame beneath the river.
@@ -41,6 +41,8 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 - **Reset Save** requires two explicit confirmations and then deletes only Sekampfire permanent progress, checkpoints and legacy progress keys. Audio preferences remain unchanged; reset cannot be undone.
 - The in-game Privacy Policy links to [the full privacy page](privacy.html). The game stores save data locally; its hosting and CDN dependencies are detailed in the policy.
 - **Low visual FX** reduces snow particle counts and reflection scanlines on slower devices. High remains the default.
+- The HUD now separates warmth/fuel, wood capacity (with a small fill meter), stored pile, ash and day/weather into subtle translucent sections. Audio menu rows have visible volume bars and selected menu rows have a narrower, clearer highlight.
+- Existing short action sounds use gentler attack envelopes and slightly warmer filtering. The continuous fire-static channel stays disabled.
 
 ## Tech
 

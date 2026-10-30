@@ -503,7 +503,10 @@ const AUDIO = (() => {
       const duration = step ? 0.09 : light ? 0.20 : 0.12;
       const gain = ac.createGain();
       const volume = (step ? 0.14 : build ? 0.26 : 0.22) * mix;
-      gain.gain.setValueAtTime(volume, now);
+      // Gentle attack/release keeps filtered action cues from popping
+      // abruptly. No new continuous noise or synthetic fire sound.
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(volume, now + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       gain.connect(master);
       if (!light && noiseBuffer) {
@@ -511,7 +514,7 @@ const AUDIO = (() => {
         source.buffer = noiseBuffer;
         const filter = ac.createBiquadFilter();
         filter.type = step ? "lowpass" : "bandpass";
-        filter.frequency.value = step ? 370 : build ? 610 : 850;
+        filter.frequency.value = step ? 315 : build ? 550 : 710;
         source.connect(filter);
         filter.connect(gain);
         source.start(now, Math.random() * 1.5, duration);
@@ -623,26 +626,51 @@ function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
   ctx.restore();
 }
 
-function drawCarriedLogs(ctx: any, x: number, y: number, dir: number, amount: number) {
+function drawBackpack(ctx: any, x: number, y: number, dir: number,
+                      amount: number, upgrades: number) {
+  // The permanent +8 and crafted +8 backpacks each enlarge the actual bag.
+  // Every piece of carried wood remains individually visible, even at 21 logs.
+  const tier = clamp(Math.floor(Number.isFinite(upgrades) ? upgrades : 0), 0, 2);
   const count = clamp(Math.floor(Number.isFinite(amount) ? amount : 0), 0, 30);
-  if (!count) return;
-  const columns = count <= 5 ? 2 : 3;
-  const rows = Math.ceil(count / columns);
-  const startX = Math.round(x - dir * 9 - (columns * 4) / 2);
-  const startY = Math.round(y - 10 - rows * 2);
-  // The back straps and log ends visually frame each little wood segment.
-  for (let i = 0; i < count; i++) {
-    const col = i % columns;
-    const row = Math.floor(i / columns);
-    const pxX = startX + col * 4;
-    const pxY = startY + row * 2;
-    px(ctx, pxX, pxY, 4, 2, "#653c21");
-    px(ctx, pxX, pxY, 3, 1, "#b27a43");
-    px(ctx, pxX, pxY + 1, 1, 1, "#e0ae70");
-    px(ctx, pxX + 3, pxY + 1, 1, 1, "#c99152");
+  const w = [10, 14, 17][tier];
+  const h = [12, 17, 21][tier];
+  const middleX = Math.round(x - dir * (8 + tier * 2));
+  const bx = middleX - Math.floor(w / 2);
+  const by = Math.round(y - 8 - h);
+  const fabric = ["#685637", "#786443", "#756746"][tier];
+  const trim = ["#a38a57", "#b69c65", "#c3a775"][tier];
+  px(ctx, bx, by, w, h, "#2c2622");
+  px(ctx, bx + 1, by + 1, w - 2, h - 2, fabric);
+  px(ctx, bx + 1, by + 1, w - 2, 2, trim);
+  px(ctx, bx, by + h - 3, w, 2, "#4d3b2a");
+  // Bag size and external pockets make each upgrade visible even when empty.
+  if (tier >= 1) {
+    px(ctx, bx + 1, by + h - 8, 3, 4, "#4c4835");
+    px(ctx, bx + w - 4, by + h - 8, 3, 4, "#4c4835");
+    px(ctx, bx + 1, by + h - 8, 3, 1, trim);
   }
-  const bottom = startY + rows * 2;
-  px(ctx, startX - 1, bottom, columns * 4 + 2, 1, "#a78c60");
+  if (tier >= 2) {
+    px(ctx, bx + 3, by - 2, w - 6, 2, "#8c7c53");
+    px(ctx, bx + Math.floor(w / 2) - 1, by + 1, 2, 3, "#d0b27b");
+  }
+  // Column width contracts from 4px to 3px, while each 2px log has its own
+  // light-colored cut end and dark top edge for visual separation.
+  const columns = count <= 5 ? 2 : 3;
+  const logWidth = count <= 5 ? 4 : 3;
+  const rows = Math.ceil(count / columns);
+  const span = columns * logWidth;
+  const startX = middleX - Math.floor(span / 2);
+  const startY = Math.round(y - 9 - rows * 2);
+  for (let i = 0; i < count; i++) {
+    const col = i % columns, row = Math.floor(i / columns);
+    const pxX = startX + col * logWidth, pxY = startY + row * 2;
+    px(ctx, pxX, pxY, logWidth, 2, "#4e301d");
+    px(ctx, pxX, pxY, logWidth - 1, 1, "#b77f47");
+    px(ctx, pxX, pxY + 1, 1, 1, "#e1b97d");
+    px(ctx, pxX + logWidth - 1, pxY + 1, 1, 1, "#c49152");
+  }
+  // Visible strap BELOW the logs to keep all carried units countable.
+  px(ctx, bx, by + h - 2, w, 1, trim);
 }
 
 function drawPlayer(ctx: any, g: any) {
@@ -681,10 +709,8 @@ function drawPlayer(ctx: any, g: any) {
     if (hasCraftedBoots) px(ctx, x + dx + legShift - 1, y - 5 - legLift, 4, 1, "#c39c58");
     px(ctx, x + dx + legShift - 1, y - 1 - legLift, 4, 1, footwearSole);
   }
-  // backpack and log load read clearly at 320x180
-  px(ctx, bx - dir * 6 - 2, by - 16, 5, 9, outline);
-  px(ctx, bx - dir * 6 - 1, by - 15, 3, 7, "#6d5c3b");
-  px(ctx, bx - dir * 6, by - 14, 1, 5, "#a98a52");
+  // Backpack and its real cargo are drawn behind the shoulders.
+  drawBackpack(ctx, bx, by, dir, p.wood, g.packTier);
   px(ctx, bx - 5, by - 16, 10, 10, outline);
   px(ctx, bx - 4, by - 15, 8, 9, coat);
   px(ctx, bx - 4, by - 8, 8, 2, coatShade);
@@ -713,10 +739,6 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx - 3, by - 15, 6, 1, "#f1784d");
   const scarfFlutter = Math.sin(g.animT * (walking ? 9 : 3)) * (walking ? 2 : 1);
   px(ctx, bx - dir * (6 + Math.round(scarfFlutter)), by - 15, 4, 2, "#bc3d30");
-  // Exactly one small log mark per carried log: up to 21 at max upgrades.
-  // A 3-column, 7-row bundle sits on the back, growing naturally from 1 to 21.
-  // Old saved runs with more wood still render their full load (capped for safety).
-  drawCarriedLogs(ctx, bx, by, dir, p.wood);
   if (chopping) {
     const arc = chopProgress < 0.45
       ? -0.2 - (chopProgress / 0.45) * 1.25
@@ -1113,7 +1135,7 @@ function createEngine(): any {
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
-    keys: {}, pressE: false, pressT: false,
+    keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
     ui: "title", menu: null, menuSel: 0, titleSel: 0, lastResult: null,
@@ -1272,6 +1294,21 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const pcap = pileCap(g);
   const speed = g.crafts.boots ? 112 : 90;
 
+  // Movement takes priority over any unfinished axe swing. If ACT remains
+  // held after moving, it must be released before another chop can begin.
+  const moveLeft = !!(g.keys.left || g.pleft);
+  const moveRight = !!(g.keys.right || g.pright);
+  const wantsToMove = moveLeft !== moveRight;
+  if (!g.keys.act) g.chopBlocked = false;
+  if (wantsToMove) {
+    if (p.chopT > 0) {
+      p.chopT = 0;
+      p.chopTree = null;
+    }
+    if (g.keys.act) g.chopBlocked = true;
+    g.pressE = false;
+  }
+
   // ---- day/night cycle ----
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
@@ -1343,7 +1380,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // ---- context action (single press) ----
   if (g.pressE) {
     g.pressE = false;
-    if (p.chopT <= 0) {
+    if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
       if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
@@ -1417,7 +1454,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   }
 
   // ---- hold action: keep chopping / stoking ----
-  if (g.keys.act && p.chopT <= 0) {
+  if (g.keys.act && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
     if (nearPit && g.fireLit && g.stokeCd <= 0 && g.fuel < 99) {
       if (p.wood > 0) { p.wood--; g.fuel = Math.min(100, g.fuel + 16); g.stokeCd = 0.3; }
       else if (g.stored > 0) { g.stored--; g.fuel = Math.min(100, g.fuel + 16); g.stokeCd = 0.3; }
@@ -1502,13 +1539,13 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (du.life <= 0) g.dust.splice(i, 1);
   }
 
-  // movement: hold sides of screen or A/D
+  // movement: independent of the chop timer; an interrupted swing is not
+  // allowed to finish/damage its target during this update.
   p.moving = false;
-  if (p.chopT <= 0) {
-    const left = g.keys.left || g.pleft;
-    const right = g.keys.right || g.pright;
-    if (left && !right) { p.x -= speed * dt; p.dir = -1; p.moving = true; }
-    else if (right && !left) { p.x += speed * dt; p.dir = 1; p.moving = true; }
+  if (wantsToMove) {
+    p.x += (moveRight ? 1 : -1) * speed * dt;
+    p.dir = moveRight ? 1 : -1;
+    p.moving = true;
     p.x = clamp(p.x, 10, WORLD_W - 10);
   }
   if (p.moving) {
@@ -1783,22 +1820,42 @@ function drawBar(ctx: any, x: number, y: number, w: number, v: number, c1: strin
 }
 
 function drawHUD(ctx: any, g: any, meta: any) {
-  drawText(ctx, "WARMTH", 6, 5, "#c8d2e8");
+  const cap = carryCap(g, meta);
+  const wood = clamp(g.player.wood, 0, cap);
+  // Subtle transparent ribbons preserve readability without covering the sky.
+  ctx.fillStyle = "rgba(8,16,31,0.53)";
+  ctx.fillRect(2, 2, 78, 20);
+  ctx.fillRect(3, 23, 194, 15);
+  ctx.fillRect(W - 85, 19, 83, g.endlessMode ? 32 : 25);
+  ctx.fillStyle = "rgba(185,157,112,0.34)";
+  ctx.fillRect(3, 22, 194, 1);
+  ctx.fillRect(W - 85, 19, 83, 1);
+  drawText(ctx, "WARMTH", 6, 5, "#dce3ee");
   drawBar(ctx, 32, 6, 46, g.player.warmth, "#c23b2e", "#ff8a5c");
-  drawText(ctx, "FUEL", 6, 15, "#c8d2e8");
+  drawText(ctx, "FUEL", 6, 15, "#dce3ee");
   drawBar(ctx, 32, 16, 46, g.fireLit ? g.fuel : 0, "#ff8c1a", "#ffe9a0");
-  drawText(ctx, "WOOD " + g.player.wood + "/" + carryCap(g, meta), 6, 26, "#e8dcc8");
-  if (g.builtPile) drawText(ctx, "PILE " + g.stored + "/" + pileCap(g), 64, 26, "#e8dcc8");
-  drawText(ctx, "ASH " + Math.floor(g.ashEarned), 124, 26, "#cfc2f0");
-  if (g.player.torchT > 0) drawText(ctx, "TORCH " + Math.ceil(g.player.torchT), 6, 34, "#ffd977");
-  const rx = W - 84;
-  drawText(ctx, g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1), rx, 20, "#c8d2e8");
-  drawText(ctx, WEATHER_TEXT[g.weather] || "", rx, 28, "#c8d2e8");
-  drawText(ctx, visualSeason(g).toUpperCase(), rx, 36, "#d9caa8");
-  if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 44, "#8fd0ff");
+
+  drawText(ctx, "WOOD", 6, 26, "#e8dcc8");
+  drawText(ctx, wood + "/" + cap, 28, 26, wood >= cap ? "#ffd98a" : "#f1e5cd");
+  // Very small wood progress indicator: the numeric count remains authoritative.
+  ctx.fillStyle = "rgba(73,58,39,0.85)";
+  ctx.fillRect(6, 34, 54, 2);
+  if (wood > 0) {
+    ctx.fillStyle = wood >= cap ? "#f0bb69" : "#bd9360";
+    ctx.fillRect(6, 34, Math.round(54 * wood / cap), 2);
+  }
+  if (g.builtPile) drawText(ctx, "PILE " + g.stored + "/" + pileCap(g), 69, 26, "#d8d0bd");
+  drawText(ctx, "ASH " + Math.floor(g.ashEarned), 134, 26, "#d8caf2");
+  if (g.player.torchT > 0) drawText(ctx, "TORCH " + Math.ceil(g.player.torchT), 6, 40, "#ffd977");
+
+  const rx = W - 81;
+  drawText(ctx, g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1), rx, 22, "#e0e5ef");
+  drawText(ctx, WEATHER_TEXT[g.weather] || "", rx, 30, "#c8d2e8");
+  drawText(ctx, visualSeason(g).toUpperCase(), rx, 38, "#dfc99a");
+  if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 46, "#8fd0ff");
   if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
     const t = "THE LONG NIGHT";
-    drawText(ctx, t, Math.round(W / 2 - textW(t) / 2), 40, "#8fd0ff");
+    drawText(ctx, t, Math.round(W / 2 - textW(t) / 2), 44, "#8fd0ff");
   }
 }
 
@@ -1835,11 +1892,13 @@ function uiButton(ctx: any, g: any, x: number, y: number, w: number, h: number, 
   const enabled = opts.enabled !== false;
   const sel = !!opts.sel;
   const water = !!opts.water;
+  const pressed = !!opts.pressed && enabled;
   ctx.fillStyle = water ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.4)";
   ctx.fillRect(x + 1, y + 2, w, h - 1);
   if (water) {
     ctx.fillStyle = !enabled ? "rgba(17,32,45,0.34)"
-      : opts.accent ? "rgba(112,68,32,0.38)" : "rgba(23,49,66,0.42)";
+      : opts.accent ? (pressed ? "rgba(128,78,34,0.48)" : "rgba(112,68,32,0.38)")
+      : (pressed ? "rgba(41,79,95,0.48)" : "rgba(23,49,66,0.42)");
     ctx.fillRect(x, y, w, h);
   } else {
     px(ctx, x, y, w, h, enabled ? (sel ? "#7a4a1e" : "#4a3020") : "#1e2438");
@@ -1850,6 +1909,10 @@ function uiButton(ctx: any, g: any, x: number, y: number, w: number, h: number, 
   ctx.fillRect(x, y + h - 1, w, 1);
   ctx.fillRect(x, y, 1, h);
   ctx.fillRect(x + w - 1, y, 1, h);
+  if (water && pressed) {
+    ctx.fillStyle = "rgba(255,221,159,0.58)";
+    ctx.fillRect(x + 3, y + h - 3, w - 6, 1);
+  }
   drawTextC(ctx, label, x + w / 2, y + Math.floor(h / 2) - 2, enabled ? "#ffe9c8" : "#5a6480");
   g.zones.push({ x, y, w, h, onDown: enabled ? opts.onDown : undefined, onUp: opts.onUp });
 }
@@ -2006,10 +2069,24 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
   let y = y0 + 16;
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
-    if (i === g.menuSel) px(ctx, x0 + 3, y, pw - 6, r.h, r.red ? "rgba(211,65,65,0.28)" : "rgba(255,217,138,0.14)");
+    if (i === g.menuSel) {
+      px(ctx, x0 + 3, y, pw - 6, r.h,
+        r.red ? "rgba(211,65,65,0.22)" : "rgba(255,217,138,0.11)");
+      px(ctx, x0 + 3, y + 1, 2, Math.max(1, r.h - 2),
+        r.red ? "#f37e70" : "#dcb779");
+    }
     drawText(ctx, r.label, x0 + 9, y + 1, !r.enabled ? "#5a6480" : r.red ? "#ff7272" : "#ffe9c8");
     drawText(ctx, r.right, x0 + pw - 9 - textW(r.right), y + 1, !r.enabled ? "#5a6480" : r.red ? "#ff7272" : "#d9c9a0");
-    drawText(ctx, r.desc, x0 + 9, y + 8, "#8a94ac");
+    drawText(ctx, r.desc, x0 + 9, y + 8, "#a4acc0");
+    if (r.volumeKey) {
+      const level = AUDIO.getLevel(r.volumeKey);
+      ctx.fillStyle = "rgba(41,53,71,0.92)";
+      ctx.fillRect(x0 + 191, y + 10, 49, 3);
+      if (level > 0) {
+        ctx.fillStyle = "#caa46b";
+        ctx.fillRect(x0 + 191, y + 10, Math.round(level * 49 / 100), 3);
+      }
+    }
     const idx = i;
     g.zones.push({ x: x0 + 3, y, w: pw - 6, h: r.h, onDown: () => { g.menuSel = idx; rows[idx].onDown(); } });
     if (r.onAdjust) {
@@ -2260,9 +2337,9 @@ function drawRunChrome(ctx: any, g: any) {
   const act = g.actionLabel || "-";
   // Gameplay controls float over the river; movement arrows remain untouched.
   uiButton(ctx, g, 133, H - 29, 54, 26, act, {
-    enabled: act !== "-", water: true, accent: true,
+    enabled: act !== "-", water: true, accent: true, pressed: !!g.keys.act,
     onDown: () => { g.pressE = true; g.keys.act = true; },
-    onUp: () => { g.keys.act = false; },
+    onUp: () => { g.keys.act = false; g.chopBlocked = false; },
   });
   uiButton(ctx, g, 77, H - 22, 47, 18, "BUILD", {
     water: true, onDown: () => { g.menu = "build"; g.menuSel = 0; g.keys.act = false; },
@@ -2412,7 +2489,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   if (k === "arrowleft" || k === "a") g.keys.left = !g.menu && down;
   if (k === "arrowright" || k === "d") g.keys.right = !g.menu && down;
   if (!down) {
-    if (k === "e" || k === " ") g.keys.act = false;
+    if (k === "e" || k === " ") { g.keys.act = false; g.chopBlocked = false; }
     return;
   }
   const isList = ["bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause"].includes(g.menu);
@@ -2566,6 +2643,9 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
 // ============ draw ============
 function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any, meta: any) {
   g.zones = [];
+  // Derived from current permanent and crafted upgrades: never persisted as
+  // another source of truth. The game world and reflection share this tier.
+  g.packTier = (meta.up.pack ? 1 : 0) + (g.crafts.pack ? 1 : 0);
   const inRun = g.ui === "run";
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;

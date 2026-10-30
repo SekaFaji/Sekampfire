@@ -623,26 +623,51 @@ function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
   ctx.restore();
 }
 
-function drawCarriedLogs(ctx: any, x: number, y: number, dir: number, amount: number) {
+function drawBackpack(ctx: any, x: number, y: number, dir: number,
+                      amount: number, upgrades: number) {
+  // The permanent +8 and crafted +8 backpacks each enlarge the actual bag.
+  // Every piece of carried wood remains individually visible, even at 21 logs.
+  const tier = clamp(Math.floor(Number.isFinite(upgrades) ? upgrades : 0), 0, 2);
   const count = clamp(Math.floor(Number.isFinite(amount) ? amount : 0), 0, 30);
-  if (!count) return;
-  const columns = count <= 5 ? 2 : 3;
-  const rows = Math.ceil(count / columns);
-  const startX = Math.round(x - dir * 9 - (columns * 4) / 2);
-  const startY = Math.round(y - 10 - rows * 2);
-  // The back straps and log ends visually frame each little wood segment.
-  for (let i = 0; i < count; i++) {
-    const col = i % columns;
-    const row = Math.floor(i / columns);
-    const pxX = startX + col * 4;
-    const pxY = startY + row * 2;
-    px(ctx, pxX, pxY, 4, 2, "#653c21");
-    px(ctx, pxX, pxY, 3, 1, "#b27a43");
-    px(ctx, pxX, pxY + 1, 1, 1, "#e0ae70");
-    px(ctx, pxX + 3, pxY + 1, 1, 1, "#c99152");
+  const w = [10, 14, 17][tier];
+  const h = [12, 17, 21][tier];
+  const middleX = Math.round(x - dir * (8 + tier * 2));
+  const bx = middleX - Math.floor(w / 2);
+  const by = Math.round(y - 8 - h);
+  const fabric = ["#685637", "#786443", "#756746"][tier];
+  const trim = ["#a38a57", "#b69c65", "#c3a775"][tier];
+  px(ctx, bx, by, w, h, "#2c2622");
+  px(ctx, bx + 1, by + 1, w - 2, h - 2, fabric);
+  px(ctx, bx + 1, by + 1, w - 2, 2, trim);
+  px(ctx, bx, by + h - 3, w, 2, "#4d3b2a");
+  // Bag size and external pockets make each upgrade visible even when empty.
+  if (tier >= 1) {
+    px(ctx, bx + 1, by + h - 8, 3, 4, "#4c4835");
+    px(ctx, bx + w - 4, by + h - 8, 3, 4, "#4c4835");
+    px(ctx, bx + 1, by + h - 8, 3, 1, trim);
   }
-  const bottom = startY + rows * 2;
-  px(ctx, startX - 1, bottom, columns * 4 + 2, 1, "#a78c60");
+  if (tier >= 2) {
+    px(ctx, bx + 3, by - 2, w - 6, 2, "#8c7c53");
+    px(ctx, bx + Math.floor(w / 2) - 1, by + 1, 2, 3, "#d0b27b");
+  }
+  // Column width contracts from 4px to 3px, while each 2px log has its own
+  // light-colored cut end and dark top edge for visual separation.
+  const columns = count <= 5 ? 2 : 3;
+  const logWidth = count <= 5 ? 4 : 3;
+  const rows = Math.ceil(count / columns);
+  const span = columns * logWidth;
+  const startX = middleX - Math.floor(span / 2);
+  const startY = Math.round(y - 9 - rows * 2);
+  for (let i = 0; i < count; i++) {
+    const col = i % columns, row = Math.floor(i / columns);
+    const pxX = startX + col * logWidth, pxY = startY + row * 2;
+    px(ctx, pxX, pxY, logWidth, 2, "#4e301d");
+    px(ctx, pxX, pxY, logWidth - 1, 1, "#b77f47");
+    px(ctx, pxX, pxY + 1, 1, 1, "#e1b97d");
+    px(ctx, pxX + logWidth - 1, pxY + 1, 1, 1, "#c49152");
+  }
+  // Visible strap BELOW the logs to keep all carried units countable.
+  px(ctx, bx, by + h - 2, w, 1, trim);
 }
 
 function drawPlayer(ctx: any, g: any) {
@@ -681,10 +706,8 @@ function drawPlayer(ctx: any, g: any) {
     if (hasCraftedBoots) px(ctx, x + dx + legShift - 1, y - 5 - legLift, 4, 1, "#c39c58");
     px(ctx, x + dx + legShift - 1, y - 1 - legLift, 4, 1, footwearSole);
   }
-  // backpack and log load read clearly at 320x180
-  px(ctx, bx - dir * 6 - 2, by - 16, 5, 9, outline);
-  px(ctx, bx - dir * 6 - 1, by - 15, 3, 7, "#6d5c3b");
-  px(ctx, bx - dir * 6, by - 14, 1, 5, "#a98a52");
+  // Backpack and its real cargo are drawn behind the shoulders.
+  drawBackpack(ctx, bx, by, dir, p.wood, g.packTier);
   px(ctx, bx - 5, by - 16, 10, 10, outline);
   px(ctx, bx - 4, by - 15, 8, 9, coat);
   px(ctx, bx - 4, by - 8, 8, 2, coatShade);
@@ -713,10 +736,6 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx - 3, by - 15, 6, 1, "#f1784d");
   const scarfFlutter = Math.sin(g.animT * (walking ? 9 : 3)) * (walking ? 2 : 1);
   px(ctx, bx - dir * (6 + Math.round(scarfFlutter)), by - 15, 4, 2, "#bc3d30");
-  // Exactly one small log mark per carried log: up to 21 at max upgrades.
-  // A 3-column, 7-row bundle sits on the back, growing naturally from 1 to 21.
-  // Old saved runs with more wood still render their full load (capped for safety).
-  drawCarriedLogs(ctx, bx, by, dir, p.wood);
   if (chopping) {
     const arc = chopProgress < 0.45
       ? -0.2 - (chopProgress / 0.45) * 1.25
@@ -2581,6 +2600,9 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
 // ============ draw ============
 function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any, meta: any) {
   g.zones = [];
+  // Derived from current permanent and crafted upgrades: never persisted as
+  // another source of truth. The game world and reflection share this tier.
+  g.packTier = (meta.up.pack ? 1 : 0) + (g.crafts.pack ? 1 : 0);
   const inRun = g.ui === "run";
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;

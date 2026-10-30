@@ -43,7 +43,7 @@ describe("directional footsteps at real 320x180 pixel coordinates", () => {
       expect(left).toHaveLength(2);
       for (let i = 0; i < 2; i++) {
         expect(right[i].front).toBe(left[i].front);
-        expect(right[i].heelX - 100).toBe(-(left[i].heelX - 100));
+        expect(right[i].heelX + left[i].heelX).toBe(200);
         expect(right[i].footY).toBe(left[i].footY);
       }
     }

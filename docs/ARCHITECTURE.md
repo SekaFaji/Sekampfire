@@ -22,6 +22,7 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `docs/SEASONS.md` — seasonal ecology and visual-only balance policy
 - `src/game/font.ts` — independent pixel text system
 - `src/game/renderUtils.ts` — shared primitive/color helpers
+- `src/game/renderAtmosphere.ts` — deterministic mixed woodland parallax, world-anchored ground vegetation, bounded sky/horizon haze
 - `src/game/renderSprites.ts` — player/camp/wildlife composition and sprites
 - `src/game/playerLegs.ts` — tested direction-aware side-view gait, boots and toe silhouettes
 - `src/game/game.ts` — **temporary migration module** containing remaining scene renderer, simulation, input and in-canvas UI. Still large and being extracted in reviewed slices, not rewritten wholesale.

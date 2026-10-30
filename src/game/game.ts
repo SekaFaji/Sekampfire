@@ -13,6 +13,7 @@ import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
+import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
@@ -1498,7 +1499,7 @@ function renderReflectionSubjects(rctx: any, g: any, colors: any, camX: number) 
   rctx.save();
   rctx.translate(0, WATER_Y - PLAYER_Y + 1);
   rctx.globalAlpha = 0.13;
-  drawForestLayer(rctx, camX, 0.48, GROUND + 10, colors.near, 22, 9);
+  drawForestLayer(rctx, camX, 0.48, GROUND + 10, colors.near, 22, 9, colors.name);
   rctx.restore();
   rctx.save();
   rctx.translate(-Math.round(camX), WATER_Y - PLAYER_Y + 1);
@@ -1612,6 +1613,8 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   grad.addColorStop(1, lightenHex(sky, 0.12));
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, GROUND);
+  // Warm dawn/dusk haze behind scenery, never over the player or HUD.
+  drawSkyHaze(ctx, q);
 
   let darkA = 0;
   if (q > 0.52 && q < 0.6) darkA = (q - 0.52) / 0.08;
@@ -1683,9 +1686,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   const meadowBlend = 1 - clamp((g.player.x - 420) / 260, 0, 1);
   ctx.save();
   ctx.globalAlpha = 1 - meadowBlend * 0.5;
-  drawForestLayer(ctx, camX, 0.24, GROUND + 11, colors.far, 24, 3);
-  drawForestLayer(ctx, camX, 0.48, GROUND + 10, colors.near, 22, 9);
+  drawForestLayer(ctx, camX, 0.24, GROUND + 11, colors.far, 24, 3, colors.name);
+  drawForestLayer(ctx, camX, 0.48, GROUND + 10, colors.near, 22, 9, colors.name);
   ctx.restore();
+  drawHorizonHaze(ctx, colors, weatherIntensity(g, "fog"));
 
   // The existing fog/rain weather affects distance, not the sharp foreground.
   const fogStrength = weatherIntensity(g, "fog") + weatherIntensity(g, "rain") * 0.35;
@@ -1706,6 +1710,8 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const dy = 135 + (Math.abs(Math.sin(wx * 0.73)) * 19 | 0);
     px(ctx, x, dy, 2, 1, colors.speckle);
   }
+  // Sparse seasonal grasses/reeds and snow flecks, away from central camp.
+  drawGroundAccents(ctx, camX, g.animT, colors);
 
   // world space
   ctx.save();
@@ -1829,7 +1835,8 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 // slow firelight flicker on the surrounding ground (no second light source)
     const flicker = 0.92 + Math.sin(g.animT * 9) * 0.06;
     const rg = ctx.createRadialGradient(CX - camX, 146, 0, CX - camX, 146, Math.max(10, lightR * flicker));
-    rg.addColorStop(0, "rgba(255,150,60,0.22)");
+    rg.addColorStop(0, "rgba(255,172,92,0.23)");
+    rg.addColorStop(0.42, "rgba(244,136,66,0.09)");
     rg.addColorStop(1, "rgba(255,150,60,0)");
     ctx.fillStyle = rg;
     ctx.fillRect(0, 0, W, H);

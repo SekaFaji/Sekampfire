@@ -1,5 +1,6 @@
 import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, STAGES, CRAFTS, UPGRADES, WEATHER_TEXT } from "./config";
 import { createInputHandlers } from "./input";
+import { drawIllustratedGuide, drawShopTabs } from "./menuScreens";
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier } from "./rules";
 import { AUDIO } from "./audio";
@@ -116,7 +117,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, lastResult: null,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
     crafts: {} as any, eventCd: 6,
@@ -992,7 +993,7 @@ function shopRows(g: any, meta: any) {
 
 function menuRows(g: any, meta: any): any[] {
   if (g.menu === "bench") return benchRows(g, meta);
-  if (g.menu === "shop") return shopRows(g, meta);
+  if (g.menu === "shop") return g.shopTab === 1 ? [] : shopRows(g, meta);
   if (g.menu === "build") return buildRows(g, meta);
   if (g.menu === "settings") return settingsRows(g, meta);
   if (g.menu === "audio") return audioRows(g);
@@ -1205,34 +1206,7 @@ function resetRows(g: any, meta: any) {
 
 
 function drawHelpMenu(ctx: any, g: any) {
-  panel(ctx, 34, 18, 252, 146);
-  drawText(ctx, "HOW TO PLAY", 40, 24, "#ffd98a");
-  closeZone(ctx, g, 268, 24);
-  const lines: any[] = [
-    ["WALK: HOLD LEFT OR RIGHT SIDE", "#c8d2e8"],
-    ["OF THE SCREEN - OR A AND D KEYS", "#c8d2e8"],
-    ["", "#c8d2e8"],
-    ["ACT: BIG BUTTON OR E. HOLD IT", "#c8d2e8"],
-    ["TO KEEP CHOPPING OR STOKING", "#c8d2e8"],
-    ["", "#c8d2e8"],
-    ["THE WORKBENCH AND WOOD PILE SITES", "#ffd977"],
-    ["ARE MARKED BY STAKES. CARRY 15", "#ffd977"],
-    ["LOGS TO A SITE AND ACT TO STACK THEM.", "#ffd977"],
-    ["ACT AGAIN - HAMMERING TAKES A WHILE", "#ffd977"],
-    ["", "#c8d2e8"],
-    ["WORKBENCH: CRAFT GEAR", "#ffd977"],
-    ["WOOD PILE: STORE WOOD", "#ffd977"],
-    ["", "#c8d2e8"],
-    ["TORCH: T - BUILD: B - PAUSE: P OR ESC", "#c8d2e8"],
-    ["", "#c8d2e8"],
-    ["ASH IS EARNED EACH NIGHT AND SPENT", "#cfc2f0"],
-    ["ON PERMANENT UPGRADES BETWEEN RUNS", "#cfc2f0"],
-  ];
-  let y = 36;
-  for (const ln of lines) {
-    if (ln[0]) drawText(ctx, ln[0], 42, y, ln[1]);
-    y += 7;
-  }
+  drawIllustratedGuide(ctx, g, () => closeMenu(g));
 }
 
 function drawInfoMenu(ctx: any, g: any, title: string, lines: string[], hasPolicyLink: boolean) {
@@ -1263,7 +1237,7 @@ function drawMenu(ctx: any, g: any, meta: any) {
   if (g.menu === "bench") {
     drawListMenu(ctx, g, "WORKBENCH", "WOOD " + g.player.wood + " + PILE " + g.stored, benchRows(g, meta));
   } else if (g.menu === "shop") {
-    drawListMenu(ctx, g, "FLAME LINEAGE", "ASH " + meta.ash, shopRows(g, meta));
+    drawShopTabs(ctx, g, meta, shopRows(g, meta), () => closeMenu(g));
   } else if (g.menu === "build") {
     drawListMenu(ctx, g, "BUILD", "WOOD " + (g.player.wood + g.stored), buildRows(g, meta));
   } else if (g.menu === "settings") {
@@ -1382,7 +1356,7 @@ function titleActions(g: any, meta: any): any[] {
     }])
   ];
   return run.concat([
-    { label: "UPGRADES", act: () => { g.menu = "shop"; g.menuSel = 0; } },
+    { label: "SHOP", act: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } },
     { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
   ]);
 }
@@ -1423,17 +1397,17 @@ function drawScreen(ctx: any, g: any, meta: any) {
     }
     drawBig(ctx, "SEKAMPFIRE", W / 2 + 2, 18 + 2, 5, "#3a2408");
     drawBig(ctx, "SEKAMPFIRE", W / 2, 18, 5, "#ffd98a");
-    drawTextC(ctx, "A COZY WINTER SURVIVAL", W / 2, 50, "#c8d2e8");
+    drawTextC(ctx, "FOUR SEASONS. ONE FIRE.", W / 2, 50, "#c8d2e8");
     drawTextC(ctx, "ASH " + meta.ash + " - BEST " + (meta.best || 0) + " NIGHTS", W / 2, 60, "#8a94ac");
     // Main decisions stay compact and centred; optional help and socials
     // occupy separate side areas without cluttering keyboard navigation.
     const items = titleActions(g, meta);
-    const menuTop = 72, rowStep = 17;
-    const menuHeight = items.length * rowStep + 10;
+    const menuTop = 75, rowStep = 15;
+    const menuHeight = items.length * rowStep + 5;
     panel(ctx, 98, menuTop, 124, menuHeight);
     g.titleSel = clamp(g.titleSel || 0, 0, items.length - 1);
     for (let i = 0; i < items.length; i++) {
-      const y = menuTop + 8 + i * rowStep;
+      const y = menuTop + 5 + i * rowStep;
       const sel = i === g.titleSel;
       if (sel) px(ctx, 102, y - 2, 116, 12, "rgba(255,217,138,0.13)");
       drawTextC(ctx, items[i].label, W / 2 + (sel ? 4 : 0), y, sel ? "#ffd98a" : "#a5b0c5");
@@ -1444,7 +1418,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     // Standalone tutorial plaque to the right, available regardless of
     // whether the player has a resumable run.
     uiButton(ctx, g, 236, 107, 74, 18, "HOW TO PLAY", {
-      onDown: () => { g.menu = "help"; }
+      onDown: () => { g.menu = "help"; g.helpPage = 0; }
     });
 
     // A small vertical stack of pixel-framed socials. No new audio, popup
@@ -1466,8 +1440,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
         onDown: () => window.open(social.url, "_blank", "noopener,noreferrer"),
       });
     }
-    if (Math.sin(g.animT * 3) > -0.2) drawTextC(ctx, "W/S PICK - E SELECT", W / 2, 163, "#65718a");
-    drawTextC(ctx, "HOLD A SCREEN SIDE TO WALK", W / 2, 170, "#53617a");
+
   } else if (g.ui === "dead" && g.lastResult) {
     ctx.fillStyle = "rgba(8,10,26,0.62)";
     ctx.fillRect(0, 0, W, H);
@@ -1478,7 +1451,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawTextC(ctx, "YOU SURVIVED " + g.lastResult.nights + (g.lastResult.nights === 1 ? " NIGHT." : " NIGHTS."), W / 2, 62, "#c8d2e8");
     drawTextC(ctx, "+" + g.lastResult.ash + " ASH BANKED. (TOTAL " + meta.ash + ")", W / 2, 72, "#ffd98a");
     uiButton(ctx, g, 100, 94, 120, 15, "TRY AGAIN", { onDown: () => startRun(g, meta) });
-    uiButton(ctx, g, 100, 113, 120, 13, "UPGRADES", { onDown: () => { g.menu = "shop"; g.menuSel = 0; } });
+    uiButton(ctx, g, 100, 113, 120, 13, "SHOP", { onDown: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } });
     uiButton(ctx, g, 100, 130, 120, 13, "MAIN MENU", { onDown: () => returnToMainMenu(g) });
   } else if (g.ui === "win" && g.lastResult) {
     ctx.fillStyle = "rgba(8,10,26,0.55)";
@@ -1488,7 +1461,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawTextC(ctx, "THE LONG NIGHT HAS PASSED. THE CABIN IS YOURS.", W / 2, 52, "#c8d2e8");
     drawTextC(ctx, "NIGHTS " + g.lastResult.nights + " - ASH +" + g.lastResult.ash, W / 2, 62, "#ffd98a");
     uiButton(ctx, g, 90, 82, 140, 14, "ENDLESS WINTER", { onDown: () => goEndless(g) });
-    uiButton(ctx, g, 90, 100, 140, 13, "UPGRADES", { onDown: () => { g.menu = "shop"; g.menuSel = 0; } });
+    uiButton(ctx, g, 90, 100, 140, 13, "SHOP", { onDown: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } });
     uiButton(ctx, g, 90, 117, 140, 13, "NEW RUN", { onDown: () => startRun(g, meta) });
     uiButton(ctx, g, 90, 134, 140, 13, "MAIN MENU", { onDown: () => returnToMainMenu(g) });
   }

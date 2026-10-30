@@ -6,10 +6,10 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] Redesign main title: four-season subtitle, tighten dynamic menu, SHOP label, preserve main actions and social links.
 - [x] Functional Shop with existing permanent Ash upgrades and a neutral inactive Coming Soon tab; no premium/payment hint.
 - [x] Replace text-only How to Play with seven illustrated real-sprite steps and touchscreen/keyboard paging (device QA still pending).
-- [ ] Full four-season calendar: **seven completed in-game days per season**, beginning in autumn; all four ecosystems change tree foliage/weather and wildlife.
-- [ ] Seven-day seasonal wildlife spawns with appropriate appearance, differentiated from ambience-only critters.
-- [ ] Movement pressed-edge feedback: gradual spatial fade and short fade-out on release.
-- [ ] Shoreline waves should advance/recede subtly and independently of mirrored player/animals, without harsh seams.
+- [x] Four-season calendar: **seven completed in-game days per season**, autumn/winter/spring/summer, with season-specific palettes and tree details. **Weather/difficulty seasonal rebalance is not yet implemented**.
+- [x] Seven-day season-specific wildlife spawns and original pixel sprites (12 distinct wildlife species); ambience-only, no gameplay balance impact.
+- [x] Movement pressed-edge feedback: 15% spatial gradient and short ease-in/fade-out; phone QA pending.
+- [x] Waterline waves advance/recede 1–2 logical pixels, with sparse translucent foam and no full-width white line; phone QA pending.
 - [x] **End screen navigation**: win, death and retirement offer Main Menu with no second ash banking, plus keyboard shortcut M. Needs mobile tap verification.
 - [x] **Adaptive fullscreen source implementation**: measured 16:9 canvas, safe-area insets and immersive browser fallback. **Real Android/iOS viewport testing still required** before declaring device-perfect.
 - [x] **Player camera-facing idle in source**: character faces camera when not moving/chopping, with breathing/blinking/scarf animation; still requires phone visual QA.
@@ -19,6 +19,7 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] **Detailed procedural trees in source**: separate anchored renderer with three evergreen silhouettes, bark, branches, shading and winter-only snow; tests for geometry/season. **Final premium art quality still requires visual approval on real devices**.
 
 ## Priority 1 — visual/audio polish requests
+- [ ] Season-specific weather odds and distinct survival difficulty (optional future design decision; do not change without explicit approval).
 
 - [x] Include visible near-shore wildlife in the water reflection and add faint near-treeline reflection without strongly mirroring mountains or sky. Verify on phone.
 - [x] Compact main menu; move How to Play to its right-side plaque and add separate bottom-left Discord/YouTube buttons with exact project links. Verify touch layout on phone.

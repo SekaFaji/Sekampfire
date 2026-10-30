@@ -17,7 +17,7 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 
 - A reflective foreground river and parallax pine silhouettes add depth to the winter landscape.
 - BUILD, ACT and TORCH float over the water; MENU sits at the top right below the minimap.
-- The original left/right movement arrows and hold-a-side movement remain unchanged; holding a direction now adds a larger, translucent feedback overlay.
+- The original left/right movement arrows and hold-a-side movement remain unchanged. Holding a direction now tints that entire half of the game screen, without drawing extra arrow shapes.
 - River controls remain transparent, and the shoreline follows a soft irregular edge rather than a bright straight line.
 - The autumn opening gradually gives way to winter, spring and summer palettes; seasons change visuals, not survival balance.
 - The left, middle and right regions reveal hills, forest and mountains with smoothly blended backgrounds.
@@ -30,7 +30,15 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 - Snowy footsteps fade behind the player in winter. Existing rabbits, foxes, the fire and weather have more subtle ambient movement.
 - Birds, foxes, rabbits and the dog have more independent idle movements and fewer repetitive notifications. Wind, rain, fog and snow effects crossfade smoothly when weather changes.
 - Procedural sound effects now use filtered noise for quieter steps, chopping and construction, with occasional soft fire crackles.
-- Gentle fire and wind ambience, footsteps, chopping and building cues use browser-generated sound (no downloaded audio files). Sound starts only after a tap or key press and can be muted in **Settings → Sound**.
+- Gentle fire and wind ambience, footsteps, chopping and building cues use browser-generated sound (no downloaded audio files). Sound starts after a tap or key press. **Settings → Audio** offers independent master, ambience and effects volume adjustments from 0–100%, plus mute.
+
+## Player, privacy and settings polish
+
+- The player's pixel-art avatar has a stronger outline, shaded coat, scarf, backpack, improved walk/idle motion, axe swing and torch pose; gameplay collision and movement speed are unchanged.
+- **Settings** includes Audio, a HIGH/LOW visual-effects toggle, Privacy Policy, Credits and a red Reset Save flow.
+- **Reset Save** requires two explicit confirmations and then deletes only Sekampfire permanent progress, checkpoints and legacy progress keys. Audio preferences remain unchanged; reset cannot be undone.
+- The in-game Privacy Policy links to [the full privacy page](privacy.html). The game stores save data locally; its hosting and CDN dependencies are detailed in the policy.
+- **Low visual FX** reduces snow particle counts and reflection scanlines on slower devices. High remains the default.
 
 ## Tech
 

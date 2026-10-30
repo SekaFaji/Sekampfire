@@ -78,6 +78,57 @@ const WEATHER_TEXT: Record<string, string> = {
   blizzard: "BLIZZARD",
 };
 
+// ============ visual-only seasons ============
+// Season and backdrop change the art, not warmth, weather odds, rewards or build costs.
+// A day is complete after its night ends; don't change seasons halfway through a night.
+const SEASON_ROTATION = ["autumn", "autumn", "winter", "winter", "winter", "spring", "spring", "summer", "summer"];
+const SEASON_COLORS: Record<string, any> = {
+  autumn: {
+    ground:"#776a4d", ridge:"#a18c65", shore:"#625e4d", water:"#376477",
+    treeLight:"#b3753b", treeDark:"#754b32", cap:"#d0a16b", trunk:"#63482f",
+    far:"#727e72", near:"#53655e", hillFar:"#778b88", hillNear:"#66766e",
+    mountain:"#566777", mountain2:"#495f65", snow:"#9fa8a7", sky:"#c0a57c", speckle:"#a99264",
+  },
+  winter: {
+    ground:"#dbe4ee", ridge:"#c8d4e2", shore:"#849eaa", water:"#376b83",
+    treeLight:"#3c7a44", treeDark:"#245a36", cap:"#e6eef6", trunk:"#6b4a32",
+    far:"#577a82", near:"#345b65", hillFar:"#788fa1", hillNear:"#586c85",
+    mountain:"#42506e", mountain2:"#313d5c", snow:"#b9c7dd", sky:"#a8c4dc", speckle:"#c4d2e2",
+  },
+  spring: {
+    ground:"#64836a", ridge:"#91aa7d", shore:"#536f68", water:"#397b83",
+    treeLight:"#62ac66", treeDark:"#2b7549", cap:"#a4c883", trunk:"#6b5038",
+    far:"#719c83", near:"#4b7868", hillFar:"#7b9a99", hillNear:"#608c77",
+    mountain:"#637b86", mountain2:"#486778", snow:"#abbec4", sky:"#9bbfbd", speckle:"#a8bf79",
+  },
+  summer: {
+    ground:"#728851", ridge:"#a1aa68", shore:"#647358", water:"#356f83",
+    treeLight:"#4b994f", treeDark:"#26623c", cap:"#81b45c", trunk:"#6a4d2f",
+    far:"#6f9482", near:"#486f5d", hillFar:"#849d91", hillNear:"#678b75",
+    mountain:"#5d7285", mountain2:"#495f75", snow:"#c9cecb", sky:"#a5c6d1", speckle:"#b4ad6e",
+  },
+};
+function completedNights(g: any): number {
+  return Math.max(0, g.night - (g.isNight ? 1 : 0));
+}
+function visualSeason(g: any): string {
+  if (g.longNightActive) return "winter";
+  return SEASON_ROTATION[completedNights(g) % SEASON_ROTATION.length];
+}
+function visualPalette(g: any): any {
+  const season = visualSeason(g);
+  const current = SEASON_COLORS[season];
+  const index = completedNights(g);
+  const previous = SEASON_ROTATION[(index - 1 + SEASON_ROTATION.length) % SEASON_ROTATION.length];
+  if (index === 0 || previous === season || g.longNightActive) return { ...current, name: season };
+  // Fade the environment into its new season over the opening seconds of daylight.
+  const blend = clamp(g.time / 14, 0, 1);
+  const old = SEASON_COLORS[previous];
+  const out: any = { name: season };
+  for (const k of Object.keys(current)) out[k] = lerpHex(old[k], current[k], blend);
+  return out;
+}
+
 // ============ 3x5 pixel font ============
 const FONT: Record<string, string> = {
   A: "111101111101101", B: "111101111101111", C: "111100100100111",
@@ -234,19 +285,20 @@ function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) 
 }
 
 // cozy pines in three variants: layered pine, tall spire fir, bushy spruce
-function drawTree(ctx: any, tr: any, t: number, windAmt: number) {
+function drawTree(ctx: any, tr: any, t: number, windAmt: number, colors: any) {
   const x = Math.round(tr.x), y = Math.round(tr.y);
   const hit = tr.hitT > 0 ? Math.sin(t * 45) * 2 * tr.hitT : 0;
   const sway = Math.sin(t * 1.7 + tr.id) * (1 + windAmt * 3) + hit;
   const s = tr.tier, v = ((tr.variant || 0) % 3);
   const th = 5 + s * 4, tw = 2 + s;
-  const tc = tr.tier === 2 ? "#4a3428" : "#6b4a32";
+  const tc = colors.trunk;
   px(ctx, x - Math.floor(tw / 2), y - th, tw, th, tc);
   px(ctx, x - Math.floor(tw / 2) + 1, y - th + 2, 1, th - 3, tr.tier === 2 ? "#5a4232" : "#7a5636");
   const cw = 6 + s * 4, chh = 6 + s * 5;
-  const cA = v === 2 ? "#4a8a5c" : v === 1 ? "#35804a" : "#3c7a44";
-  const cB = v === 2 ? "#2c5a40" : v === 1 ? "#245a36" : "#2c5a34";
-  const snowC = "#e6eef6";
+  const cA = v === 2 ? lightenHex(colors.treeLight, 0.14) : colors.treeLight;
+  const cB = v === 1 ? colors.treeDark : lerpHex(colors.treeDark, colors.treeLight, 0.18);
+  const snowC = colors.cap;
+  const showCap = colors.name === "winter";
   if (v === 0) {
     // layered pine: three stacked triangle tiers with snow on each
     const tH = Math.max(2, Math.round(chh / 3) + 1);
@@ -257,7 +309,7 @@ function drawTree(ctx: any, tr: any, t: number, windAmt: number) {
         const w2 = Math.max(2, Math.round(twid * (1 - i / tH)));
         px(ctx, x - w2 / 2 + sway * 0.6, yb - i, w2, 1, (i + k) % 3 === 0 ? cA : cB);
       }
-      px(ctx, x - Math.max(1, Math.floor(twid * 0.25)), yb - tH + 2, Math.max(2, Math.floor(twid * 0.5)), 1, snowC);
+      if (showCap || k % 2 === 0) px(ctx, x - Math.max(1, Math.floor(twid * 0.25)), yb - tH + 2, Math.max(2, Math.floor(twid * 0.5)), 1, snowC);
     }
   } else if (v === 1) {
     // tall spire fir: narrow, pointed, little snow cap
@@ -281,14 +333,14 @@ function drawTree(ctx: any, tr: any, t: number, windAmt: number) {
   }
 }
 
-function drawFallingTree(ctx: any, ft: any, t: number) {
+function drawFallingTree(ctx: any, ft: any, t: number, colors: any) {
   const prog = clamp(ft.t / 0.55, 0, 1);
   const ang = (ft.dir || 1) * 1.55 * prog * prog;
   ctx.save();
   ctx.translate(Math.round(ft.x), Math.round(ft.y));
   ctx.rotate(ang);
   ctx.translate(-Math.round(ft.x), -Math.round(ft.y));
-  drawTree(ctx, ft, t, 0);
+  drawTree(ctx, ft, t, 0, colors);
   ctx.restore();
 }
 
@@ -342,6 +394,12 @@ function drawPlayer(ctx: any, g: any) {
   if (p.torchT > 0) {
     px(ctx, x + dir * 6, y - 16 + bob, 1, 6, "#6b4a32");
     drawFlame(ctx, x + dir * 6, y - 16 + bob, g.animT, 0.25);
+  }
+  // Small breath wisps in cold weather: decorative, no warmth or stamina effects.
+  if (visualSeason(g) === "winter" || g.weather === "coldsnap") {
+    const b = (g.animT * 1.8) % 1;
+    ctx.fillStyle = "rgba(226,239,243," + (0.3 * (1 - b)).toFixed(3) + ")";
+    ctx.fillRect(x + dir * (5 + b * 6), y - 13 - b * 5, 2, 1);
   }
 }
 
@@ -604,6 +662,25 @@ function drawMountainRange(ctx: any, arr: any[], color: string, snow: string) {
   }
 }
 
+// Rolling hills fill the horizon in the meadow / forest regions.
+// Moving right gradually reveals the mountain panorama instead.
+function drawHillRange(ctx: any, camX: number, shift: number,
+                       fill: string, depth: number, spread: number) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(0, GROUND + 12);
+  for (let x = 0; x <= W + 8; x += 8) {
+    const wx = x + camX * shift;
+    const y = GROUND - depth
+      - Math.sin(wx / spread) * 10
+      - Math.sin(wx / (spread * 0.48) + 0.9) * 4;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W + 8, GROUND + 12);
+  ctx.closePath();
+  ctx.fill();
+}
+
 // ============ distant forest layers ============
 // Forest silhouettes are decorative parallax, not collectible world trees.
 function drawForestLayer(ctx: any, camX: number, parallax: number, base: number,
@@ -703,8 +780,7 @@ function genScenery(g: any, seed: number) {
   while (x < WORLD_W * 0.75 + W + 100) { g.mts2.push({ x, w: 40 + rnd() * 70, h: 16 + rnd() * 30 }); x += 28 + rnd() * 58; }
   for (let i = 0; i < 45; i++) g.stars.push({ x: rnd() * W, y: rnd() * 90, tw: rnd() * 6 });
   for (let i = 0; i < 320; i++) g.sparkles.push({ x: rnd() * WORLD_W, y: GROUND + 4 + rnd() * (H - GROUND - 8), c: rnd() > 0.5 ? "#eef6fc" : "#c4d2e2" });
-  g.snow = [];
-  for (let i = 0; i < 45; i++) g.snow.push({ x: rnd() * W, y: rnd() * H, v: 12 + rnd() * 18, ph: rnd() * 6 });
+  g.snow = []; // Start in snow-free autumn; winter fills snowfall particles naturally.
 }
 
 function treeTierFor(x: number): number {
@@ -718,7 +794,7 @@ function spawnTrees(g: any, count: number) {
       const x = 16 + Math.random() * (WORLD_W - 32);
       if (x > CX - 100 && x < CX + 56) continue;
       if (g.trees.some((t: any) => Math.abs(t.x - x) < 16)) continue;
-      const y = 138 + Math.random() * 28;
+      const y = 136 + Math.random() * 18; // Keep pickups clear of foreground water.
       const tier = treeTierFor(x);
       const variant = Math.floor(Math.random() * 3);
       g.trees.push({ id: g.treeId++, x, y, tier, variant, hp: [1, 2, 3][tier], hitT: 0 });
@@ -1218,7 +1294,8 @@ function updateAmbient(g: any, dt: number) {
   }
   if (g.shake > 0) g.shake = Math.max(0, g.shake - dt);
   // snow
-  const target = g.weather === "blizzard" ? 110 : g.weather === "wind" ? 70 : 45;
+  const winter = visualSeason(g) === "winter";
+  const target = !winter ? 0 : g.weather === "blizzard" ? 110 : g.weather === "wind" ? 70 : 45;
   while (g.snow.length < target) g.snow.push({ x: Math.random() * W, y: Math.random() * H, v: 12 + Math.random() * 18, ph: Math.random() * 6 });
   while (g.snow.length > target) g.snow.pop();
   const windV = g.weather === "wind" ? 45 : g.weather === "blizzard" ? 95 : 0;
@@ -1331,7 +1408,8 @@ function drawHUD(ctx: any, g: any, meta: any) {
   const rx = W - 84;
   drawText(ctx, g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1), rx, 20, "#c8d2e8");
   drawText(ctx, WEATHER_TEXT[g.weather] || "", rx, 28, "#c8d2e8");
-  if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 36, "#8fd0ff");
+  drawText(ctx, visualSeason(g).toUpperCase(), rx, 36, "#d9caa8");
+  if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 44, "#8fd0ff");
   if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
     const t = "THE LONG NIGHT";
     drawText(ctx, t, Math.round(W / 2 - textW(t) / 2), 40, "#8fd0ff");
@@ -1922,6 +2000,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   const camX = clamp(g.player.x - W / 2, 0, WORLD_W - W);
   g.camX = camX;
   const x0 = CX - 42;
+  const colors = visualPalette(g);
 
   const shx = g.shake > 0 ? Math.round(Math.sin(g.animT * 90) * 1.6 * (g.shake / 0.15)) : 0;
   const shy = g.shake > 0 ? Math.round(Math.cos(g.animT * 77) * 1.2 * (g.shake / 0.15)) : 0;
@@ -1931,8 +2010,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
   // sky
   const grad = ctx.createLinearGradient(0, 0, 0, GROUND);
-  grad.addColorStop(0, skyColor(q));
-  grad.addColorStop(1, lightenHex(skyColor(q), 0.12));
+  const naturalSky = skyColor(q);
+  const sky = q > 0.05 && q < 0.55 ? lerpHex(naturalSky, colors.sky, 0.42) : naturalSky;
+  grad.addColorStop(0, sky);
+  grad.addColorStop(1, lightenHex(sky, 0.12));
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, GROUND);
 
@@ -1985,40 +2066,56 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     px(ctx, sx - 2, sy - 4, 4, 8, "#ffd977");
   }
 
-  // mountains (parallax)
+  // Distinct left meadow, central woodland and right mountain horizons.
+  // Blend by world position to avoid a sudden change while walking.
+  drawHillRange(ctx, camX, 0.16, colors.hillFar, 29, 70);
+  drawHillRange(ctx, camX, 0.30, colors.hillNear, 18, 48);
+  const mountainBlend = clamp((g.player.x - 990) / 240, 0, 1);
+  if (mountainBlend > 0) {
+    ctx.save();
+    ctx.globalAlpha = mountainBlend;
+    ctx.translate(-Math.round(camX * 0.2), 0);
+    drawMountainRange(ctx, g.mts, colors.mountain, colors.snow);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = mountainBlend;
+    ctx.translate(-Math.round(camX * 0.45), 0);
+    drawMountainRange(ctx, g.mts2, colors.mountain2, colors.snow);
+    ctx.restore();
+  }
+
+  const meadowBlend = 1 - clamp((g.player.x - 420) / 260, 0, 1);
   ctx.save();
-  ctx.translate(-Math.round(camX * 0.2), 0);
-  drawMountainRange(ctx, g.mts, "#42506e", "#b9c7dd");
-  ctx.restore();
-  ctx.save();
-  ctx.translate(-Math.round(camX * 0.45), 0);
-  drawMountainRange(ctx, g.mts2, "#313d5c", "#9db0cf");
+  ctx.globalAlpha = 1 - meadowBlend * 0.5;
+  drawForestLayer(ctx, camX, 0.24, GROUND + 11, colors.far, 24, 3);
+  drawForestLayer(ctx, camX, 0.48, GROUND + 10, colors.near, 22, 9);
   ctx.restore();
 
-  // The same landscape moves at two rates behind the actual chop-able trees.
-  drawForestLayer(ctx, camX, 0.24, GROUND + 11, "#577a82", 24, 3);
-  drawForestLayer(ctx, camX, 0.48, GROUND + 10, "#345b65", 22, 9);
-
-  // ground
-  px(ctx, 0, GROUND, W, 4, "#c8d4e2");
-  px(ctx, 0, GROUND + 4, W, H - GROUND - 4, "#dbe4ee");
+  // Ground and scattered texture share a continuous palette, including camp.
+  px(ctx, 0, GROUND, W, 4, colors.ridge);
+  px(ctx, 0, GROUND + 4, W, H - GROUND - 4, colors.ground);
+  for (let x = 0; x < W; x += 11) {
+    const wx = x + Math.round(camX);
+    const dy = 135 + (Math.abs(Math.sin(wx * 0.73)) * 19 | 0);
+    px(ctx, x, dy, 2, 1, colors.speckle);
+  }
 
   // world space
   ctx.save();
   ctx.translate(-Math.round(camX), 0);
   for (const s of g.sparkles) {
     if (s.x < camX - 4 || s.x > camX + W + 4) continue;
-    px(ctx, s.x, s.y, 1, 1, s.c);
+    px(ctx, s.x, s.y, 1, 1, colors.name === "winter" ? s.c : colors.speckle);
   }
 
   const ents: { y: number; f: () => void }[] = [];
   ents.push({ y: 150, f: () => drawStructures(ctx, g) });
   for (const tr of g.trees) {
     if (tr.x < camX - 60 || tr.x > camX + W + 60) continue;
-    ents.push({ y: tr.y, f: () => drawTree(ctx, tr, g.animT, g.windAmt || 0) });
+    ents.push({ y: tr.y, f: () => drawTree(ctx, tr, g.animT, g.windAmt || 0, colors) });
   }
   for (const ft of g.falling) {
-    ents.push({ y: ft.y, f: () => drawFallingTree(ctx, ft, g.animT) });
+    ents.push({ y: ft.y, f: () => drawFallingTree(ctx, ft, g.animT, colors) });
   }
   ents.push({ y: 151, f: () => drawFire(ctx, g) });
   ents.push({ y: 151.5, f: () => drawPickups(ctx, g) });
@@ -2107,7 +2204,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
   if (g.fireLit && lightR > 0) {
     ctx.globalCompositeOperation = "lighter";
-    const rg = ctx.createRadialGradient(CX - camX, 146, 0, CX - camX, 146, Math.max(10, lightR * 0.9));
+// slow firelight flicker on the surrounding ground (no second light source)
+    const flicker = 0.92 + Math.sin(g.animT * 9) * 0.06;
+    const rg = ctx.createRadialGradient(CX - camX, 146, 0, CX - camX, 146, Math.max(10, lightR * flicker));
     rg.addColorStop(0, "rgba(255,150,60,0.22)");
     rg.addColorStop(1, "rgba(255,150,60,0)");
     ctx.fillStyle = rg;
@@ -2127,11 +2226,11 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     ctx.fillRect(mx0, my0, mw, mh);
     const mm = (wx: number) => mx0 + (wx / WORLD_W) * mw;
     // snow ground line
-    ctx.fillStyle = "rgba(220,232,244,0.28)";
+    ctx.fillStyle = colors.ridge;
     ctx.fillRect(mx0 + 1, my0 + 11, mw - 2, 1);
     for (const tr of g.trees) {
       const tx = Math.round(mm(tr.x));
-      ctx.fillStyle = ["#3c7a44", "#35804a", "#4a8a5c"][(tr.variant || 0) % 3];
+      ctx.fillStyle = colors.treeLight;
       ctx.fillRect(tx, my0 + 4, 2, 5);
       ctx.fillStyle = "#5a4232";
       ctx.fillRect(tx, my0 + 9, 1, 2);

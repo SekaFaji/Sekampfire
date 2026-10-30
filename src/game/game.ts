@@ -7,6 +7,7 @@ import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
 import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
 import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
+import { shorelineWaveOffset, shorelineFoam } from "./water";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
@@ -107,7 +108,7 @@ function createEngine(): any {
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, camX: CX - W / 2, shake: 0,
-    pleft: false, pright: false,
+    pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, endlessMode: false, endlessN: 0, over: false,
@@ -653,6 +654,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
   g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
+  const ease = 1 - Math.exp(-Math.max(0, dt) * 13);
+  g.moveFeedbackLeft += ((g.pleft || g.keys.left) ? 1 - g.moveFeedbackLeft : -g.moveFeedbackLeft) * ease;
+  g.moveFeedbackRight += ((g.pright || g.keys.right) ? 1 - g.moveFeedbackRight : -g.moveFeedbackRight) * ease;
   // toasts
   for (let i = g.toasts.length - 1; i >= 0; i--) {
     g.toasts[i].life -= dt;
@@ -1342,17 +1346,22 @@ function drawRunChrome(ctx: any, g: any) {
 // Large, restrained directional feedback behind the EXISTING movement chevrons.
 // Pointer and keyboard input both work; the arrow geometry itself is unchanged.
 function drawMovementFeedback(ctx: any, g: any) {
-  // Narrow pressed-edge tint (15% width), with NO new arrows or controls.
-  const left = !!(g.pleft || g.keys.left);
-  const right = !!(g.pright || g.keys.right);
-  if (!left && !right) return;
-  const edgeWidth = Math.round(W * 0.15);
-  const fillSide = (x: number) => {
-    ctx.fillStyle = g.isNight ? "rgba(187,206,226,0.105)" : "rgba(51,79,101,0.115)";
-    ctx.fillRect(x, 0, edgeWidth, H);
+  // Smooth 15% edge indicator: soft spatial fade and a short time fade-out.
+  // Never draw extra arrows, and don't alter existing input hit areas.
+  const width = Math.round(W * 0.15);
+  const drawSide = (side: "left" | "right", intensity: number) => {
+    if (intensity < 0.015) return;
+    const x = side === "left" ? 0 : W - width;
+    const alpha = (g.isNight ? 0.18 : 0.15) * clamp(intensity, 0, 1);
+    const bright = g.isNight ? "194,215,230" : "48,75,96";
+    const fill = ctx.createLinearGradient(x, 0, x + width, 0);
+    fill.addColorStop(0, side === "left" ? `rgba(${bright},${alpha})` : `rgba(${bright},0)`);
+    fill.addColorStop(1, side === "left" ? `rgba(${bright},0)` : `rgba(${bright},${alpha})`);
+    ctx.fillStyle = fill;
+    ctx.fillRect(x, 0, width, H);
   };
-  if (left) fillSide(0);
-  if (right) fillSide(W - edgeWidth);
+  drawSide("left", g.moveFeedbackLeft || 0);
+  drawSide("right", g.moveFeedbackRight || 0);
 }
 
 // movement chevrons mid-screen on both sides - movement hint, not a button
@@ -1579,12 +1588,22 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     ctx.fillRect(x, y, 7 + (i % 4) * 4, 1);
   }
   const bank = lerpHex(palette.shore, "#243746", night * 0.92);
-  for (let x = 0; x < W; x += 2) {
+  const breeze = g.weather === "wind" || g.weather === "blizzard" ? 1.28 : 1;
+  // Small bank waves wash back and forth over one or two logical pixels.
+  // Broken foam glints fade out; never a full-width white shoreline stripe.
+  for (let x = 0; x < W; x += 3) {
     const wx = x + camX;
-    const delta = Math.round(Math.sin(wx * 0.05) + Math.sin(wx * 0.13) * 0.7);
-    const y = WATER_Y - 2 + delta;
+    const irregular = Math.round(Math.sin(wx * 0.05) * 0.5 +
+      Math.sin(wx * 0.13) * 0.5);
+    const y = WATER_Y - 2 + irregular +
+      shorelineWaveOffset(g.animT, wx, breeze);
     ctx.fillStyle = bank;
-    ctx.fillRect(x, y, 2, 1);
+    ctx.fillRect(x, y, Math.min(3, W - x), 1);
+    const wash = shorelineFoam(g.animT, wx);
+    if (wash > 0.35 && x % 9 !== 0) {
+      ctx.fillStyle = `rgba(181,211,218,${((0.06 + 0.13 * wash) * (1 - 0.45 * night)).toFixed(3)})`;
+      ctx.fillRect(x, y + 1, Math.min(2, W - x), 1);
+    }
   }
 }
 

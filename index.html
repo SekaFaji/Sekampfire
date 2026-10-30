@@ -269,6 +269,88 @@ function toast(g: any, text: string) {
   if (g.toasts.length > 3) g.toasts.shift();
 }
 
+// ============ optional procedural audio ============
+// Browser audio unlocks only after a user gesture. No assets, no autoplay,
+// and no impact on simulation. Mute is saved locally.
+const SOUND_KEY = "sekampfire-sound-v1";
+const AUDIO = (() => {
+  let enabled = true;
+  try { enabled = localStorage.getItem(SOUND_KEY) !== "off"; } catch (_e) {}
+  let ac: any = null, master: any = null, wind: any = null, fire: any = null;
+  function touch() {
+    if (!enabled) return;
+    try {
+      if (!ac) {
+        const Ctor = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (!Ctor) return;
+        ac = new Ctor();
+        master = ac.createGain();
+        master.gain.value = 0.34;
+        master.connect(ac.destination);
+        const buf = ac.createBuffer(1, Math.round(ac.sampleRate * 2), ac.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        const source = ac.createBufferSource();
+        source.buffer = buf;
+        source.loop = true;
+        wind = ac.createGain();
+        fire = ac.createGain();
+        wind.gain.value = 0;
+        fire.gain.value = 0;
+        const windFilter = ac.createBiquadFilter();
+        windFilter.type = "lowpass";
+        windFilter.frequency.value = 450;
+        const fireFilter = ac.createBiquadFilter();
+        fireFilter.type = "highpass";
+        fireFilter.frequency.value = 1100;
+        source.connect(windFilter);
+        source.connect(fireFilter);
+        windFilter.connect(wind);
+        fireFilter.connect(fire);
+        wind.connect(master);
+        fire.connect(master);
+        source.start();
+      }
+      if (ac.state === "suspended") ac.resume().catch(() => {});
+    } catch (_e) { /* Audio should never break the game. */ }
+  }
+  function setEnabled(next: boolean) {
+    enabled = next;
+    try { localStorage.setItem(SOUND_KEY, enabled ? "on" : "off"); } catch (_e) {}
+    if (enabled) touch();
+    if (ac && master) master.gain.setTargetAtTime(enabled ? 0.34 : 0, ac.currentTime, 0.04);
+  }
+  function sync(g: any) {
+    if (!ac || !wind || !fire) return;
+    const active = enabled && g.ui === "run" && !g.over && !g.menu;
+    const gusts = g.weather === "blizzard" ? 0.1 : g.weather === "wind" ? 0.065 : 0.013;
+    wind.gain.setTargetAtTime(active ? gusts : 0, ac.currentTime, 0.45);
+    const proximity = clamp(1 - Math.abs(g.player.x - CX) / 180, 0.1, 1);
+    fire.gain.setTargetAtTime(active && g.fireLit ? 0.045 * proximity : 0, ac.currentTime, 0.4);
+  }
+  function effect(kind: string) {
+    if (!enabled || !ac || ac.state !== "running") return;
+    try {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      const now = ac.currentTime;
+      const step = kind === "step", light = kind === "light";
+      const dur = step ? 0.055 : light ? 0.22 : 0.095;
+      const freq = step ? 95 : light ? 580 : kind === "build" ? 185 : 145;
+      osc.type = light ? "sine" : "triangle";
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(35, freq * (light ? 0.7 : 0.45)), now + dur);
+      gain.gain.setValueAtTime(step ? 0.025 : light ? 0.055 : 0.07, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(now);
+      osc.stop(now + dur + 0.01);
+    } catch (_e) {}
+  }
+  return { touch, sync, effect, setEnabled, get enabled() { return enabled; } };
+})();
+
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
   const h = Math.max(3, 5 + strength * 11);
@@ -1667,6 +1749,11 @@ function buildRows(g: any, meta: any) {
 
 function settingsRows(g: any, meta: any) {
   return [
+    {
+      label: "SOUND", right: AUDIO.enabled ? "ON" : "OFF",
+      desc: "TOGGLE FIRE WIND AND ACTION SOUNDS", h: 15, enabled: true,
+      onDown: () => { AUDIO.setEnabled(!AUDIO.enabled); },
+    },
     {
       label: "FULLSCREEN", right: g.fs ? "ON" : "OFF", desc: "TAP HERE OR PRESS F TO TOGGLE", h: 15, enabled: true,
       onDown: () => { if (g.fsToggle) g.fsToggle(); },

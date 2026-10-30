@@ -17,7 +17,11 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 
 - A reflective foreground river and parallax pine silhouettes add depth to the winter landscape.
 - BUILD, ACT and TORCH float over the water; MENU sits at the top right below the minimap.
-- The original left/right movement arrows and hold-a-side movement remain unchanged.
+- The original left/right movement arrows and hold-a-side movement remain unchanged; holding a direction now adds a larger, translucent feedback overlay.
+- River controls remain transparent, and the shoreline follows a soft irregular edge rather than a bright straight line.
+- The autumn opening gradually gives way to winter, spring and summer palettes; seasons change visuals, not survival balance.
+- The left, middle and right regions reveal hills, forest and mountains with smoothly blended backgrounds.
+- The camp now shares continuous ground with the world; the workbench no longer emits an artificial light halo.
 
 ## Tech
 

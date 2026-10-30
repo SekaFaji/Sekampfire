@@ -120,7 +120,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, lastResult: null,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
     crafts: {} as any, eventCd: 6,
@@ -385,6 +385,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
       } else if (nearBench) {
         g.menu = "bench";
         g.menuSel = 0;
+        g.craftConfirm = null;
         g.keys.act = false;
       } else if (nearPit) {
         if (!g.fireLit) {
@@ -914,6 +915,7 @@ function closeZone(ctx: any, g: any, x: number, y: number) {
 
 // close the open menu; settings opened from pause returns to the pause menu
 function closeMenu(g: any) {
+  g.craftConfirm = null;
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
     g.menu = "settings";
     g.menuSel = 0;
@@ -956,15 +958,20 @@ function benchRows(g: any, meta: any) {
     const owned = !!g.crafts[c.id];
     const total = g.player.wood + g.stored;
     const enabled = !owned && total >= c.cost;
+    const confirm = g.craftConfirm === c.id && enabled;
     return {
       label: c.name.toUpperCase(),
-      right: owned ? "OWNED" : c.cost + " WOOD",
-      desc: c.desc,
+      right: owned ? "OWNED" : confirm ? "CONFIRM?" : c.cost + " WOOD",
+      desc: confirm ? "TAP AGAIN TO CRAFT - " + c.cost + " WOOD" : c.desc,
       h: 15,
       enabled,
       onDown: () => {
-        if (owned) { toast(g, c.name.toUpperCase() + " is already crafted."); return; }
-        if (total < c.cost) { toast(g, "Not enough wood."); return; }
+        // The first selection never spends a single log. Only a second
+        // deliberate selection of this same item can craft it.
+        if (g.crafts[c.id]) { g.craftConfirm = null; toast(g, c.name.toUpperCase() + " is already crafted."); return; }
+        if (g.player.wood + g.stored < c.cost) { g.craftConfirm = null; toast(g, "Not enough wood."); return; }
+        if (g.craftConfirm !== c.id) { g.craftConfirm = c.id; return; }
+        g.craftConfirm = null;
         const fromCarried = Math.min(g.player.wood, c.cost);
         g.player.wood -= fromCarried;
         g.stored -= c.cost - fromCarried;
@@ -1017,6 +1024,7 @@ function moveSel(g: any, meta: any, dir: number) {
   const rows = menuRows(g, meta);
   if (!rows.length) return;
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
+  if (g.menu === "bench") g.craftConfirm = null;
 }
 
 function activateSel(g: any, meta: any) {
@@ -1591,6 +1599,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   const inRun = g.ui === "run";
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;
+  if (g.menu !== "bench") g.craftConfirm = null;
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
   const q = clamp(g.time / total, 0, 1);
@@ -1893,5 +1902,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, moveSel, closeMenu, drawSideArrows };
 export { W, H } from "./config";

@@ -539,6 +539,8 @@ function drawConstruction(ctx: any, g: any, bx: number, isBench: boolean) {
 
 function drawStructures(ctx: any, g: any) {
   const st = g.stage;
+  const colors = visualPalette(g);
+  const roofTrim = colors.name === "winter" ? roofTrim : colors.ridge;
   const x0 = CX - 42;
   if (g.builtBench) drawBench(ctx, g);
   else if (g.benchBuildT >= 0) drawConstruction(ctx, g, BENCH_X, true);
@@ -550,14 +552,14 @@ function drawStructures(ctx: any, g: any) {
     px(ctx, CX + 16, 142, 18, 3, "#8a5a34");
     px(ctx, CX + 17, 145, 2, 5, "#6b4a32");
     px(ctx, CX + 30, 145, 2, 5, "#6b4a32");
-    px(ctx, CX + 16, 141, 18, 1, "#eef4fa");
+    px(ctx, CX + 16, 141, 18, 1, roofTrim);
   }
   if (st >= 3 && st < 6) {
     px(ctx, CX - 32, 150, 2, 18, "#6b4a32");
     px(ctx, CX - 8, 150, 2, 16, "#6b4a32");
     for (let i = 0; i < 8; i++) {
       px(ctx, CX - 38 + i * 4, 132 - i, 5, 2, "#8a5a34");
-      px(ctx, CX - 38 + i * 4, 131 - i, 5, 1, "#eef4fa");
+      px(ctx, CX - 38 + i * 4, 131 - i, 5, 1, roofTrim);
     }
   }
   if (st >= 4) {
@@ -568,13 +570,13 @@ function drawStructures(ctx: any, g: any) {
     px(ctx, sx + 10, 148, 6, 2, "#8a5a34");
     px(ctx, sx + 10, 146, 6, 2, "#7a4c2a");
     for (let i = 0; i < 8; i++) px(ctx, sx - 2 + i * 4, 133, 4, 2, "#5a3a22");
-    px(ctx, sx - 2, 132, 30, 1, "#eef4fa");
+    px(ctx, sx - 2, 132, 30, 1, roofTrim);
   }
   if (st === 5) {
     px(ctx, CX - 36, 112, 4, 38, "#6a482c");
     px(ctx, CX + 32, 112, 4, 38, "#6a482c");
     px(ctx, CX - 36, 110, 72, 3, "#6a482c");
-    px(ctx, CX - 36, 109, 72, 1, "#eef4fa");
+    px(ctx, CX - 36, 109, 72, 1, roofTrim);
     for (let i = 0; i < 9; i++) px(ctx, CX - 28 + i * 6, 118, 4, 32, "#7a5636");
   }
   if (st >= 6) {
@@ -602,7 +604,7 @@ function drawStructures(ctx: any, g: any) {
     }
     for (let i = 0; i < 6; i++) {
       const w = 84 - i * 5;
-      px(ctx, CX - w / 2, 119 - i * 2, w, 1, "#eef4fa");
+      px(ctx, CX - w / 2, 119 - i * 2, w, 1, roofTrim);
     }
   }
   for (const s of g.smoke) {
@@ -708,6 +710,7 @@ function drawForestLayer(ctx: any, camX: number, parallax: number, base: number,
 function drawCritter(ctx: any, c: any, g: any) {
   const x = Math.round(c.x), y = Math.round(c.y);
   const d = c.dir || 1;
+  const rabbitFur = visualSeason(g) === "winter" ? "#e8eef4" : "#bda184";
   if (c.type === "bird") {
     if (c.state === "fly") {
       const flap = Math.sin(g.animT * 20 + c.ph) > 0 ? -1 : 1;
@@ -729,9 +732,9 @@ function drawCritter(ctx: any, c: any, g: any) {
     const hop = c.state === "hop" ? -Math.abs(Math.sin(g.animT * 10)) * 2 : (Math.sin(g.animT * 3 + c.ph) > 0.85 ? -1 : 0);
     ctx.fillStyle = "rgba(20,20,40,0.25)";
     ctx.fillRect(x - 2, y - 1, 5, 1);
-    px(ctx, x - 2, y - 3 + hop, 5, 3, "#e8eef4");
-    px(ctx, x + d * 2, y - 5 + hop, 2, 2, "#e8eef4");
-    px(ctx, x + d * 2, y - 7 + hop, 1, 2, "#e8eef4");
+    px(ctx, x - 2, y - 3 + hop, 5, 3, rabbitFur);
+    px(ctx, x + d * 2, y - 5 + hop, 2, 2, rabbitFur);
+    px(ctx, x + d * 2, y - 7 + hop, 1, 2, rabbitFur);
     px(ctx, x + d * 3, y - 7 + hop, 1, 2, "#d8dfe8");
     px(ctx, x + d * 3, y - 4 + hop, 1, 1, "#d87a8a");
   } else if (c.type === "fox") {
@@ -809,7 +812,7 @@ function startRunEngine(g: any, meta: any) {
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
-  toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "You are freezing. Chop a tree. Then light the fire pit.");
+  toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
   toast(g, "Survive the nights. Build a cabin. Outlast the winter.");
 }
 

@@ -1113,7 +1113,7 @@ function createEngine(): any {
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
-    keys: {}, pressE: false, pressT: false,
+    keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
     ui: "title", menu: null, menuSel: 0, titleSel: 0, lastResult: null,
@@ -1272,6 +1272,21 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const pcap = pileCap(g);
   const speed = g.crafts.boots ? 112 : 90;
 
+  // Movement takes priority over any unfinished axe swing. If ACT remains
+  // held after moving, it must be released before another chop can begin.
+  const moveLeft = !!(g.keys.left || g.pleft);
+  const moveRight = !!(g.keys.right || g.pright);
+  const wantsToMove = moveLeft !== moveRight;
+  if (!g.keys.act) g.chopBlocked = false;
+  if (wantsToMove) {
+    if (p.chopT > 0) {
+      p.chopT = 0;
+      p.chopTree = null;
+    }
+    if (g.keys.act) g.chopBlocked = true;
+    g.pressE = false;
+  }
+
   // ---- day/night cycle ----
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
@@ -1343,7 +1358,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // ---- context action (single press) ----
   if (g.pressE) {
     g.pressE = false;
-    if (p.chopT <= 0) {
+    if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
       if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
@@ -1417,7 +1432,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   }
 
   // ---- hold action: keep chopping / stoking ----
-  if (g.keys.act && p.chopT <= 0) {
+  if (g.keys.act && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
     if (nearPit && g.fireLit && g.stokeCd <= 0 && g.fuel < 99) {
       if (p.wood > 0) { p.wood--; g.fuel = Math.min(100, g.fuel + 16); g.stokeCd = 0.3; }
       else if (g.stored > 0) { g.stored--; g.fuel = Math.min(100, g.fuel + 16); g.stokeCd = 0.3; }
@@ -1502,13 +1517,13 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (du.life <= 0) g.dust.splice(i, 1);
   }
 
-  // movement: hold sides of screen or A/D
+  // movement: independent of the chop timer; an interrupted swing is not
+  // allowed to finish/damage its target during this update.
   p.moving = false;
-  if (p.chopT <= 0) {
-    const left = g.keys.left || g.pleft;
-    const right = g.keys.right || g.pright;
-    if (left && !right) { p.x -= speed * dt; p.dir = -1; p.moving = true; }
-    else if (right && !left) { p.x += speed * dt; p.dir = 1; p.moving = true; }
+  if (wantsToMove) {
+    p.x += (moveRight ? 1 : -1) * speed * dt;
+    p.dir = moveRight ? 1 : -1;
+    p.moving = true;
     p.x = clamp(p.x, 10, WORLD_W - 10);
   }
   if (p.moving) {
@@ -2262,7 +2277,7 @@ function drawRunChrome(ctx: any, g: any) {
   uiButton(ctx, g, 133, H - 29, 54, 26, act, {
     enabled: act !== "-", water: true, accent: true,
     onDown: () => { g.pressE = true; g.keys.act = true; },
-    onUp: () => { g.keys.act = false; },
+    onUp: () => { g.keys.act = false; g.chopBlocked = false; },
   });
   uiButton(ctx, g, 77, H - 22, 47, 18, "BUILD", {
     water: true, onDown: () => { g.menu = "build"; g.menuSel = 0; g.keys.act = false; },
@@ -2412,7 +2427,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   if (k === "arrowleft" || k === "a") g.keys.left = !g.menu && down;
   if (k === "arrowright" || k === "d") g.keys.right = !g.menu && down;
   if (!down) {
-    if (k === "e" || k === " ") g.keys.act = false;
+    if (k === "e" || k === " ") { g.keys.act = false; g.chopBlocked = false; }
     return;
   }
   const isList = ["bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause"].includes(g.menu);

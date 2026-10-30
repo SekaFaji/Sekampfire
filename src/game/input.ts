@@ -17,6 +17,16 @@ export function createInputHandlers(controllers: {
   const { audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu } = controllers;
 // ============ input ============
 function handleKey(g: any, meta: any, k: string, down: boolean) {
+  if (down && g.menu === "help" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
+    const delta = k === "arrowleft" || k === "a" ? -1 : 1;
+    g.helpPage = Math.max(0, Math.min(6, (g.helpPage || 0) + delta));
+    return;
+  }
+  if (down && g.menu === "shop" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
+    g.shopTab = k === "arrowleft" || k === "a" ? 0 : 1;
+    g.menuSel = 0; g.upConfirm = null;
+    return;
+  }
   if (g.menu === "audio" && down && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
     const row: any = audioRows(g)[g.menuSel];
     if (row && row.onAdjust) row.onAdjust(k === "arrowleft" || k === "a" ? -1 : 1);
@@ -39,7 +49,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   }
   if (k === "e" || k === "enter" || k === " ") {
     if (isList) activateSel(g, meta);
-    else if (g.menu === "help") { g.menu = null; }
+    else if (g.menu === "help") { if ((g.helpPage || 0) >= 6) closeMenu(g); else g.helpPage = (g.helpPage || 0) + 1; }
     else if (g.menu === "privacy" || g.menu === "credits") closeMenu(g);
     else if (g.ui === "title") activateTitleItem(g, meta, g.titleSel);
     else if (g.ui === "dead") startRun(g, meta);
@@ -50,7 +60,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     returnToMainMenu(g);
     return;
   }
-  if (k === "h" && g.ui === "title" && !g.menu) g.menu = "help";
+  if (k === "h" && g.ui === "title" && !g.menu) { g.menu = "help"; g.helpPage = 0; }
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
   if (k === "b") {
     if (g.ui === "run") {
@@ -67,7 +77,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     if (g.menu === "pause") { g.menu = null; g.keys.act = false; }
     else if (!g.menu) { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; }
   }
-  if (k === "u" && !g.menu && (g.ui === "title" || g.ui === "dead" || g.ui === "win")) { g.menu = "shop"; g.menuSel = 0; }
+  if (k === "u" && !g.menu && (g.ui === "title" || g.ui === "dead" || g.ui === "win")) { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; }
   if (k === "f" && g.fsToggle) g.fsToggle();
 }
 

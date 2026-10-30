@@ -8,6 +8,8 @@ function choppingRun() {
   const g = createEngine();
   g.ui = "run";
   g.time = 10;
+  // Test woodland chopping away from the pit/bench/pile interaction zones.
+  g.player.x = 300;
   const tr = { x: g.player.x + 8, y: 152, tier: 0, id: 999, variant: 0, hp: 3, hitT: 0 };
   g.trees = [tr];
   g.player.chopTree = tr;

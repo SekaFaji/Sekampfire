@@ -851,7 +851,7 @@ function createEngine(): any {
     won: false, endlessMode: false, endlessN: 0, over: false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
-    benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0,
+    benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
     keys: {}, pressE: false, pressT: false,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
@@ -1099,11 +1099,13 @@ function update(g: any, meta: any, dt: number, cb: any) {
         if (!g.fireLit) {
           if (g.firestarter > 0) {
             g.firestarter--; g.fireLit = true; g.everLit = true; g.fuel = 34;
+            AUDIO.effect("light");
             cb.toast("The fire catches. Warm at last.");
           } else if (p.wood >= 3 || g.stored >= 3) {
             const fromStore = Math.max(0, 3 - p.wood);
             p.wood -= 3 - fromStore; g.stored -= fromStore;
             g.fireLit = true; g.everLit = true; g.fuel = 28;
+            AUDIO.effect("light");
             cb.toast("You rebuild the fire from kindling. (3 wood)");
           } else {
             cb.toast("Need 3 wood to relight the fire.");
@@ -1168,6 +1170,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         const tr = p.chopTree;
         tr.hp--;
         tr.hitT = 1;
+        AUDIO.effect("chop");
         g.shake = 0.12;
         for (let k = 0; k < 7; k++) {
           g.chips.push({
@@ -1215,6 +1218,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     }
     if (Math.random() < dt * 2) g.shake = Math.max(g.shake, 0.05);
     if (nt >= BUILD_TIME) {
+      AUDIO.effect("build");
       for (let k = 0; k < 14; k++) {
         g.dust.push({ x: bx + (Math.random() * 22 - 11), y: 148, vx: Math.random() * 40 - 20, vy: -(10 + Math.random() * 40), life: 0.9 });
       }
@@ -1240,8 +1244,17 @@ function update(g: any, meta: any, dt: number, cb: any) {
     else if (right && !left) { p.x += speed * dt; p.dir = 1; p.moving = true; }
     p.x = clamp(p.x, 10, WORLD_W - 10);
   }
-  if (p.moving) g.moveT = 2;
-  else g.moveT = Math.max(0, g.moveT - dt);
+  if (p.moving) {
+    g.moveT = 2;
+    g.walkSoundT -= dt;
+    if (g.walkSoundT <= 0) {
+      AUDIO.effect("step");
+      g.walkSoundT = 0.26;
+    }
+  } else {
+    g.moveT = Math.max(0, g.moveT - dt);
+    g.walkSoundT = 0;
+  }
   if (p.moving && visualSeason(g) === "winter") {
     g.footstepT = (g.footstepT || 0) - dt;
     if (g.footstepT <= 0) {
@@ -1693,6 +1706,7 @@ function doBuildAction(g: any, meta: any) {
   g.stored -= cost - fromCarried;
   g.stage++;
   g.ashEarned += 4;
+  AUDIO.effect("build");
   g.menu = null;
   g.keys.act = false;
   toast(g, STAGES[g.stage - 1].name + " built.");
@@ -2490,6 +2504,7 @@ function App() {
         const active = g.ui === "run" && !g.over && !g.menu;
         if (active) update(g, metaRef.current, dt, cb);
         if (!g.menu) updateAmbient(g, dt);
+        AUDIO.sync(g);
         draw(g, ctx, off, octx, reflection, rctx, metaRef.current);
       } catch (err: any) {
         const msg = err && err.message ? err.message : String(err);
@@ -2503,6 +2518,7 @@ function App() {
       const k = e.key.toLowerCase();
       if (["arrowleft", "arrowright", "arrowup", "arrowdown", " "].indexOf(k) >= 0) e.preventDefault();
       if (e.repeat && (k === "e" || k === " " || k === "enter")) return;
+      AUDIO.touch();
       handleKey(g, metaRef.current, k, true);
     };
     const ku = (e: KeyboardEvent) => handleKey(g, metaRef.current, e.key.toLowerCase(), false);
@@ -2517,6 +2533,7 @@ function App() {
     };
     const pd = (e: PointerEvent) => {
       e.preventDefault();
+      AUDIO.touch();
       const [mx, my] = toXY(e);
       handlePointer(g, "down", e.pointerId, mx, my);
     };

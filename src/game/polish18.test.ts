@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEngine, benchRows, moveSel, closeMenu, drawSideArrows } from "./game";
+import { createEngine, benchRows, moveSel, closeMenu, drawSideArrows, drawMovementFeedback } from "./game";
 import { shorelineWaveOffset, shorelineFoam, reflectionOffset, reflectionOpacity, waterGlint } from "./water";
 
 function state() {
@@ -86,6 +86,20 @@ describe("daylight and night movement arrows", () => {
     expect(cores.some(m=>m.x>280)).toBe(true);
     expect(cores.filter(m=>m.x<40).every(m=>m.color==="rgba(255,235,180,0.98)")).toBe(true);
   });
+  it("brightens the pressed-side gradient in daytime without moving its boundary", () => {
+    const g=createEngine(); g.isNight=false;g.moveFeedbackLeft=1;
+    const stops: Array<[number,string]> = [], filled: any[] = [];
+    const ctx: any = {
+      createLinearGradient: () => ({ addColorStop: (p:number,c:string) => stops.push([p,c]) }),
+      set fillStyle(_v:any) {},
+      fillRect: (...args: any[]) => filled.push(args),
+    };
+    drawMovementFeedback(ctx,g);
+    expect(filled).toContainEqual([0,0,48,180]);
+    expect(stops[0][1]).toContain("250,222,157,0.25");
+    expect(stops[1][1]).toContain(",0)");
+  });
+
   it("retains high contrast for both arrows at night", () => {
     const g=createEngine();g.animT=0;g.isNight=true;g.pright=true;
     const v=canvas();drawSideArrows(v.ctx,g);

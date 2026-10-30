@@ -1,53 +1,52 @@
 # Sekampfire
 
-A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build up your camp and outlast the Long Night.
+A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gather wood, keep the fire burning, build a camp and survive the Long Night.
 
 **Play:** https://sekafaji.github.io/Sekampfire/
 
-## How it plays
+## Development (Windows, macOS or Linux)
 
-- Hold the left or right side of the screen to walk (or use A / D).
-- Press ACT (big button or E) to chop trees, stoke the fire and interact. Hold it to keep chopping. **Walking immediately interrupts an unfinished chop** without damaging the tree; ACT must be released before chopping again.
-- Carry 15 logs to each marked build site to raise the workbench and the wood pile. You initially carry 5 logs; each backpack upgrade adds 8 capacity (up to 21 with both).
-- Craft gear at the workbench, upgrade the camp through six build stages, and keep your warmth up - the cold bites hardest at the start.
-- Survive the nights to earn ash, and spend it on permanent flame-lineage upgrades between runs.
-- Press P or ESC (or MENU beneath the minimap) to pause, tweak settings, or end the run and bank your ash.
+Requirements: Node.js 22+ and npm. The production build bundles the game and all runtime dependencies; it does not load Babel, React or Tailwind from a CDN.
 
-## Visuals and controls
+```bash
+npm ci
+npm run dev        # local browser game
+npm run check      # TypeScript typecheck
+npm run test       # repeatable unit tests
+npm run build      # production game in dist/
+npm run preview    # verify production output
+```
 
-- A reflective foreground river and parallax pine silhouettes add depth to the winter landscape.
-- BUILD, ACT and TORCH float over the water; MENU sits at the top right below the minimap.
-- The original left/right movement arrows and hold-a-side movement remain unchanged. Holding a direction tints only the outer 15% of that screen edge, without extra arrow shapes. Movement now takes priority over chopping.
-- River controls remain transparent, and the shoreline follows a soft irregular edge rather than a bright straight line.
-- The autumn opening gradually gives way to winter, spring and summer palettes; seasons change visuals, not survival balance.
-- The left, middle and right regions reveal hills, forest and mountains with smoothly blended backgrounds.
-- The camp now shares continuous ground with the world; the workbench no longer emits an artificial light halo.
+**Deployment:** Merging to `main` runs checks and builds `dist/` for GitHub Pages. The public URL and save keys stay unchanged after the migration.
 
-## Living-world polish
+## Gameplay
 
-- Tree art is larger than the player, with saplings and mature trees scaled around their root points without changing tree hit points or chopping rules. The carried wood bundle draws one small log per log held. The backpack also grows in three visible sizes (base, one +8 upgrade, both +8 upgrades).
+- Hold the left/right side of the screen or press A/D to walk. Movement immediately interrupts an unfinished chop (and does not damage the tree). To chop again, release and repress ACT.
+- Press ACT or E to chop trees, feed the fire and interact. Hold ACT for repeated chopping while stationary.
+- Base capacity is 5 logs; a permanent and a crafted backpack each add 8 capacity, up to 21. The bag has three visual sizes with one small sprite per carried log.
+- Gather 15 logs for each initial workbench/pile site, then craft boots, pack and other gear at the bench. Build a camp, survive seasonal days and the Long Night, and earn ash for permanent upgrades.
+- Menus include settings, credits, a privacy policy, audio mixer, High/Low visual effects, and a two-step save reset.
+- An unfinished run can be continued from the title menu after reopening the browser. Completed runs bank earned ash and clear the checkpoint.
 
-- The river reflects the player's walking and chopping poses, animated trees, camp structures, the fire and the dog. The land/ground overlay is excluded from the reflection to avoid false stripes.
-- The waterline now blends into the world, and the game canvas has no black frame beneath the river.
-- Snowy footsteps fade behind the player in winter. Existing rabbits, foxes, the fire and weather have more subtle ambient movement.
-- Birds, foxes, rabbits and the dog have more independent idle movements and fewer repetitive notifications. Wind, rain, fog and snow effects crossfade smoothly when weather changes.
-- Procedural sound effects use filtered noise for footsteps, chopping and construction. The harsh continuous fire/static channel and artificial crackles are disabled until better fire audio is available; wind and action effects remain.
-- Wind ambience, footsteps, chopping, ignition and building cues use browser-generated sound (no downloaded audio files). Sound starts after a tap or key press. **Settings → Audio** offers independent master, ambience and effects volume adjustments from 0–100%, plus mute.
+## Professional foundation — first migration phase
 
-## Player, privacy and settings polish
+- `src/App.tsx`: browser/React lifecycle, input and drawing loop
+- `src/game/config.ts`: immutable world and crafting configuration
+- `src/game/rules.ts`: extracted pure gameplay formulas with unit tests
+- `src/game/math.ts`: pure math utilities with unit tests
+- `src/game/audio.ts`: procedural action sound, wind ambience and saved mixer preferences
+- `src/game/graphics.ts`: standalone visual-effects preference
+- `src/game/weather.ts`: pure weather blending function and unit tests
+- `src/game/game.ts`: **preserved game simulation, rendering, UI and saving** — still large and scheduled for incremental extraction
+- `src/main.tsx` and `src/styles.css`: application bootstrap and built styles
+- `public/privacy.html`: published data-handling policy
+- `docs/ARCHITECTURE.md`: engineering rules and staged extraction plan
+- `docs/MOBILE.md`: Android-first / iOS-later packaging readiness
+- `docs/BACKLOG.md`: all approved but unfinished user requests (including player idle, wooden axe, wooden ring, better trees, mobile fullscreen and Main Menu end navigation)
 
-- The player's pixel-art avatar has a stronger outline, shaded coat, scarf, backpack, improved walk/idle motion, axe swing and torch pose; gameplay collision and movement speed are unchanged. The starting hat is removed (there is no craftable hat), starter footwear is plain, and Warm Boots appear only after crafting them.
-- **Settings** includes Audio, a HIGH/LOW visual-effects toggle, Privacy Policy, Credits and a red Reset Save flow.
-- **Reset Save** requires two explicit confirmations and then deletes only Sekampfire permanent progress, checkpoints and legacy progress keys. Audio preferences remain unchanged; reset cannot be undone.
-- The in-game Privacy Policy links to [the full privacy page](privacy.html). The game stores save data locally; its hosting and CDN dependencies are detailed in the policy.
-- **Low visual FX** reduces snow particle counts and reflection scanlines on slower devices. High remains the default.
-- The HUD now separates warmth/fuel, wood capacity (with a small fill meter), stored pile, ash and day/weather into subtle translucent sections. Audio menu rows have visible volume bars and selected menu rows have a narrower, clearer highlight.
-- Existing short action sounds use gentler attack envelopes and slightly warmer filtering. The continuous fire-static channel stays disabled.
+### Important limits
+This is the **foundation restructuring milestone**, not a completed production game or mobile app. Rendering, player art and mobile viewport still need further work. Source restructuring is deliberately behaviour-preserving; the outstanding improvements are tracked in [the backlog](docs/BACKLOG.md), not incorrectly marked done.
 
-## Tech
+Existing progress keys (`sekampfire-meta-v1` and `sekampfire-run-v1`) are preserved. `base: './'` in Vite keeps output asset paths relative for GitHub Pages and future native packaging. `android/` and `ios/` projects have **not** been created; they will be added only when native builds are requested.
 
-- Everything runs in a single React canvas: custom 3x5 pixel font, immediate-mode in-canvas UI, procedurally drawn pixel art - no image or audio assets.
-- `index.html` is the whole game: the TSX source is embedded and compiled in the browser (React UMD + Babel standalone), so there is no build step.
-- Permanent ash and upgrades save to localStorage as `sekampfire-meta-v1`.
-- An unfinished run is checkpointed separately under `sekampfire-run-v1`. **Continue Run** appears on the title screen after reload, with a separate **New Run** option. Refreshing or backgrounding the browser does not grant idle/offline rewards; time is paused while away.
-- On death, retirement or victory the checkpoint is cleared before banking ash, so a completed run cannot be resumed for duplicate rewards. Local browser storage may still be cleared by the browser or user.
+See [architecture](docs/ARCHITECTURE.md), [mobile plan](docs/MOBILE.md), [backlog](docs/BACKLOG.md), and [privacy policy](public/privacy.html).

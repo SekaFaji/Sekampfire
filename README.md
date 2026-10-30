@@ -19,14 +19,14 @@ npm run preview    # verify production output
 
 **Deployment:** Merging to `main` runs checks and builds `dist/` for GitHub Pages. The public URL and save keys stay unchanged after the migration.
 
-## Patch #12 — visual motion and menu polish
+## Patch #12 - visual motion and menu polish
 
 - Woodcutting now animates the shoulder, elbow and gripping hand together; the branch/axe pivot follows the wrist through wind-up, impact and recovery without changing chop speed or damage.
 - Shoreline wildlife (foxes, rabbits and low-enough birds) now participates in the existing water-reflection pass, alongside the dog and player. A very faint foreground treeline reflection adds depth without duplicating distant mountains or the full sky.
 - Title actions are a compact central list. **How to Play** is its own right-side plaque (or H shortcut); bottom-left framed buttons link to [Discord](https://discord.gg/794QQWJEeP) and [YouTube](https://youtube.com/@sekafajigames). Both open only on a user's tap.
 - No new gameplay progression, telemetry, fire-noise loops, or save migrations.
 
-## Patch #16 — player character art polish
+## Patch #16 - player character art polish
 
 - Fixed side-facing shoes/toes to follow the player's actual left/right facing direction, including the crafted-boot variants. The previous leg geometry did not react to facing direction, making shoes appear backward when walking right.
 - Improved alternating steps, leading/rear leg shading, shoe soles and ankle cuffs. Walking arms now reach horizontally as well as vertically, with restrained one-pixel body-weight movement.
@@ -53,7 +53,7 @@ npm run preview    # verify production output
 - Menus include settings, credits, a privacy policy, audio mixer, High/Low visual effects, and a two-step save reset.
 - An unfinished run can be continued from the title menu after reopening the browser. Completed runs bank earned ash and clear the checkpoint. Win/death/retirement results now offer **Main Menu** without banking rewards again.
 
-## Professional foundation — modularization phase 2
+## Professional foundation - modularization phase 2
 
 - `src/App.tsx`: browser/React lifecycle, input and drawing loop
 - `src/game/config.ts`: immutable world and crafting configuration
@@ -67,7 +67,7 @@ npm run preview    # verify production output
 - `src/game/font.ts`: standalone pixel-font drawing and text measurement
 - `src/game/renderUtils.ts`: shared color, pixel and random helpers
 - `src/game/renderSprites.ts`: all 18 standalone player/tree/camp/world sprite renderers
-- `src/game/game.ts`: **preserved world simulation, remaining scene rendering, and in-canvas UI** — still being separated in small, tested patches
+- `src/game/game.ts`: **preserved world simulation, remaining scene rendering, and in-canvas UI** - still being separated in small, tested patches
 - `src/game/input.ts`: isolated keyboard, pointer and multi-touch adapter
 - `src/ui/viewport.ts`: tested aspect-preserving fullscreen dimensions and safe-area fitting
 - `src/main.tsx` and `src/styles.css`: application bootstrap and built styles

@@ -4,7 +4,14 @@ import { lerpHex } from "./renderUtils";
 // ============ visual-only seasons ============
 // Season and backdrop change the art, not warmth, weather odds, rewards or build costs.
 // A day is complete after its night ends; don't change seasons halfway through a night.
-const SEASON_ROTATION = ["autumn", "autumn", "winter", "winter", "winter", "spring", "spring", "summer", "summer"];
+export const DAYS_PER_SEASON = 7;
+export const SEASONS = ["autumn", "winter", "spring", "summer"] as const;
+export function seasonDay(g: any): number {
+  return completedNights(g) % DAYS_PER_SEASON + 1;
+}
+export function seasonNumber(g: any): number {
+  return Math.floor(completedNights(g) / DAYS_PER_SEASON) % SEASONS.length;
+}
 const SEASON_COLORS: Record<string, any> = {
   autumn: {
     ground:"#776a4d", ridge:"#a18c65", shore:"#625e4d", water:"#376477",
@@ -35,15 +42,16 @@ function completedNights(g: any): number {
   return Math.max(0, g.night - (g.isNight ? 1 : 0));
 }
 function visualSeason(g: any): string {
-  if (g.longNightActive) return "winter";
-  return SEASON_ROTATION[completedNights(g) % SEASON_ROTATION.length];
+  return SEASONS[seasonNumber(g)];
 }
 function visualPalette(g: any): any {
   const season = visualSeason(g);
   const current = SEASON_COLORS[season];
   const index = completedNights(g);
-  const previous = SEASON_ROTATION[(index - 1 + SEASON_ROTATION.length) % SEASON_ROTATION.length];
-  if (index === 0 || previous === season || g.longNightActive) return { ...current, name: season };
+  // Only crossfade on the first dawn of each new seven-day season;
+  // ordinary day/night changes never interpolate to an unrelated palette.
+  if (index === 0 || index % DAYS_PER_SEASON !== 0) return { ...current, name: season };
+  const previous = SEASONS[(seasonNumber(g) - 1 + SEASONS.length) % SEASONS.length];
   // Fade the environment into its new season over the opening seconds of daylight.
   const blend = clamp(g.time / 14, 0, 1);
   const old = SEASON_COLORS[previous];

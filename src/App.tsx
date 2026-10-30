@@ -19,8 +19,13 @@ function App() {
     const stage = stageRef.current;
     if (!stage) return;
     const measure = () => {
-      const w = stage.clientWidth;
-      const h = stage.clientHeight;
+      // clientWidth/clientHeight INCLUDE padding: subtract it so the canvas
+      // cannot spill outside the safe touch region on narrow phones.
+      const style = window.getComputedStyle(stage);
+      const horizontal = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const vertical = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const w = stage.clientWidth - horizontal;
+      const h = stage.clientHeight - vertical;
       if (!w || !h) return;
       const next = fitViewport(w, h, fs ? Infinity : 960);
       setDisplaySize(prev =>
@@ -230,7 +235,7 @@ function App() {
     <div ref={wrapRef}
       className={fs
         ? "fixed inset-0 z-50 overflow-hidden bg-[#0a0e1a]"
-        : "h-[100dvh] min-h-[180px] overflow-hidden bg-[radial-gradient(ellipse_at_top,#182036,#0a0e1a)]"}
+        : "relative h-[100dvh] min-h-[180px] overflow-hidden bg-[radial-gradient(ellipse_at_top,#182036,#0a0e1a)]"}
     >
       <div ref={stageRef}
         className={fs
@@ -241,7 +246,12 @@ function App() {
           bottom: "env(safe-area-inset-bottom, 0px)",
           left: "env(safe-area-inset-left, 0px)",
           right: "env(safe-area-inset-right, 0px)"
-        } : undefined}
+        } : {
+          paddingTop: "calc(12px + env(safe-area-inset-top, 0px))",
+          paddingRight: "calc(12px + env(safe-area-inset-right, 0px))",
+          paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
+          paddingLeft: "calc(12px + env(safe-area-inset-left, 0px))",
+        }}
       >
         <div className="relative overflow-hidden shadow-[0_0_70px_rgba(255,150,60,0.10)] bg-[#24455c]"
           style={{

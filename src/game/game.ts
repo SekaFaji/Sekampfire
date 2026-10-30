@@ -1,7 +1,7 @@
 import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, STAGES, CRAFTS, UPGRADES, WEATHER_TEXT } from "./config";
 import { createInputHandlers } from "./input";
 import { clamp } from "./math";
-import { carryCap, pileCap } from "./rules";
+import { carryCap, pileCap, choppingToolTier } from "./rules";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
@@ -1548,6 +1548,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // Derived from current permanent and crafted upgrades: never persisted as
   // another source of truth. The game world and reflection share this tier.
   g.packTier = (meta.up.pack ? 1 : 0) + (g.crafts.pack ? 1 : 0);
+  g.toolTier = choppingToolTier(g, meta);
   const inRun = g.ui === "run";
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;

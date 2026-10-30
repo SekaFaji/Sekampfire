@@ -426,8 +426,7 @@ const AUDIO = (() => {
     ambienceLevel = safe(settings.ambience, 90);
     effectsLevel = safe(settings.effects, 90);
   } catch (_e) { /* Use safe default settings. */ }
-  let ac: any = null, master: any = null, wind: any = null, fire: any = null, noiseBuffer: any = null;
-  let lastCrackle = -1;
+  let ac: any = null, master: any = null, wind: any = null, noiseBuffer: any = null;
   function saveLevels() {
     try {
       localStorage.setItem(AUDIO_LEVEL_KEY, JSON.stringify({
@@ -454,21 +453,15 @@ const AUDIO = (() => {
         source.buffer = buf;
         source.loop = true;
         wind = ac.createGain();
-        fire = ac.createGain();
         wind.gain.value = 0;
-        fire.gain.value = 0;
         const windFilter = ac.createBiquadFilter();
         windFilter.type = "lowpass";
-        windFilter.frequency.value = 620;
-        const fireFilter = ac.createBiquadFilter();
-        fireFilter.type = "highpass";
-        fireFilter.frequency.value = 750;
+        windFilter.frequency.value = 420;
         source.connect(windFilter);
-        source.connect(fireFilter);
         windFilter.connect(wind);
-        fireFilter.connect(fire);
         wind.connect(master);
-        fire.connect(master);
+        // No synthesized campfire hiss. The old broadband static was harsh;
+        // retain quiet wind and short action cues until we have a real fire loop.
         source.start();
       }
       if (ac.state === "suspended") ac.resume().catch(() => {});
@@ -492,19 +485,12 @@ const AUDIO = (() => {
     if (ac && master) master.gain.setTargetAtTime(outputGain(), ac.currentTime, 0.035);
   }
   function sync(g: any) {
-    if (!ac || !wind || !fire) return;
+    if (!ac || !wind) return;
     const active = enabled && g.ui === "run" && !g.over && !g.menu;
-    const gusts = 0.028 + weatherIntensity(g, "blizzard") * 0.16 +
-      weatherIntensity(g, "wind") * 0.095;
+    const gusts = 0.014 + weatherIntensity(g, "blizzard") * 0.075 +
+      weatherIntensity(g, "wind") * 0.04;
     const ambience = ambienceLevel / 100;
-    wind.gain.setTargetAtTime(active ? gusts * ambience : 0, ac.currentTime, 0.38);
-    const proximity = clamp(1 - Math.abs(g.player.x - CX) / 180, 0.12, 1);
-    fire.gain.setTargetAtTime(active && g.fireLit ? 0.12 * proximity * ambience : 0, ac.currentTime, 0.3);
-    if (active && g.fireLit && ambience > 0 && proximity > 0.2 &&
-        ac.currentTime - lastCrackle > 0.45 + Math.random() * 0.7) {
-      lastCrackle = ac.currentTime;
-      effect("crackle", true);
-    }
+    wind.gain.setTargetAtTime(active ? gusts * ambience : 0, ac.currentTime, 0.48);
   }
   function effect(kind: string, ambient = false) {
     if (!enabled || !ac || !master || ac.state !== "running") return;
@@ -512,11 +498,11 @@ const AUDIO = (() => {
     if (mix <= 0 || masterLevel <= 0) return;
     try {
       const now = ac.currentTime;
-      const step = kind === "step", crackle = kind === "crackle";
+      const step = kind === "step";
       const light = kind === "light", build = kind === "build";
-      const duration = step ? 0.09 : crackle ? 0.035 : light ? 0.20 : 0.12;
+      const duration = step ? 0.09 : light ? 0.20 : 0.12;
       const gain = ac.createGain();
-      const volume = (step ? 0.14 : crackle ? 0.085 : build ? 0.26 : 0.22) * mix;
+      const volume = (step ? 0.14 : build ? 0.26 : 0.22) * mix;
       gain.gain.setValueAtTime(volume, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       gain.connect(master);
@@ -524,8 +510,8 @@ const AUDIO = (() => {
         const source = ac.createBufferSource();
         source.buffer = noiseBuffer;
         const filter = ac.createBiquadFilter();
-        filter.type = crackle ? "highpass" : step ? "lowpass" : "bandpass";
-        filter.frequency.value = crackle ? 1900 : step ? 370 : build ? 610 : 850;
+        filter.type = step ? "lowpass" : "bandpass";
+        filter.frequency.value = step ? 370 : build ? 610 : 850;
         source.connect(filter);
         filter.connect(gain);
         source.start(now, Math.random() * 1.5, duration);
@@ -2121,7 +2107,7 @@ function audioRows(g: any) {
     },
     ...[
       { key: "master", label: "MASTER", desc: "OVERALL GAME LOUDNESS" },
-      { key: "ambience", label: "AMBIENCE", desc: "WIND AND FIRE BACKGROUND AUDIO" },
+      { key: "ambience", label: "AMBIENCE", desc: "WIND BACKGROUND AUDIO" },
       { key: "effects", label: "EFFECTS", desc: "STEPS CHOPPING BUILDING AND MORE" }
     ].map((v: any) => ({
       label: v.label, right: "- " + AUDIO.getLevel(v.key) + "% +",
@@ -2295,17 +2281,17 @@ function drawRunChrome(ctx: any, g: any) {
 // Large, restrained directional feedback behind the EXISTING movement chevrons.
 // Pointer and keyboard input both work; the arrow geometry itself is unchanged.
 function drawMovementFeedback(ctx: any, g: any) {
-  // Entire pressed half of the gameplay viewport, no second arrows,
-  // chevrons, framing, or directional artwork.
+  // Narrow pressed-edge tint (15% width), with NO new arrows or controls.
   const left = !!(g.pleft || g.keys.left);
   const right = !!(g.pright || g.keys.right);
   if (!left && !right) return;
+  const edgeWidth = Math.round(W * 0.15);
   const fillSide = (x: number) => {
     ctx.fillStyle = g.isNight ? "rgba(187,206,226,0.105)" : "rgba(51,79,101,0.115)";
-    ctx.fillRect(x, 0, W / 2, H);
+    ctx.fillRect(x, 0, edgeWidth, H);
   };
   if (left) fillSide(0);
-  if (right) fillSide(W / 2);
+  if (right) fillSide(W - edgeWidth);
 }
 
 // movement chevrons mid-screen on both sides - movement hint, not a button

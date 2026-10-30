@@ -8,7 +8,7 @@ import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
 import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
 import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
-import { shorelineWaveOffset, shorelineFoam } from "./water";
+import { shorelineWaveOffset, shorelineFoam, reflectionOffset, reflectionOpacity, waterGlint } from "./water";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
@@ -120,7 +120,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, lastResult: null,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
     crafts: {} as any, eventCd: 6,
@@ -385,6 +385,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
       } else if (nearBench) {
         g.menu = "bench";
         g.menuSel = 0;
+        g.craftConfirm = null;
         g.keys.act = false;
       } else if (nearPit) {
         if (!g.fireLit) {
@@ -914,6 +915,7 @@ function closeZone(ctx: any, g: any, x: number, y: number) {
 
 // close the open menu; settings opened from pause returns to the pause menu
 function closeMenu(g: any) {
+  g.craftConfirm = null;
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
     g.menu = "settings";
     g.menuSel = 0;
@@ -956,15 +958,20 @@ function benchRows(g: any, meta: any) {
     const owned = !!g.crafts[c.id];
     const total = g.player.wood + g.stored;
     const enabled = !owned && total >= c.cost;
+    const confirm = g.craftConfirm === c.id && enabled;
     return {
       label: c.name.toUpperCase(),
-      right: owned ? "OWNED" : c.cost + " WOOD",
-      desc: c.desc,
+      right: owned ? "OWNED" : confirm ? "CONFIRM?" : c.cost + " WOOD",
+      desc: confirm ? "TAP AGAIN TO CRAFT - " + c.cost + " WOOD" : c.desc,
       h: 15,
       enabled,
       onDown: () => {
-        if (owned) { toast(g, c.name.toUpperCase() + " is already crafted."); return; }
-        if (total < c.cost) { toast(g, "Not enough wood."); return; }
+        // The first selection never spends a single log. Only a second
+        // deliberate selection of this same item can craft it.
+        if (g.crafts[c.id]) { g.craftConfirm = null; toast(g, c.name.toUpperCase() + " is already crafted."); return; }
+        if (g.player.wood + g.stored < c.cost) { g.craftConfirm = null; toast(g, "Not enough wood."); return; }
+        if (g.craftConfirm !== c.id) { g.craftConfirm = c.id; return; }
+        g.craftConfirm = null;
         const fromCarried = Math.min(g.player.wood, c.cost);
         g.player.wood -= fromCarried;
         g.stored -= c.cost - fromCarried;
@@ -1017,6 +1024,7 @@ function moveSel(g: any, meta: any, dir: number) {
   const rows = menuRows(g, meta);
   if (!rows.length) return;
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
+  if (g.menu === "bench") g.craftConfirm = null;
 }
 
 function activateSel(g: any, meta: any) {
@@ -1327,8 +1335,10 @@ function drawMovementFeedback(ctx: any, g: any) {
   const drawSide = (side: "left" | "right", intensity: number) => {
     if (intensity < 0.015) return;
     const x = side === "left" ? 0 : W - width;
-    const alpha = (g.isNight ? 0.18 : 0.15) * clamp(intensity, 0, 1);
-    const bright = g.isNight ? "194,215,230" : "48,75,96";
+    const alpha = (g.isNight ? 0.18 : 0.25) * clamp(intensity, 0, 1);
+    // Daylight now uses a warm light wash instead of the previous dim
+    // dark-blue tint that disappeared against tree and meadow details.
+    const bright = g.isNight ? "194,215,230" : "250,222,157";
     const fill = ctx.createLinearGradient(x, 0, x + width, 0);
     fill.addColorStop(0, side === "left" ? `rgba(${bright},${alpha})` : `rgba(${bright},0)`);
     fill.addColorStop(1, side === "left" ? `rgba(${bright},0)` : `rgba(${bright},${alpha})`);
@@ -1347,14 +1357,22 @@ function drawSideArrows(ctx: any, g: any) {
   const pulse = 0.5 + 0.5 * Math.sin(g.animT * 2);
   const cy = 92;
   const drawChev = (dir: number, active: boolean) => {
-    if (active) ctx.fillStyle = g.isNight ? "rgba(255,217,138,0.65)" : "rgba(70,40,14,0.6)";
-    else ctx.fillStyle = g.isNight
-      ? `rgba(235,240,250,${0.2 + pulse * 0.12})`
-      : `rgba(24,32,52,${0.34 + pulse * 0.14})`;
+    // A dark one-pixel silhouette makes both arrow directions visible over
+    // bright meadow/sky AND dark woods. Pale ivory/gold fills remain readable
+    // in daylight, instead of translucent charcoal vanishing into foliage.
+    const main = active
+      ? (g.isNight ? "rgba(255,219,147,0.96)" : "rgba(255,235,180,0.98)")
+      : g.isNight
+        ? `rgba(236,245,250,${(0.56 + pulse * 0.13).toFixed(3)})`
+        : `rgba(255,246,218,${(0.78 + pulse * 0.13).toFixed(3)})`;
     for (let i = 0; i < 7; i++) {
       const ind = Math.abs(i - 3);
       const xx = dir < 0 ? 14 + ind * 3 : W - 16 - ind * 3;
-      ctx.fillRect(xx, cy - 7 + i * 2, 2, 2);
+      const yy = cy - 7 + i * 2;
+      ctx.fillStyle = "rgba(14,23,34,0.82)";
+      ctx.fillRect(xx - 1, yy - 1, 4, 4);
+      ctx.fillStyle = main;
+      ctx.fillRect(xx, yy, 2, 2);
     }
   };
   drawChev(-1, actL);
@@ -1543,25 +1561,34 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     // Exact vertical mirror of the aligned sprites: no 18px source offset.
     const srcY = WATER_Y - 1 - i;
     if (srcY < 0) break;
-    const wave = Math.sin(i * 0.49 + g.animT * 1.5) * 1.25 +
-      Math.sin(i * 0.18 - g.animT * 0.76) * 1.4;
     const wind = g.weather === "wind" || g.weather === "blizzard" ? 1.6 : 1;
-    const shift = Math.round(wave * wind);
+    const shift = reflectionOffset(g.animT, i, wind);
     const sx = Math.max(0, -shift);
     const dx = Math.max(0, shift);
-    ctx.globalAlpha = (0.53 - 0.28 * i / height) * (g.weather === "blizzard" ? 0.75 : 1);
+    ctx.globalAlpha = reflectionOpacity(i, height, g.weather === "blizzard");
     ctx.drawImage(reflection, sx, srcY, W - Math.abs(shift), 1,
       dx, WATER_Y + i, W - Math.abs(shift), Math.min(pixelStep, height - i));
   }
   ctx.restore();
-  for (let i = 0; i < 14; i++) {
-    const y = WATER_Y + 3 + (i * 11) % (height - 3);
-    const x = (i * 71 + Math.floor(Math.sin(g.animT * 0.62 + i) * 14)
-      - Math.floor(camX * 0.16) + 4 * W) % W;
-    ctx.fillStyle = "rgba(178,215,227," + (0.07 + (1 - night) * 0.045) + ")";
-    ctx.fillRect(x, y, 7 + (i % 4) * 4, 1);
+  // Season-aware, broken surface glints move independently of the mirrored
+  // sprites, so they never drag the player's or wildlife's reflection.
+  const glintColor = palette.name === "autumn" ? "217,187,139"
+    : palette.name === "winter" ? "216,235,244"
+    : palette.name === "spring" ? "169,225,204" : "180,222,231";
+  const rippleCount = GRAPHICS.high ? 15 : 9;
+  for (let i = 0; i < rippleCount; i++) {
+    const glint = waterGlint(g.animT, i, camX, W);
+    const y = WATER_Y + glint.y;
+    if (y >= H - 1) continue;
+    ctx.fillStyle = `rgba(${glintColor},${(glint.alpha * (1 - night * 0.45)).toFixed(3)})`;
+    ctx.fillRect(glint.x, y, glint.length, 1);
+    // Secondary fragment makes the highlight read as broken water motion.
+    if (i % 3 === 0) ctx.fillRect((glint.x + glint.length + 3) % W, y + 1, 3, 1);
   }
   const bank = lerpHex(palette.shore, "#243746", night * 0.92);
+  const washTone = palette.name === "autumn" ? "207,173,126"
+    : palette.name === "winter" ? "213,230,237"
+    : palette.name === "spring" ? "166,207,178" : "176,212,207";
   const breeze = g.weather === "wind" || g.weather === "blizzard" ? 1.28 : 1;
   // Small bank waves wash back and forth over one or two logical pixels.
   // Broken foam glints fade out; never a full-width white shoreline stripe.
@@ -1575,7 +1602,7 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     ctx.fillRect(x, y, Math.min(3, W - x), 1);
     const wash = shorelineFoam(g.animT, wx);
     if (wash > 0.35 && x % 9 !== 0) {
-      ctx.fillStyle = `rgba(181,211,218,${((0.06 + 0.13 * wash) * (1 - 0.45 * night)).toFixed(3)})`;
+      ctx.fillStyle = `rgba(${washTone},${((0.05 + 0.11 * wash) * (1 - 0.45 * night)).toFixed(3)})`;
       ctx.fillRect(x, y + 1, Math.min(2, W - x), 1);
     }
   }
@@ -1591,6 +1618,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   const inRun = g.ui === "run";
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;
+  if (g.menu !== "bench") g.craftConfirm = null;
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
   const q = clamp(g.time / total, 0, 1);
@@ -1893,5 +1921,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, moveSel, closeMenu, drawSideArrows };
 export { W, H } from "./config";

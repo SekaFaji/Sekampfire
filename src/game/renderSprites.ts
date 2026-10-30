@@ -5,6 +5,7 @@ import { visualSeason, visualPalette } from "./palette";
 import { drawTree, drawFallingTree } from "./renderTrees";
 import { drawSideLegs } from "./playerLegs";
 import { drawSeasonalWildlife } from "./renderWildlife";
+import { drawWoodlandSilhouettes } from "./renderAtmosphere";
 
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
@@ -540,27 +541,47 @@ function drawPickups(ctx: any, g: any) {
 
 function drawMountainRange(ctx: any, arr: any[], color: string, snow: string) {
   for (const m of arr) {
+    // Jagged shoulders break the old perfect isosceles triangles. Geometry
+    // stays within the existing world-space x/w/h bounds and needs no RNG.
+    const x = m.x, y = GROUND + 2, w = m.w, h = m.h;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.moveTo(m.x, GROUND + 2);
-    ctx.lineTo(m.x + m.w / 2, GROUND + 2 - m.h);
-    ctx.lineTo(m.x + m.w, GROUND + 2);
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w * 0.12, y - h * 0.30);
+    ctx.lineTo(x + w * 0.28, y - h * 0.62);
+    ctx.lineTo(x + w * 0.39, y - h * 0.58);
+    ctx.lineTo(x + w * 0.52, y - h);
+    ctx.lineTo(x + w * 0.63, y - h * 0.70);
+    ctx.lineTo(x + w * 0.74, y - h * 0.76);
+    ctx.lineTo(x + w * 0.89, y - h * 0.28);
+    ctx.lineTo(x + w, y);
     ctx.closePath();
     ctx.fill();
-    const capH = Math.min(9, m.h * 0.35);
-    const capW = m.w * (capH / m.h);
+    // Snow collects at irregular peak ledges, not in a pasted triangle.
+    const capY = y - h;
+    const capDepth = Math.min(10, h * 0.32);
     ctx.fillStyle = snow;
     ctx.beginPath();
-    ctx.moveTo(m.x + m.w / 2 - capW / 2, GROUND + 2 - m.h + capH);
-    ctx.lineTo(m.x + m.w / 2, GROUND + 2 - m.h);
-    ctx.lineTo(m.x + m.w / 2 + capW / 2, GROUND + 2 - m.h + capH);
+    ctx.moveTo(x + w * 0.40, capY + capDepth * 1.1);
+    ctx.lineTo(x + w * 0.52, capY);
+    ctx.lineTo(x + w * 0.63, capY + capDepth * 1.4);
+    ctx.lineTo(x + w * 0.56, capY + capDepth * 0.9);
+    ctx.lineTo(x + w * 0.50, capY + capDepth * 1.2);
+    ctx.lineTo(x + w * 0.45, capY + capDepth * 0.65);
+    ctx.closePath();
+    ctx.fill();
+    // Subtle rock-face separation adds depth without outlining peaks.
+    ctx.fillStyle = lerpHex(color, "#24333d", 0.16);
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.52, capY + capDepth * 1.2);
+    ctx.lineTo(x + w * 0.63, y - h * 0.70);
+    ctx.lineTo(x + w * 0.75, y);
+    ctx.lineTo(x + w * 0.62, y);
     ctx.closePath();
     ctx.fill();
   }
 }
 
-// Rolling hills fill the horizon in the meadow / forest regions.
-// Moving right gradually reveals the mountain panorama instead.
 function drawHillRange(ctx: any, camX: number, shift: number,
                        fill: string, depth: number, spread: number) {
   ctx.fillStyle = fill;
@@ -581,27 +602,12 @@ function drawHillRange(ctx: any, camX: number, shift: number,
 // ============ distant forest layers ============
 // Forest silhouettes are decorative parallax, not collectible world trees.
 function drawForestLayer(ctx: any, camX: number, parallax: number, base: number,
-                         color: string, spacing: number, seed: number) {
-  const scroll = camX * parallax;
-  const start = Math.floor((scroll - 40) / spacing);
-  const end = Math.ceil((scroll + W + 40) / spacing);
-  ctx.save();
-  ctx.translate(-Math.round(scroll), 0);
-  for (let i = start; i <= end; i++) {
-    const r = Math.abs(Math.sin(i * 91.731 + seed * 17.23) * 43758.5453) % 1;
-    const x = Math.round(i * spacing + (r - 0.5) * 12);
-    const h = Math.round(19 + r * 18);
-    const half = Math.round(5 + r * 4);
-    px(ctx, x - 1, base - h + 5, 2, h - 4, color);
-    for (let row = 0; row < h - 5; row += 2) {
-      const wid = Math.max(1, Math.round((row / (h - 5)) * half));
-      px(ctx, x - wid, base - h + row, wid * 2 + 1, 2, color);
-    }
-  }
-  ctx.restore();
+                         color: string, spacing: number, seed: number, season = "autumn") {
+  // Deterministic mixed broadleaf/fir/pine silhouettes, still using the
+  // original camera parallax, colour and transparent reflection pipeline.
+  drawWoodlandSilhouettes(ctx, camX, parallax, base, color, spacing, seed, season);
 }
 
-// ============ ambient critters ============
 function drawCritter(ctx: any, c: any, g: any) {
   if (drawSeasonalWildlife(ctx, c, g)) return;
   const x = Math.round(c.x), y = Math.round(c.y);

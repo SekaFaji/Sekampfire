@@ -287,6 +287,10 @@ function captureRunSnapshot(g: any): any {
     x:t.x,y:t.y,id:t.id,tier:t.tier,variant:t.variant,hp:t.hp
   }));
   state.pickups = g.pickups.map((p: any) => ({x:p.x,y:p.y,w:p.w}));
+  state.falling = g.falling.map((t: any) => ({
+    x:t.x,y:t.y,id:t.id,tier:t.tier,variant:t.variant,wood:t.wood,
+    t:t.t,dir:t.dir
+  }));
   state.crafts = { ...g.crafts };
   return { version: RUN_SAVE_VERSION, state };
 }
@@ -304,6 +308,7 @@ function loadRunSnapshot(): any {
     const v = data.state;
     if (!v.player || !Array.isArray(v.trees) || !Array.isArray(v.pickups)) return null;
     if (v.trees.length > 150 || v.pickups.length > 200) return null;
+    if (v.falling !== undefined && (!Array.isArray(v.falling) || v.falling.length > 150)) return null;
     if (!Number.isFinite(v.player.x) || !Number.isFinite(v.time)) return null;
     return v;
   } catch (_e) { return null; }
@@ -356,8 +361,20 @@ function resumeRun(g: any, data: any) {
     variant:Math.floor(finiteRange(t.variant,0,2,0)),
     hp:Math.floor(finiteRange(t.hp,1,3,1)), hitT:0
   }));
+  g.falling = (Array.isArray(data.falling) ? data.falling : []).slice(0, 150)
+    .filter((t: any) => t && Number.isFinite(t.x) && Number.isFinite(t.y)
+      && Number.isFinite(t.id)).map((t: any) => ({
+      x:finiteRange(t.x,0,WORLD_W,0),y:finiteRange(t.y,132,165,145),
+      id:Math.floor(finiteRange(t.id,1,1000000,1)),
+      tier:Math.floor(finiteRange(t.tier,0,2,0)),
+      variant:Math.floor(finiteRange(t.variant,0,2,0)),
+      wood:Math.floor(finiteRange(t.wood,1,3,1)),
+      t:finiteRange(t.t,0,0.55,0),
+      dir:t.dir === -1 ? -1 : 1,hitT:0
+    }));
   g.treeId = Math.max(Math.floor(n("treeId", 1, 1000001, 1)),
-    ...g.trees.map((t: any) => t.id + 1));
+    ...g.trees.map((t: any) => t.id + 1),
+    ...g.falling.map((t: any) => t.id + 1));
   g.pickups = data.pickups.slice(0, 200).filter((p: any) => p &&
     Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.w))
     .map((p: any) => ({
@@ -2719,10 +2736,14 @@ function App() {
       saveRunSnapshot(g);
     };
     const pagehide = () => saveRunSnapshot(g);
+    const visibility = () => {
+      if (document.visibilityState === "hidden") saveRunSnapshot(g);
+    };
     window.addEventListener("keydown", kd);
     window.addEventListener("keyup", ku);
     window.addEventListener("blur", blur);
     window.addEventListener("pagehide", pagehide);
+    document.addEventListener("visibilitychange", visibility);
 
     const toXY = (e: any) => {
       const r = canvas.getBoundingClientRect();
@@ -2755,6 +2776,7 @@ function App() {
       window.removeEventListener("keyup", ku);
       window.removeEventListener("blur", blur);
       window.removeEventListener("pagehide", pagehide);
+      document.removeEventListener("visibilitychange", visibility);
       canvas.removeEventListener("pointerdown", pd);
       canvas.removeEventListener("pointermove", pm);
       canvas.removeEventListener("pointerup", pu);

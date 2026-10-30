@@ -8,7 +8,7 @@ import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
 import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
 import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
-import { shorelineWaveOffset, shorelineFoam } from "./water";
+import { shorelineWaveOffset, shorelineFoam, reflectionOffset, reflectionOpacity, waterGlint } from "./water";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
@@ -1559,25 +1559,34 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     // Exact vertical mirror of the aligned sprites: no 18px source offset.
     const srcY = WATER_Y - 1 - i;
     if (srcY < 0) break;
-    const wave = Math.sin(i * 0.49 + g.animT * 1.5) * 1.25 +
-      Math.sin(i * 0.18 - g.animT * 0.76) * 1.4;
     const wind = g.weather === "wind" || g.weather === "blizzard" ? 1.6 : 1;
-    const shift = Math.round(wave * wind);
+    const shift = reflectionOffset(g.animT, i, wind);
     const sx = Math.max(0, -shift);
     const dx = Math.max(0, shift);
-    ctx.globalAlpha = (0.53 - 0.28 * i / height) * (g.weather === "blizzard" ? 0.75 : 1);
+    ctx.globalAlpha = reflectionOpacity(i, height, g.weather === "blizzard");
     ctx.drawImage(reflection, sx, srcY, W - Math.abs(shift), 1,
       dx, WATER_Y + i, W - Math.abs(shift), Math.min(pixelStep, height - i));
   }
   ctx.restore();
-  for (let i = 0; i < 14; i++) {
-    const y = WATER_Y + 3 + (i * 11) % (height - 3);
-    const x = (i * 71 + Math.floor(Math.sin(g.animT * 0.62 + i) * 14)
-      - Math.floor(camX * 0.16) + 4 * W) % W;
-    ctx.fillStyle = "rgba(178,215,227," + (0.07 + (1 - night) * 0.045) + ")";
-    ctx.fillRect(x, y, 7 + (i % 4) * 4, 1);
+  // Season-aware, broken surface glints move independently of the mirrored
+  // sprites, so they never drag the player's or wildlife's reflection.
+  const glintColor = palette.name === "autumn" ? "217,187,139"
+    : palette.name === "winter" ? "216,235,244"
+    : palette.name === "spring" ? "169,225,204" : "180,222,231";
+  const rippleCount = GRAPHICS.high ? 15 : 9;
+  for (let i = 0; i < rippleCount; i++) {
+    const glint = waterGlint(g.animT, i, camX, W);
+    const y = WATER_Y + glint.y;
+    if (y >= H - 1) continue;
+    ctx.fillStyle = `rgba(${glintColor},${(glint.alpha * (1 - night * 0.45)).toFixed(3)})`;
+    ctx.fillRect(glint.x, y, glint.length, 1);
+    // Secondary fragment makes the highlight read as broken water motion.
+    if (i % 3 === 0) ctx.fillRect((glint.x + glint.length + 3) % W, y + 1, 3, 1);
   }
   const bank = lerpHex(palette.shore, "#243746", night * 0.92);
+  const washTone = palette.name === "autumn" ? "207,173,126"
+    : palette.name === "winter" ? "213,230,237"
+    : palette.name === "spring" ? "166,207,178" : "176,212,207";
   const breeze = g.weather === "wind" || g.weather === "blizzard" ? 1.28 : 1;
   // Small bank waves wash back and forth over one or two logical pixels.
   // Broken foam glints fade out; never a full-width white shoreline stripe.
@@ -1591,7 +1600,7 @@ function drawReflectiveRiver(ctx: any, g: any, reflection: any, rctx: any,
     ctx.fillRect(x, y, Math.min(3, W - x), 1);
     const wash = shorelineFoam(g.animT, wx);
     if (wash > 0.35 && x % 9 !== 0) {
-      ctx.fillStyle = `rgba(181,211,218,${((0.06 + 0.13 * wash) * (1 - 0.45 * night)).toFixed(3)})`;
+      ctx.fillStyle = `rgba(${washTone},${((0.05 + 0.11 * wash) * (1 - 0.45 * night)).toFixed(3)})`;
       ctx.fillRect(x, y + 1, Math.min(2, W - x), 1);
     }
   }

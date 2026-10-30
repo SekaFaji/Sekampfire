@@ -261,6 +261,119 @@ function loadMeta(): any {
   return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {} };
 }
 
+
+// ============ Safe local run checkpoint ============
+// Permanent ash and upgrades remain in their existing key. This checkpoint
+// only stores a pending, unfinished run; it never banks earned ash.
+const RUN_KEY = "sekampfire-run-v1";
+const RUN_SAVE_VERSION = 1;
+const WEATHER_IDS = ["clear", "wind", "fog", "rain", "coldsnap", "blizzard"];
+const finiteRange = (v: any, lo: number, hi: number, fallback: number) =>
+  typeof v === "number" && Number.isFinite(v) ? clamp(v, lo, hi) : fallback;
+function clearRunSnapshot() {
+  try { localStorage.removeItem(RUN_KEY); } catch (_e) {}
+}
+function captureRunSnapshot(g: any): any {
+  if (g.ui !== "run" || g.over) return null;
+  const keys = ["time","night","isNight","weather","aurora","fuel","fireLit","everLit",
+    "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
+    "ashEarned","depth","builtBench","builtPile","benchLogs","pileLogs",
+    "benchBuildT","pileBuildT","stored","treeId","scenerySeed"];
+  const state: any = {};
+  for (const key of keys) state[key] = g[key];
+  state.player = { x: g.player.x, dir: g.player.dir, wood: g.player.wood,
+    warmth: g.player.warmth, torchT: g.player.torchT };
+  state.trees = g.trees.map((t: any) => ({
+    x:t.x,y:t.y,id:t.id,tier:t.tier,variant:t.variant,hp:t.hp
+  }));
+  state.pickups = g.pickups.map((p: any) => ({x:p.x,y:p.y,w:p.w}));
+  state.crafts = { ...g.crafts };
+  return { version: RUN_SAVE_VERSION, state };
+}
+function saveRunSnapshot(g: any) {
+  const snap = captureRunSnapshot(g);
+  if (!snap) return;
+  try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch (_e) {}
+}
+function loadRunSnapshot(): any {
+  try {
+    const raw = localStorage.getItem(RUN_KEY);
+    if (!raw || raw.length > 240000) return null;
+    const data = JSON.parse(raw);
+    if (!data || data.version !== RUN_SAVE_VERSION || !data.state) return null;
+    const v = data.state;
+    if (!v.player || !Array.isArray(v.trees) || !Array.isArray(v.pickups)) return null;
+    if (v.trees.length > 150 || v.pickups.length > 200) return null;
+    if (!Number.isFinite(v.player.x) || !Number.isFinite(v.time)) return null;
+    return v;
+  } catch (_e) { return null; }
+}
+function resumeRun(g: any, data: any) {
+  if (!data) return;
+  // Reset all UI pointers, particle state and transient actions before restore.
+  Object.assign(g, createEngine());
+  const n = (key: string, lo: number, hi: number, fallback: number) =>
+    finiteRange(data[key], lo, hi, fallback);
+  const flag = (key: string) => data[key] === true;
+  const seed = n("scenerySeed", 1, 1e9, 777);
+  genScenery(g, seed);
+  g.player.x = finiteRange(data.player.x, 10, WORLD_W - 10, CX + 26);
+  g.player.dir = data.player.dir === -1 ? -1 : 1;
+  g.player.wood = finiteRange(data.player.wood, 0, 26, 0);
+  g.player.warmth = finiteRange(data.player.warmth, 1, 100, 100);
+  g.player.torchT = finiteRange(data.player.torchT, 0, 60, 0);
+  g.time = n("time", 0, DAY_LEN + LONG_NIGHT_LEN - 0.01, 10);
+  g.night = Math.floor(n("night", 0, 100000, 0));
+  g.isNight = g.time >= DAY_LEN;
+  g.weather = WEATHER_IDS.includes(data.weather) ? data.weather : "clear";
+  g.aurora = flag("aurora");
+  g.fuel = n("fuel", 0, 100, 0);
+  g.fireLit = flag("fireLit") && g.fuel > 0;
+  g.everLit = flag("everLit") || g.fireLit;
+  g.firestarter = n("firestarter", 0, 1, 0);
+  g.stage = Math.floor(n("stage", 0, 6, 0));
+  g.longNightPending = flag("longNightPending");
+  g.longNightActive = flag("longNightActive");
+  g.endlessMode = flag("endlessMode");
+  g.endlessN = Math.floor(n("endlessN", 0, 100000, 0));
+  g.ashEarned = n("ashEarned", 0, 10000000, 0);
+  g.depth = n("depth", 0, 10000, 0);
+  g.builtBench = flag("builtBench");
+  g.builtPile = flag("builtPile");
+  g.benchLogs = n("benchLogs", 0, SITE_COST, 0);
+  g.pileLogs = n("pileLogs", 0, SITE_COST, 0);
+  g.benchBuildT = n("benchBuildT", -1, BUILD_TIME, -1);
+  g.pileBuildT = n("pileBuildT", -1, BUILD_TIME, -1);
+  g.stored = n("stored", 0, 40, 0);
+  g.trees = data.trees.slice(0, 150).filter((t: any) =>
+    t && typeof t === "object" && Number.isFinite(t.x) && Number.isFinite(t.y)
+      && Number.isFinite(t.id)).map((t: any) => ({
+    x:finiteRange(t.x,10,WORLD_W-10,20), y:finiteRange(t.y,132,165,145),
+    id:Math.floor(finiteRange(t.id,1,1000000,1)),
+    tier:Math.floor(finiteRange(t.tier,0,2,0)),
+    variant:Math.floor(finiteRange(t.variant,0,2,0)),
+    hp:Math.floor(finiteRange(t.hp,1,3,1)), hitT:0
+  }));
+  g.treeId = Math.max(Math.floor(n("treeId", 1, 1000001, 1)),
+    ...g.trees.map((t: any) => t.id + 1));
+  g.pickups = data.pickups.slice(0, 200).filter((p: any) => p &&
+    Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.w))
+    .map((p: any) => ({
+      x:finiteRange(p.x,0,WORLD_W,0),
+      y:finiteRange(p.y,130,170,145),
+      w:Math.floor(finiteRange(p.w,1,12,1))
+    }));
+  g.crafts = {};
+  for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
+  g.ui = "run";
+  g.menu = null;
+  g.resumeData = null;
+  g.keys = {};
+  g.pointers = {};
+  g.pleft = false; g.pright = false;
+  toast(g, "Run restored. The fire is waiting.");
+}
+
 const carryCap = (g: any, meta: any) => 10 + (meta.up.pack ? 8 : 0) + (g.crafts.pack ? 8 : 0);
 const pileCap = (g: any) => (g.builtPile ? (g.stage >= 4 ? 40 : 12) : 0);
 
@@ -842,6 +955,7 @@ function drawCritter(ctx: any, c: any, g: any) {
 function createEngine(): any {
   return {
     animT: 0, time: 10, isNight: false, night: 0, weather: "clear", aurora: false,
+    weatherBlend: 1, previousWeather: "clear", scenerySeed: 777, resumeData: null,
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, camX: CX - W / 2, shake: 0,
@@ -863,6 +977,7 @@ function createEngine(): any {
 }
 
 function genScenery(g: any, seed: number) {
+  g.scenerySeed = seed;
   const rnd = mulberry32(seed);
   g.mts = []; g.mts2 = []; g.stars = []; g.sparkles = [];
   let x = -100;
@@ -905,9 +1020,11 @@ function startRunEngine(g: any, meta: any) {
 }
 
 function startRun(g: any, meta: any) {
+  clearRunSnapshot();
   startRunEngine(g, meta);
   g.ui = "run";
   g.menu = null;
+  saveRunSnapshot(g);
 }
 
 function goEndless(g: any) {
@@ -917,6 +1034,7 @@ function goEndless(g: any) {
   g.ui = "run";
   g.menu = null;
   toast(g, "Endless winter. Survive as long as you can.");
+  saveRunSnapshot(g);
 }
 
 function setupTitleScene(g: any) {
@@ -2445,6 +2563,7 @@ function App() {
     const g = createEngine();
     gameRef.current = g;
     setupTitleScene(g);
+    g.resumeData = loadRunSnapshot();
     const canvas = canvasRef.current;
     if (!canvas) return;
     let ctx: any = null, off: any = null, octx: any = null;
@@ -2468,6 +2587,8 @@ function App() {
     const cb = {
       toast: (text: string) => toast(g, text),
       end: (kind: string, stats: any) => {
+        // Retire, death, and victory are terminal: never bank a checkpoint twice.
+        clearRunSnapshot();
         const m = metaRef.current;
         m.ash = (m.ash || 0) + stats.ash;
         m.totalAsh = (m.totalAsh || 0) + stats.ash;
@@ -2515,6 +2636,7 @@ function App() {
 
     let raf = 0;
     let last = performance.now();
+    let saveAccum = 0;
     const frame = (now: number) => {
       try {
         const dt = Math.min(0.05, (now - last) / 1000);
@@ -2524,6 +2646,10 @@ function App() {
         const active = g.ui === "run" && !g.over && !g.menu;
         if (active) update(g, metaRef.current, dt, cb);
         if (!g.menu) updateAmbient(g, dt);
+        if (g.ui === "run" && !g.over) {
+          saveAccum += dt;
+          if (saveAccum >= 4) { saveRunSnapshot(g); saveAccum = 0; }
+        } else saveAccum = 0;
         AUDIO.sync(g);
         draw(g, ctx, off, octx, reflection, rctx, metaRef.current);
       } catch (err: any) {
@@ -2542,10 +2668,15 @@ function App() {
       handleKey(g, metaRef.current, k, true);
     };
     const ku = (e: KeyboardEvent) => handleKey(g, metaRef.current, e.key.toLowerCase(), false);
-    const blur = () => { g.keys = {}; g.pleft = false; g.pright = false; g.pointers = {}; };
+    const blur = () => {
+      g.keys = {}; g.pleft = false; g.pright = false; g.pointers = {};
+      saveRunSnapshot(g);
+    };
+    const pagehide = () => saveRunSnapshot(g);
     window.addEventListener("keydown", kd);
     window.addEventListener("keyup", ku);
     window.addEventListener("blur", blur);
+    window.addEventListener("pagehide", pagehide);
 
     const toXY = (e: any) => {
       const r = canvas.getBoundingClientRect();
@@ -2577,6 +2708,7 @@ function App() {
       window.removeEventListener("keydown", kd);
       window.removeEventListener("keyup", ku);
       window.removeEventListener("blur", blur);
+      window.removeEventListener("pagehide", pagehide);
       canvas.removeEventListener("pointerdown", pd);
       canvas.removeEventListener("pointermove", pm);
       canvas.removeEventListener("pointerup", pu);

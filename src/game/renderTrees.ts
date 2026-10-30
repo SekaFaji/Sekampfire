@@ -59,7 +59,7 @@ export function drawTree(ctx: any, tr: any, t: number, windAmt: number, colors: 
     const frac = (layer + 1) / layerCount;
     const branchHalf = Math.round(halfBase * (0.26 + 0.74 * frac));
     const rootY = Math.round(crownTop + layer * step);
-    const boughHeight = variant === 1 ? 7 : variant === 2 ? 9 : 8;
+    const boughHeight = (variant === 1 ? 7 : variant === 2 ? 9 : 8) + (colors.name === "summer" ? 1 : 0);
     const side = ((seed + layer) % 3) - 1;
     const displacement = Math.round(lean * (1 - layer / (layerCount * 1.35)));
     const center = x + displacement + side;
@@ -114,9 +114,23 @@ export function drawTree(ctx: any, tr: any, t: number, windAmt: number, colors: 
         px(ctx, center + branchHalf - 4, rootY + boughHeight - 4, 3, 1, snowShade);
       }
     } else {
-      // A few warm/cool light breaks between the overlapping boughs.
+      // Season-specific accents distinguish the tree's growth cycle beyond
+      // simply swapping a green/orange palette.
       px(ctx, center - 1, rootY + 1, 2, 1, tip);
       if (branchHalf > 8) px(ctx, center + branchHalf - 5, rootY + 4, 2, 1, light);
+      if (colors.name === "spring") {
+        // Young buds and tiny blossoms on exposed branch tips.
+        px(ctx, center - branchHalf + 2, rootY + 2, 2, 1, "#cbdc9f");
+        px(ctx, center + branchHalf - 3, rootY + 3, 1, 2, "#e3cdcc");
+      } else if (colors.name === "autumn") {
+        // Golden leaves interrupt dense amber needles.
+        px(ctx, center - branchHalf + 2, rootY + 3, 2, 2, "#d3a454");
+        if (layer % 2 === 0) px(ctx, center + branchHalf - 4, rootY + 5, 2, 1, "#a75c34");
+      } else if (colors.name === "summer") {
+        // Full crown and sunlit tips, even in the lighter middle boughs.
+        px(ctx, center - branchHalf + 2, rootY + 2, 3, 2, "#72ad63");
+        px(ctx, center + branchHalf - 4, rootY + 4, 3, 2, "#88bb69");
+      }
     }
   }
 }

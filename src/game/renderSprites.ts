@@ -3,6 +3,7 @@ import { clamp } from "./math";
 import { lerpHex, lightenHex, px } from "./renderUtils";
 import { visualSeason, visualPalette } from "./palette";
 import { drawTree, drawFallingTree } from "./renderTrees";
+import { drawSeasonalWildlife } from "./renderWildlife";
 
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
@@ -609,6 +610,7 @@ function drawForestLayer(ctx: any, camX: number, parallax: number, base: number,
 
 // ============ ambient critters ============
 function drawCritter(ctx: any, c: any, g: any) {
+  if (drawSeasonalWildlife(ctx, c, g)) return;
   const x = Math.round(c.x), y = Math.round(c.y);
   const d = c.dir || 1;
   const rabbitFur = visualSeason(g) === "winter" ? "#e8eef4" : "#bda184";

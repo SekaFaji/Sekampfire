@@ -261,6 +261,138 @@ function loadMeta(): any {
   return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {} };
 }
 
+
+// ============ Safe local run checkpoint ============
+// Permanent ash and upgrades remain in their existing key. This checkpoint
+// only stores a pending, unfinished run; it never banks earned ash.
+const RUN_KEY = "sekampfire-run-v1";
+const RUN_SAVE_VERSION = 1;
+const WEATHER_IDS = ["clear", "wind", "fog", "rain", "coldsnap", "blizzard"];
+const finiteRange = (v: any, lo: number, hi: number, fallback: number) =>
+  typeof v === "number" && Number.isFinite(v) ? clamp(v, lo, hi) : fallback;
+function clearRunSnapshot() {
+  try { localStorage.removeItem(RUN_KEY); } catch (_e) {}
+}
+function captureRunSnapshot(g: any): any {
+  if (g.ui !== "run" || g.over) return null;
+  const keys = ["time","night","isNight","weather","aurora","fuel","fireLit","everLit",
+    "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
+    "ashEarned","depth","builtBench","builtPile","benchLogs","pileLogs",
+    "benchBuildT","pileBuildT","stored","treeId","scenerySeed"];
+  const state: any = {};
+  for (const key of keys) state[key] = g[key];
+  state.player = { x: g.player.x, dir: g.player.dir, wood: g.player.wood,
+    warmth: g.player.warmth, torchT: g.player.torchT };
+  state.trees = g.trees.map((t: any) => ({
+    x:t.x,y:t.y,id:t.id,tier:t.tier,variant:t.variant,hp:t.hp
+  }));
+  state.pickups = g.pickups.map((p: any) => ({x:p.x,y:p.y,w:p.w}));
+  state.falling = g.falling.map((t: any) => ({
+    x:t.x,y:t.y,id:t.id,tier:t.tier,variant:t.variant,wood:t.wood,
+    t:t.t,dir:t.dir
+  }));
+  state.crafts = { ...g.crafts };
+  return { version: RUN_SAVE_VERSION, state };
+}
+function saveRunSnapshot(g: any) {
+  const snap = captureRunSnapshot(g);
+  if (!snap) return;
+  try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch (_e) {}
+}
+function loadRunSnapshot(): any {
+  try {
+    const raw = localStorage.getItem(RUN_KEY);
+    if (!raw || raw.length > 240000) return null;
+    const data = JSON.parse(raw);
+    if (!data || data.version !== RUN_SAVE_VERSION || !data.state) return null;
+    const v = data.state;
+    if (!v.player || !Array.isArray(v.trees) || !Array.isArray(v.pickups)) return null;
+    if (v.trees.length > 150 || v.pickups.length > 200) return null;
+    if (v.falling !== undefined && (!Array.isArray(v.falling) || v.falling.length > 150)) return null;
+    if (!Number.isFinite(v.player.x) || !Number.isFinite(v.time)) return null;
+    return v;
+  } catch (_e) { return null; }
+}
+function resumeRun(g: any, data: any) {
+  if (!data) return;
+  // Reset all UI pointers, particle state and transient actions before restore.
+  Object.assign(g, createEngine());
+  const n = (key: string, lo: number, hi: number, fallback: number) =>
+    finiteRange(data[key], lo, hi, fallback);
+  const flag = (key: string) => data[key] === true;
+  const seed = n("scenerySeed", 1, 1e9, 777);
+  genScenery(g, seed);
+  g.player.x = finiteRange(data.player.x, 10, WORLD_W - 10, CX + 26);
+  g.player.dir = data.player.dir === -1 ? -1 : 1;
+  g.player.wood = finiteRange(data.player.wood, 0, 26, 0);
+  g.player.warmth = finiteRange(data.player.warmth, 1, 100, 100);
+  g.player.torchT = finiteRange(data.player.torchT, 0, 60, 0);
+  g.time = n("time", 0, DAY_LEN + LONG_NIGHT_LEN - 0.01, 10);
+  g.night = Math.floor(n("night", 0, 100000, 0));
+  g.isNight = g.time >= DAY_LEN;
+  g.weather = WEATHER_IDS.includes(data.weather) ? data.weather : "clear";
+  g.previousWeather = g.weather;
+  g.weatherBlend = 1;
+  g.aurora = flag("aurora");
+  g.fuel = n("fuel", 0, 100, 0);
+  g.fireLit = flag("fireLit") && g.fuel > 0;
+  g.everLit = flag("everLit") || g.fireLit;
+  g.firestarter = n("firestarter", 0, 1, 0);
+  g.stage = Math.floor(n("stage", 0, 6, 0));
+  g.longNightPending = flag("longNightPending");
+  g.longNightActive = flag("longNightActive");
+  g.endlessMode = flag("endlessMode");
+  g.endlessN = Math.floor(n("endlessN", 0, 100000, 0));
+  g.ashEarned = n("ashEarned", 0, 10000000, 0);
+  g.depth = n("depth", 0, 10000, 0);
+  g.builtBench = flag("builtBench");
+  g.builtPile = flag("builtPile");
+  g.benchLogs = n("benchLogs", 0, SITE_COST, 0);
+  g.pileLogs = n("pileLogs", 0, SITE_COST, 0);
+  g.benchBuildT = n("benchBuildT", -1, BUILD_TIME, -1);
+  g.pileBuildT = n("pileBuildT", -1, BUILD_TIME, -1);
+  g.stored = n("stored", 0, 40, 0);
+  g.trees = data.trees.slice(0, 150).filter((t: any) =>
+    t && typeof t === "object" && Number.isFinite(t.x) && Number.isFinite(t.y)
+      && Number.isFinite(t.id)).map((t: any) => ({
+    x:finiteRange(t.x,10,WORLD_W-10,20), y:finiteRange(t.y,132,165,145),
+    id:Math.floor(finiteRange(t.id,1,1000000,1)),
+    tier:Math.floor(finiteRange(t.tier,0,2,0)),
+    variant:Math.floor(finiteRange(t.variant,0,2,0)),
+    hp:Math.floor(finiteRange(t.hp,1,3,1)), hitT:0
+  }));
+  g.falling = (Array.isArray(data.falling) ? data.falling : []).slice(0, 150)
+    .filter((t: any) => t && Number.isFinite(t.x) && Number.isFinite(t.y)
+      && Number.isFinite(t.id)).map((t: any) => ({
+      x:finiteRange(t.x,0,WORLD_W,0),y:finiteRange(t.y,132,165,145),
+      id:Math.floor(finiteRange(t.id,1,1000000,1)),
+      tier:Math.floor(finiteRange(t.tier,0,2,0)),
+      variant:Math.floor(finiteRange(t.variant,0,2,0)),
+      wood:Math.floor(finiteRange(t.wood,1,3,1)),
+      t:finiteRange(t.t,0,0.55,0),
+      dir:t.dir === -1 ? -1 : 1,hitT:0
+    }));
+  g.treeId = Math.max(Math.floor(n("treeId", 1, 1000001, 1)),
+    ...g.trees.map((t: any) => t.id + 1),
+    ...g.falling.map((t: any) => t.id + 1));
+  g.pickups = data.pickups.slice(0, 200).filter((p: any) => p &&
+    Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.w))
+    .map((p: any) => ({
+      x:finiteRange(p.x,0,WORLD_W,0),
+      y:finiteRange(p.y,130,170,145),
+      w:Math.floor(finiteRange(p.w,1,12,1))
+    }));
+  g.crafts = {};
+  for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
+  g.ui = "run";
+  g.menu = null;
+  g.resumeData = null;
+  g.keys = {};
+  g.pointers = {};
+  g.pleft = false; g.pright = false;
+  toast(g, "Run restored. The fire is waiting.");
+}
+
 const carryCap = (g: any, meta: any) => 10 + (meta.up.pack ? 8 : 0) + (g.crafts.pack ? 8 : 0);
 const pileCap = (g: any) => (g.builtPile ? (g.stage >= 4 ? 40 : 12) : 0);
 
@@ -276,7 +408,8 @@ const SOUND_KEY = "sekampfire-sound-v1";
 const AUDIO = (() => {
   let enabled = true;
   try { enabled = localStorage.getItem(SOUND_KEY) !== "off"; } catch (_e) {}
-  let ac: any = null, master: any = null, wind: any = null, fire: any = null;
+  let ac: any = null, master: any = null, wind: any = null, fire: any = null, noiseBuffer: any = null;
+  let lastCrackle = -1;
   function touch() {
     if (!enabled) return;
     try {
@@ -288,6 +421,7 @@ const AUDIO = (() => {
         master.gain.value = 0.34;
         master.connect(ac.destination);
         const buf = ac.createBuffer(1, Math.round(ac.sampleRate * 2), ac.sampleRate);
+        noiseBuffer = buf;
         const data = buf.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
         const source = ac.createBufferSource();
@@ -323,33 +457,57 @@ const AUDIO = (() => {
   function sync(g: any) {
     if (!ac || !wind || !fire) return;
     const active = enabled && g.ui === "run" && !g.over && !g.menu;
-    const gusts = g.weather === "blizzard" ? 0.1 : g.weather === "wind" ? 0.065 : 0.013;
+    const gusts = 0.013 + weatherIntensity(g, "blizzard") * 0.087 + weatherIntensity(g, "wind") * 0.052;
     wind.gain.setTargetAtTime(active ? gusts : 0, ac.currentTime, 0.45);
     const proximity = clamp(1 - Math.abs(g.player.x - CX) / 180, 0.1, 1);
-    fire.gain.setTargetAtTime(active && g.fireLit ? 0.045 * proximity : 0, ac.currentTime, 0.4);
+    fire.gain.setTargetAtTime(active && g.fireLit ? 0.03 * proximity : 0, ac.currentTime, 0.4);
+    if (active && g.fireLit && proximity > 0.2 && ac.currentTime - lastCrackle > 0.35 + Math.random() * 0.7) {
+      lastCrackle = ac.currentTime;
+      effect("crackle");
+    }
   }
   function effect(kind: string) {
-    if (!enabled || !ac || ac.state !== "running") return;
+    if (!enabled || !ac || !master || ac.state !== "running") return;
     try {
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
       const now = ac.currentTime;
-      const step = kind === "step", light = kind === "light";
-      const dur = step ? 0.055 : light ? 0.22 : 0.095;
-      const freq = step ? 95 : light ? 580 : kind === "build" ? 185 : 145;
-      osc.type = light ? "sine" : "triangle";
-      osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(35, freq * (light ? 0.7 : 0.45)), now + dur);
-      gain.gain.setValueAtTime(step ? 0.025 : light ? 0.055 : 0.07, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      osc.connect(gain);
+      const step = kind === "step", crackle = kind === "crackle";
+      const light = kind === "light", build = kind === "build";
+      const dur = step ? 0.065 : crackle ? 0.026 : light ? 0.19 : 0.105;
+      const gain = ac.createGain();
+      const volume = step ? 0.025 : crackle ? 0.023 : build ? 0.07 : 0.055;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
       gain.connect(master);
-      osc.start(now);
-      osc.stop(now + dur + 0.01);
-    } catch (_e) {}
+      if (!light && noiseBuffer) {
+        // Filtered noise is less electronic than the earlier triangle tones.
+        const source = ac.createBufferSource();
+        source.buffer = noiseBuffer;
+        const filter = ac.createBiquadFilter();
+        filter.type = crackle ? "highpass" : step ? "lowpass" : "bandpass";
+        filter.frequency.value = crackle ? 1900 : step ? 380 : build ? 600 : 830;
+        source.connect(filter);
+        filter.connect(gain);
+        source.start(now, Math.random() * 1.5, dur);
+        source.stop(now + dur + 0.015);
+      } else {
+        const osc = ac.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(580, now);
+        osc.frequency.exponentialRampToValueAtTime(350, now + dur);
+        osc.connect(gain);
+        osc.start(now);
+        osc.stop(now + dur + 0.015);
+      }
+    } catch (_e) { /* Browser audio support is optional. */ }
   }
   return { touch, sync, effect, setEnabled, get enabled() { return enabled; } };
 })();
+
+// Visual weather crossfades are independent from gameplay/weather balance.
+function weatherIntensity(g: any, type: string): number {
+  const t = clamp(g.weatherBlend, 0, 1);
+  return (g.previousWeather === type ? 1 - t : 0) + (g.weather === type ? t : 0);
+}
 
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
@@ -491,15 +649,16 @@ function drawDog(ctx: any, g: any) {
   const x = Math.round(d.x), y = Math.round(d.y);
   const dir = d.dir || 1;
   const bob = d.phase !== "idle" ? Math.floor(g.animT * 8) % 2 : 0;
+  const idleBreath = d.phase === "idle" && Math.sin(g.animT * 2.2) > 0.6 ? -1 : 0;
   ctx.fillStyle = "rgba(20,20,40,0.3)";
   ctx.fillRect(x - 4, y - 1, 8, 1);
-  px(ctx, x - 4, y - 4, 8, 3, "#d8dee4");
+  px(ctx, x - 4, y - 4 + idleBreath, 8, 3, "#d8dee4");
   px(ctx, x - 4, y - 1 - bob, 1, 2, "#b8bec6");
   px(ctx, x + 3, y - 2 + bob, 1, 2, "#b8bec6");
   px(ctx, dir > 0 ? x + 3 : x - 6, y - 6, 3, 3, "#d8dee4");
   px(ctx, dir > 0 ? x + 5 : x - 6, y - 7, 1, 2, "#c2c8ce");
   px(ctx, dir > 0 ? x + 6 : x - 6, y - 5, 1, 1, "#2a2a2e");
-  const wag = Math.sin(g.animT * 12) > 0 ? -1 : 0;
+  const wag = Math.sin(g.animT * (d.phase === "idle" ? 5 : 12)) > 0 ? -1 : 0;
   px(ctx, dir > 0 ? x - 5 : x + 4, y - 5 + wag, 1, 2, "#c2c8ce");
 }
 
@@ -799,13 +958,13 @@ function drawCritter(ctx: any, c: any, g: any) {
   const rabbitFur = visualSeason(g) === "winter" ? "#e8eef4" : "#bda184";
   if (c.type === "bird") {
     if (c.state === "fly") {
-      const flap = Math.sin(g.animT * 20 + c.ph) > 0 ? -1 : 1;
+      const flap = Math.sin(g.animT * (17 + (c.ph || 0) % 5) + c.ph) > 0 ? -1 : 1;
       ctx.fillStyle = "#39435a";
       ctx.fillRect(x - 1, y, 3, 1);
       ctx.fillRect(x - 2, y + flap, 2, 1);
       ctx.fillRect(x + 1, y + flap, 2, 1);
     } else {
-      const hop = Math.sin(g.animT * 5 + c.ph) > 0.7 ? -1 : 0;
+      const hop = Math.sin(g.animT * 4 + c.ph) > 0.82 ? -1 : 0;
       ctx.fillStyle = "rgba(20,20,40,0.25)";
       ctx.fillRect(x - 2, y - 1, 4, 1);
       px(ctx, x - 2, y - 3 + hop, 4, 2, "#39435a");
@@ -826,10 +985,11 @@ function drawCritter(ctx: any, c: any, g: any) {
     px(ctx, x + d * 3, y - 4 + hop, 1, 1, "#d87a8a");
   } else if (c.type === "fox") {
     const bob = c.state === "trot" ? Math.floor(g.animT * 10) % 2 : 0;
+    const headTilt = c.state === "watch" && Math.sin(g.animT * 1.8 + c.x) > 0.8 ? -1 : 0;
     ctx.fillStyle = "rgba(20,20,40,0.25)";
     ctx.fillRect(x - 4, y - 1, 8, 1);
     px(ctx, x - 3, y - 3 - bob, 7, 3, "#c9703a");
-    px(ctx, x + d * 3, y - 5 - bob, 3, 3, "#c9703a");
+    px(ctx, x + d * 3, y - 5 - bob + headTilt, 3, 3, "#c9703a");
     px(ctx, x + d * 3, y - 6 - bob, 1, 2, "#8a4a28");
     px(ctx, x + d * 5, y - 4 - bob, 1, 1, "#2a2a2e");
     const wag = Math.sin(g.animT * 4 + c.x * 0.13) > 0.2 ? -1 : 0;
@@ -842,6 +1002,7 @@ function drawCritter(ctx: any, c: any, g: any) {
 function createEngine(): any {
   return {
     animT: 0, time: 10, isNight: false, night: 0, weather: "clear", aurora: false,
+    weatherBlend: 1, previousWeather: "clear", scenerySeed: 777, resumeData: null,
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, camX: CX - W / 2, shake: 0,
@@ -863,6 +1024,7 @@ function createEngine(): any {
 }
 
 function genScenery(g: any, seed: number) {
+  g.scenerySeed = seed;
   const rnd = mulberry32(seed);
   g.mts = []; g.mts2 = []; g.stars = []; g.sparkles = [];
   let x = -100;
@@ -905,9 +1067,11 @@ function startRunEngine(g: any, meta: any) {
 }
 
 function startRun(g: any, meta: any) {
+  clearRunSnapshot();
   startRunEngine(g, meta);
   g.ui = "run";
   g.menu = null;
+  saveRunSnapshot(g);
 }
 
 function goEndless(g: any) {
@@ -917,6 +1081,7 @@ function goEndless(g: any) {
   g.ui = "run";
   g.menu = null;
   toast(g, "Endless winter. Survive as long as you can.");
+  saveRunSnapshot(g);
 }
 
 function setupTitleScene(g: any) {
@@ -966,7 +1131,7 @@ function spawnEvent(g: any) {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = clamp(g.player.x + side * (80 + Math.random() * 40), 20, WORLD_W - 20);
     g.critters.push({ type: "fox", x, y: 150 + Math.random() * 8, state: "watch", t: 12 + Math.random() * 8, dir: -side });
-    if (run) toast(g, "A fox watches from the treeline.");
+    if (run && Math.random() < 0.15) toast(g, "A fox watches from the treeline.");
     return;
   }
   if (day && r < 0.55) {
@@ -978,7 +1143,7 @@ function spawnEvent(g: any) {
     for (let i = 0; i < n; i++) {
       g.critters.push({ type: "bird", x: bx - i * 7 * (fromLeft ? 1 : -1), y: by + Math.sin(i * 2.1) * 4, state: "fly", vx, t: -1, ph: i * 1.3, dir: vx > 0 ? 1 : -1 });
     }
-    if (run && Math.random() < 0.6) toast(g, "Birds cross the pale sky.");
+    if (run && Math.random() < 0.12) toast(g, "Birds cross the pale sky.");
     return;
   }
   if (r < 0.78) {
@@ -992,7 +1157,7 @@ function spawnEvent(g: any) {
     return;
   }
   if (run && g.moveT > 0) {
-    const dayP = ["Birdsong in the pines.", "Snow settles softly on the branches.", "The wind carries woodsmoke.", "Somewhere a branch snaps in the cold.", "The snow squeaks under your boots."];
+    const dayP = ["Birdsong in the trees.", "The wind stirs the branches.", "The wind carries woodsmoke.", "Somewhere a branch snaps.", "The forest grows quiet."];
     const nightP = ["An owl calls far away.", "Ice sings across the lake.", "The pines groan in the dark.", "The stars feel close tonight."];
     const pool = day ? dayP : nightP;
     toast(g, pool[Math.floor(Math.random() * pool.length)]);
@@ -1015,7 +1180,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
   g.isNight = g.time >= DAY_LEN;
   if (g.isNight && !wasNight) {
     g.night++;
+    g.previousWeather = g.weather;
     g.weather = pickWeather(g);
+    g.weatherBlend = 0;
     g.aurora = g.weather === "clear" && Math.random() < 0.25;
     if (g.longNightPending) {
       g.longNightPending = false;
@@ -1052,7 +1219,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     g.depth = Math.max(0, g.night - 5) + (g.endlessMode ? g.endlessN * 0.6 : 0);
   }
 
-  const windAmt = g.weather === "wind" ? 1 : g.weather === "blizzard" ? 1.6 : 0;
+  const windAmt = weatherIntensity(g, "wind") + weatherIntensity(g, "blizzard") * 1.6;
 
   // ---- torch ----
   if (g.pressT) {
@@ -1364,6 +1531,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
+  g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
   // toasts
   for (let i = g.toasts.length - 1; i >= 0; i--) {
     g.toasts[i].life -= dt;
@@ -1412,11 +1580,12 @@ function updateAmbient(g: any, dt: number) {
   }
   // snow
   const winter = visualSeason(g) === "winter";
-  const target = !winter ? 0 : g.weather === "blizzard" ? 110 : g.weather === "wind" ? 70 : 45;
+  const target = !winter ? 0 : Math.round(45 + 65 * weatherIntensity(g, "blizzard") + 25 * weatherIntensity(g, "wind"));
   while (g.snow.length < target) g.snow.push({ x: Math.random() * W, y: Math.random() * H, v: 12 + Math.random() * 18, ph: Math.random() * 6 });
   while (g.snow.length > target) g.snow.pop();
-  const windV = g.weather === "wind" ? 45 : g.weather === "blizzard" ? 95 : 0;
-  const speedup = g.weather === "blizzard" ? 2.2 : 1;
+  const gust = weatherIntensity(g, "wind") + weatherIntensity(g, "blizzard") * 2;
+  const windV = gust * 45;
+  const speedup = 1 + weatherIntensity(g, "blizzard") * 1.2;
   for (const s of g.snow) {
     s.y += s.v * speedup * dt;
     s.x += (Math.sin(g.animT * 2 + s.ph) * 8 + windV) * dt;
@@ -1441,7 +1610,7 @@ function updateAmbient(g: any, dt: number) {
           c.state = "fly";
           c.vx = (c.x > pxr ? 1 : -1) * (26 + Math.random() * 14);
           c.dir = c.vx > 0 ? 1 : -1;
-          if (g.ui === "run" && Math.random() < 0.5) toast(g, "A bird flutters away.");
+          if (g.ui === "run" && Math.random() < 0.1) toast(g, "A bird flutters away.");
         } else if (c.t <= 0) { g.critters.splice(i, 1); continue; }
       } else {
         c.x += c.vx * dt;
@@ -1454,7 +1623,7 @@ function updateAmbient(g: any, dt: number) {
           c.state = "hop";
           c.dir = c.x > pxr ? 1 : -1;
           c.t = 2.2;
-          if (g.ui === "run" && Math.random() < 0.7) toast(g, "A rabbit bursts from the snow.");
+          if (g.ui === "run" && Math.random() < 0.12) toast(g, "A rabbit darts away.");
         } else if (c.t <= 0) { g.critters.splice(i, 1); continue; }
       } else {
         c.x += c.dir * 52 * dt;
@@ -1903,11 +2072,26 @@ function drawSideArrows(ctx: any, g: any) {
   drawChev(1, actR);
 }
 
+function titleActions(g: any, meta: any): any[] {
+  const run = [
+    ...(g.resumeData ? [{
+      label: "CONTINUE RUN", act: () => resumeRun(g, g.resumeData)
+    }, {
+      label: "NEW RUN", act: () => startRun(g, meta)
+    }] : [{
+      label: "START RUN", act: () => startRun(g, meta)
+    }])
+  ];
+  return run.concat([
+    { label: "UPGRADES", act: () => { g.menu = "shop"; g.menuSel = 0; } },
+    { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
+    { label: "HOW TO PLAY", act: () => { g.menu = "help"; } },
+  ]);
+}
 function activateTitleItem(g: any, meta: any, idx: number) {
-  if (idx === 0) startRun(g, meta);
-  else if (idx === 1) { g.menu = "shop"; g.menuSel = 0; }
-  else if (idx === 2) { g.menu = "settings"; g.menuSel = 0; }
-  else if (idx === 3) { g.menu = "help"; }
+  const actions = titleActions(g, meta);
+  const chosen = actions[idx];
+  if (chosen) chosen.act();
 }
 
 function drawScreen(ctx: any, g: any, meta: any) {
@@ -1935,16 +2119,11 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawTextC(ctx, "A COZY WINTER SURVIVAL", W / 2, 50, "#c8d2e8");
     drawTextC(ctx, "ASH " + meta.ash + " - BEST " + (meta.best || 0) + " NIGHTS", W / 2, 60, "#8a94ac");
     // themed menu panel
-    panel(ctx, 98, 70, 124, 84);
-    g.titleSel = clamp(g.titleSel || 0, 0, 3);
-    const items = [
-      { label: "START RUN", act: () => startRun(g, meta) },
-      { label: "UPGRADES", act: () => { g.menu = "shop"; g.menuSel = 0; } },
-      { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
-      { label: "HOW TO PLAY", act: () => { g.menu = "help"; } },
-    ];
+    panel(ctx, 98, 69, 124, 91);
+    const items = titleActions(g, meta);
+    g.titleSel = clamp(g.titleSel || 0, 0, items.length - 1);
     for (let i = 0; i < items.length; i++) {
-      const y = 78 + i * 18;
+      const y = 76 + i * 16;
       const sel = i === g.titleSel;
       if (sel) px(ctx, 102, y - 2, 116, 11, "rgba(255,217,138,0.12)");
       drawTextC(ctx, items[i].label, W / 2 + (sel ? 4 : 0), y, sel ? "#ffd98a" : "#98a4bc");
@@ -1953,7 +2132,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
       const idx = i;
       g.zones.push({ x: 102, y: y - 3, w: 116, h: 12, onDown: () => { g.titleSel = idx; it.act(); } });
     }
-    if (Math.sin(g.animT * 3) > -0.2) drawTextC(ctx, "W/S PICK - E SELECT", W / 2, 160, "#5a6480");
+    if (Math.sin(g.animT * 3) > -0.2) drawTextC(ctx, "W/S PICK - E SELECT", W / 2, 163, "#5a6480");
     drawTextC(ctx, "HOLD A SCREEN SIDE TO WALK", W / 2, 170, "#4a5470");
   } else if (g.ui === "dead" && g.lastResult) {
     ctx.fillStyle = "rgba(8,10,26,0.62)";
@@ -1990,11 +2169,11 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   const isList = g.menu === "bench" || g.menu === "shop" || g.menu === "build" || g.menu === "settings" || g.menu === "pause";
   if (k === "arrowup" || k === "w") {
     if (isList) moveSel(g, meta, -1);
-    else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + 3) % 4;
+    else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + titleActions(g, meta).length - 1) % titleActions(g, meta).length;
   }
   if (k === "arrowdown" || k === "s") {
     if (isList) moveSel(g, meta, 1);
-    else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + 1) % 4;
+    else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + 1) % titleActions(g, meta).length;
   }
   if (k === "e" || k === "enter" || k === " ") {
     if (isList) activateSel(g, meta);
@@ -2237,8 +2416,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   ctx.restore();
 
   // The existing fog/rain weather affects distance, not the sharp foreground.
-  if (g.weather === "fog" || g.weather === "rain") {
-    const density = g.weather === "fog" ? 0.16 : 0.055;
+  const fogStrength = weatherIntensity(g, "fog") + weatherIntensity(g, "rain") * 0.35;
+  if (fogStrength > 0.005) {
+    const density = 0.16 * fogStrength;
     const drift = Math.round(Math.sin(g.animT * 0.23) * 11);
     ctx.fillStyle = "rgba(182,203,214," + density + ")";
     ctx.fillRect(drift - 12, GROUND - 37, W + 24, 16);
@@ -2319,9 +2499,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   ctx.restore();
 
   // A few light wind streaks show motion through the environment.
-  if (g.weather === "wind" || g.weather === "blizzard") {
-    ctx.fillStyle = g.weather === "blizzard"
-      ? "rgba(225,239,246,0.19)" : "rgba(195,219,227,0.09)";
+  const windStrength = weatherIntensity(g, "wind") + weatherIntensity(g, "blizzard") * 1.8;
+  if (windStrength > 0.005) {
+    ctx.fillStyle = "rgba(211,231,243," + (0.09 * windStrength) + ")";
     for (let i = 0; i < 9; i++) {
       const x = (i * 57 + Math.floor(g.animT * 58)) % W;
       const y = 44 + (i * 23) % 71;
@@ -2333,8 +2513,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     ctx.fillStyle = "rgba(238,244,250,0.85)";
     ctx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1);
   }
-  if (g.weather === "rain") {
-    ctx.strokeStyle = "rgba(150,180,220,0.4)";
+  const rainStrength = weatherIntensity(g, "rain");
+  if (rainStrength > 0.005) {
+    ctx.strokeStyle = "rgba(150,180,220," + (0.4 * rainStrength) + ")";
     ctx.beginPath();
     for (let i = 0; i < 24; i++) {
       const rx = (i * 37 + g.animT * 260) % W;
@@ -2361,8 +2542,8 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     octx.fill();
   };
   let lightR = g.fireLit ? 28 + (g.fuel / 100) * 66 : 0;
-  if (g.weather === "fog") lightR *= 0.65;
-  if (g.weather === "blizzard") lightR *= 0.75;
+  lightR *= 1 - weatherIntensity(g, "fog") * 0.35;
+  lightR *= 1 - weatherIntensity(g, "blizzard") * 0.25;
   if (lightR > 0) punch(CX - camX, 146, lightR);
   if (g.player.torchT > 0) punch(g.player.x - camX, g.player.y - 12, 38);
   if (g.stage >= 6) {
@@ -2445,6 +2626,7 @@ function App() {
     const g = createEngine();
     gameRef.current = g;
     setupTitleScene(g);
+    g.resumeData = loadRunSnapshot();
     const canvas = canvasRef.current;
     if (!canvas) return;
     let ctx: any = null, off: any = null, octx: any = null;
@@ -2468,6 +2650,8 @@ function App() {
     const cb = {
       toast: (text: string) => toast(g, text),
       end: (kind: string, stats: any) => {
+        // Retire, death, and victory are terminal: never bank a checkpoint twice.
+        clearRunSnapshot();
         const m = metaRef.current;
         m.ash = (m.ash || 0) + stats.ash;
         m.totalAsh = (m.totalAsh || 0) + stats.ash;
@@ -2515,6 +2699,7 @@ function App() {
 
     let raf = 0;
     let last = performance.now();
+    let saveAccum = 0;
     const frame = (now: number) => {
       try {
         const dt = Math.min(0.05, (now - last) / 1000);
@@ -2524,6 +2709,10 @@ function App() {
         const active = g.ui === "run" && !g.over && !g.menu;
         if (active) update(g, metaRef.current, dt, cb);
         if (!g.menu) updateAmbient(g, dt);
+        if (g.ui === "run" && !g.over) {
+          saveAccum += dt;
+          if (saveAccum >= 4) { saveRunSnapshot(g); saveAccum = 0; }
+        } else saveAccum = 0;
         AUDIO.sync(g);
         draw(g, ctx, off, octx, reflection, rctx, metaRef.current);
       } catch (err: any) {
@@ -2542,10 +2731,19 @@ function App() {
       handleKey(g, metaRef.current, k, true);
     };
     const ku = (e: KeyboardEvent) => handleKey(g, metaRef.current, e.key.toLowerCase(), false);
-    const blur = () => { g.keys = {}; g.pleft = false; g.pright = false; g.pointers = {}; };
+    const blur = () => {
+      g.keys = {}; g.pleft = false; g.pright = false; g.pointers = {};
+      saveRunSnapshot(g);
+    };
+    const pagehide = () => saveRunSnapshot(g);
+    const visibility = () => {
+      if (document.visibilityState === "hidden") saveRunSnapshot(g);
+    };
     window.addEventListener("keydown", kd);
     window.addEventListener("keyup", ku);
     window.addEventListener("blur", blur);
+    window.addEventListener("pagehide", pagehide);
+    document.addEventListener("visibilitychange", visibility);
 
     const toXY = (e: any) => {
       const r = canvas.getBoundingClientRect();
@@ -2577,6 +2775,8 @@ function App() {
       window.removeEventListener("keydown", kd);
       window.removeEventListener("keyup", ku);
       window.removeEventListener("blur", blur);
+      window.removeEventListener("pagehide", pagehide);
+      document.removeEventListener("visibilitychange", visibility);
       canvas.removeEventListener("pointerdown", pd);
       canvas.removeEventListener("pointermove", pm);
       canvas.removeEventListener("pointerup", pu);

@@ -1357,19 +1357,21 @@ function drawSideArrows(ctx: any, g: any) {
   const pulse = 0.5 + 0.5 * Math.sin(g.animT * 2);
   const cy = 92;
   const drawChev = (dir: number, active: boolean) => {
-    // A dark one-pixel silhouette makes both arrow directions visible over
-    // bright meadow/sky AND dark woods. Pale ivory/gold fills remain readable
-    // in daylight, instead of translucent charcoal vanishing into foliage.
+    // Daytime pressed arrows use dark charcoal with a pale pixel outline,
+    // readable against both bright skies and shaded foliage. The night
+    // palette and idle guidance remain unchanged.
+    const pressedDay = active && !g.isNight;
     const main = active
-      ? (g.isNight ? "rgba(255,219,147,0.96)" : "rgba(255,235,180,0.98)")
+      ? (g.isNight ? "rgba(255,219,147,0.96)" : "rgba(29,43,49,0.98)")
       : g.isNight
         ? `rgba(236,245,250,${(0.56 + pulse * 0.13).toFixed(3)})`
         : `rgba(255,246,218,${(0.78 + pulse * 0.13).toFixed(3)})`;
+    const outline = pressedDay ? "rgba(250,240,218,0.90)" : "rgba(14,23,34,0.82)";
     for (let i = 0; i < 7; i++) {
       const ind = Math.abs(i - 3);
       const xx = dir < 0 ? 14 + ind * 3 : W - 16 - ind * 3;
       const yy = cy - 7 + i * 2;
-      ctx.fillStyle = "rgba(14,23,34,0.82)";
+      ctx.fillStyle = outline;
       ctx.fillRect(xx - 1, yy - 1, 4, 4);
       ctx.fillStyle = main;
       ctx.fillRect(xx, yy, 2, 2);

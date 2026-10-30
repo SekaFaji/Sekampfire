@@ -12,7 +12,12 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/audio.ts` — browser-safe procedural sounds and configurable mixer
 - `src/game/weather.ts` — independently testable weather intensity calculations
 - `src/game/graphics.ts` — visual-quality preference
-- `src/game/game.ts` — **temporary migration module** containing the existing rendering, simulation, save logic and in-canvas UI. Still too large; it will be extracted in reviewed slices, not rewritten wholesale.
+- `src/game/save.ts` — versioned run snapshots, permanent progress, legacy fallback
+- `src/game/palette.ts` — seasons and blended colors
+- `src/game/font.ts` — independent pixel text system
+- `src/game/renderUtils.ts` — shared primitive/color helpers
+- `src/game/renderSprites.ts` — 18 independent sprite rendering functions
+- `src/game/game.ts` — **temporary migration module** containing remaining scene renderer, simulation, input and in-canvas UI. Still large and being extracted in reviewed slices, not rewritten wholesale.
 - `public/privacy.html` — published policy (Vite copies public files into `dist/`)
 - `.github/workflows/` — reproducible test and static Pages deployment
 
@@ -26,10 +31,10 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 7. Keep the public privacy policy accurate if new analytics, SDKs or networking are introduced.
 
 ## Next extraction slices
-- Save/loading and its migrations, with comprehensive corruption and reward-safety tests
+- Further save schema validation and migration coverage (core serializer now isolated)
 - Input and interaction cancellation, with pointer + keyboard transition tests
 - World simulation, weather and tree/chop logic
-- Rendering layers and art sprites, including reflections
+- Remaining scene composition, lighting, UI overlays, and water reflections (individual sprite renderers extracted)
 - In-canvas screens/menus
 - Procedural audio engine and audio preferences
 

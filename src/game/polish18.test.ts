@@ -86,7 +86,7 @@ describe("daylight and night movement arrows", () => {
     expect(cores.some(m=>m.x<40)).toBe(true);
     expect(cores.some(m=>m.x>280)).toBe(true);
     expect(cores.filter(m=>m.x<40).every(m=>m.color==="rgba(29,43,49,0.98)")).toBe(true);
-    expect(outlines.filter(m=>m.x<40).every(m=>m.color==="rgba(250,240,218,0.90)")).toBe(true);
+    expect(outlines.filter(m=>m.x<40).every(m=>m.color==="rgba(219,230,234,0.90)")).toBe(true);
     // Idle right arrow stays pale to help players discover the controls.
     expect(cores.filter(m=>m.x>280).every(m=>m.color.startsWith("rgba(255,246,218,"))).toBe(true);
     expect(outlines.filter(m=>m.x>280).every(m=>m.color==="rgba(14,23,34,0.82)")).toBe(true);
@@ -98,11 +98,11 @@ describe("daylight and night movement arrows", () => {
     const cores=v.marks.filter(m=>m.w===2&&m.h===2);
     const outlines=v.marks.filter(m=>m.w===4&&m.h===4);
     expect(cores.filter(m=>m.x>280).every(m=>m.color==="rgba(29,43,49,0.98)")).toBe(true);
-    expect(outlines.filter(m=>m.x>280).every(m=>m.color==="rgba(250,240,218,0.90)")).toBe(true);
+    expect(outlines.filter(m=>m.x>280).every(m=>m.color==="rgba(219,230,234,0.90)")).toBe(true);
     expect(cores.filter(m=>m.x<40).every(m=>m.color.startsWith("rgba(255,246,218,"))).toBe(true);
     expect(cores.map(m=>m.x)).toEqual([23,20,17,14,17,20,23,295,298,301,304,301,298,295]);
   });
-  it("brightens the pressed-side gradient in daytime without moving its boundary", () => {
+  it("darkens the full pressed-side gradient in daytime without moving its boundary", () => {
     const g=createEngine(); g.isNight=false;g.moveFeedbackLeft=1;
     const stops: Array<[number,string]> = [], filled: any[] = [];
     const ctx: any = {
@@ -112,8 +112,23 @@ describe("daylight and night movement arrows", () => {
     };
     drawMovementFeedback(ctx,g);
     expect(filled).toContainEqual([0,0,48,180]);
-    expect(stops[0][1]).toContain("250,222,157,0.25");
+    expect(stops[0][1]).toContain("24,37,43,0.28");
     expect(stops[1][1]).toContain(",0)");
+    expect(stops.some(([_, color]) => color.includes("250,222,157"))).toBe(false);
+  });
+
+  it("keeps the right-side daylight pressed wash charcoal and retains a soft fade", () => {
+    const g=createEngine(); g.isNight=false;g.moveFeedbackRight=0.5;
+    const stops: Array<[number,string]> = [], filled: any[] = [];
+    const ctx: any = {
+      createLinearGradient: () => ({ addColorStop: (p:number,c:string) => stops.push([p,c]) }),
+      set fillStyle(_v:any) {},
+      fillRect: (...args: any[]) => filled.push(args),
+    };
+    drawMovementFeedback(ctx,g);
+    expect(filled).toContainEqual([272,0,48,180]);
+    expect(stops[0][1]).toContain(",0)");
+    expect(stops[1][1]).toContain("24,37,43,0.14");
   });
 
   it("retains high contrast for both arrows at night", () => {

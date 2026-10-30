@@ -9,7 +9,8 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] Four-season calendar: **seven completed in-game days per season**, autumn/winter/spring/summer, with season-specific palettes and tree details. **Weather/difficulty seasonal rebalance is not yet implemented**.
 - [x] Seven-day season-specific wildlife spawns and original pixel sprites (12 distinct wildlife species); ambience-only, no gameplay balance impact.
 - [x] Movement pressed-edge feedback: 15% spatial gradient and short ease-in/fade-out; phone QA pending.
-- [x] Patch #19: daytime **pressed** chevrons change from yellow to charcoal with pale outline; idle hints, lighter nighttime arrows, fade and input geometry remain unchanged. In-game phone visual QA pending.
+- [x] Patch #19: daytime **pressed** chevrons change from yellow to charcoal; idle hints and lighter nighttime arrows remain unchanged.
+- [x] Patch #20: corrected the remaining yellow **pressed-side gradient** to a soft charcoal wash, and replaced its active arrow's warm outline with cool grey. Both sides retain 15% width and fade timing; mobile visual QA pending.
 - [x] Waterline waves advance/recede 1–2 logical pixels, with sparse translucent foam and no full-width white line; phone QA pending.
 - [x] **End screen navigation**: win, death and retirement offer Main Menu with no second ash banking, plus keyboard shortcut M. Needs mobile tap verification.
 - [x] **Adaptive fullscreen source implementation**: measured 16:9 canvas, safe-area insets and immersive browser fallback. **Real Android/iOS viewport testing still required** before declaring device-perfect.

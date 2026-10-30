@@ -14,6 +14,7 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] **Adaptive fullscreen source implementation**: measured 16:9 canvas, safe-area insets and immersive browser fallback. **Real Android/iOS viewport testing still required** before declaring device-perfect.
 - [x] **Player camera-facing idle in source**: character faces camera when not moving/chopping, with breathing/blinking/scarf animation; still requires phone visual QA.
 - [x] **Left-facing eye in source**: mirrored facial details and hair; needs native-resolution screenshot QA.
+- [x] **Character Art Polish #16 source**: right/left-facing shoes, toes and soles now mirror, legs alternate by direction, crafted boots use visible toe and cuff, body and walking arms follow gait. Added unit tests for both facings, 0/5/13/21 logs, idle and chopping. Native 320x180 screenshot approval remains outstanding.
 - [x] **Tool appearance/progression**: starter branch -> renamed Wood Axe (`maul` original save ID and 5-wood cost/chop-speed bonus) -> Grandpa's Axe (`axe` upgrade); overhead swing added. Needs real-device quality check.
 - [x] **Wood Ring source update**: stage name, timber windbreak art and description now agree; original 8-wood cost and wind-reduction mechanic preserved. Needs phone screenshot QA.
 - [x] **Detailed procedural trees in source**: separate anchored renderer with three evergreen silhouettes, bark, branches, shading and winter-only snow; tests for geometry/season. **Final premium art quality still requires visual approval on real devices**.

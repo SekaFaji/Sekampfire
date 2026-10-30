@@ -3,6 +3,7 @@ import { clamp } from "./math";
 import { lerpHex, lightenHex, px } from "./renderUtils";
 import { visualSeason, visualPalette } from "./palette";
 import { drawTree, drawFallingTree } from "./renderTrees";
+import { drawSideLegs } from "./playerLegs";
 import { drawSeasonalWildlife } from "./renderWildlife";
 
 // ============ sprites ============
@@ -203,33 +204,22 @@ function drawPlayer(ctx: any, g: any) {
   const walking = !!p.moving && p.chopT <= 0;
   const phase = g.animT * 9.5;
   const stride = walking ? Math.sin(phase) : 0;
-  const otherStride = walking ? Math.sin(phase + Math.PI) : 0;
   const bob = walking ? -Math.max(0, Math.sin(phase * 2)) * 1.1 :
     Math.sin(g.animT * 1.7) * 0.35;
   const chopping = p.chopT > 0 && !!p.chopTree;
   if (!walking && !chopping) { drawFrontIdle(ctx, g, x, y); return; }
   const chopProgress = chopping ? clamp(1 - p.chopT / Math.max(p.chopTime, 0.001), 0, 1) : 0;
   const lean = chopping ? (chopProgress > 0.58 && chopProgress < 0.83 ? dir : -dir * 0.4) : 0;
-  const bx = Math.round(x + lean), by = Math.round(y + bob);
+  // A restrained one-pixel weight transfer complements the alternating feet.
+  const walkingLean = walking ? Math.round(stride * dir * 0.6) : 0;
+  const bx = Math.round(x + lean + walkingLean), by = Math.round(y + bob);
   const dark = "#241d23", outline = "#2b2430";
   const coat = "#885334", coatShade = "#5a3829", coatLight = "#b27649";
   const hasCraftedBoots = !!(g.crafts && g.crafts.boots);
-  const trouser = "#414350";
-  const footwear = hasCraftedBoots ? "#624b35" : "#545056";
-  const footwearSole = hasCraftedBoots ? "#251f1d" : "#403c40";
   const skin = "#dfac84";
-  // feet and grounded shadow (same foot position as the original character)
-  ctx.fillStyle = "rgba(20,20,40,0.28)";
-  ctx.fillRect(x - 6, y - 1, 12, 2);
-  for (const [dx, movement] of [[-3, stride], [2, otherStride]]) {
-    const legLift = walking ? Math.max(0, movement) * 1.6 : 0;
-    const legShift = walking ? Math.round(movement * 2.2) : 0;
-    px(ctx, x + dx + legShift, y - 7 - legLift, 3, 5, trouser);
-    px(ctx, x + dx + legShift - 1, y - (hasCraftedBoots ? 5 : 3) - legLift,
-      4, hasCraftedBoots ? 5 : 3, footwear);
-    if (hasCraftedBoots) px(ctx, x + dx + legShift - 1, y - 5 - legLift, 4, 1, "#c39c58");
-    px(ctx, x + dx + legShift - 1, y - 1 - legLift, 4, 1, footwearSole);
-  }
+  // Side-view feet must turn with the player; preserve the original
+  // gameplay foot position and deliberately keep front idle separate.
+  drawSideLegs(ctx, x, y, dir, phase, walking, hasCraftedBoots);
   // Backpack and its real cargo are drawn behind the shoulders.
   drawBackpack(ctx, bx, by, dir, p.wood, g.packTier);
   px(ctx, bx - 5, by - 16, 10, 10, outline);
@@ -237,18 +227,21 @@ function drawPlayer(ctx: any, g: any) {
   px(ctx, bx - 4, by - 8, 8, 2, coatShade);
   px(ctx, bx + (dir > 0 ? -3 : 2), by - 14, 2, 6, coatLight);
   px(ctx, bx - 2, by - 7, 4, 1, "#c29b65");
-  // The rear arm keeps a normal silhouette; the lead arm is driven
-  // by drawChopArm during wind-up, impact and recovery.
+  // Alternating walking arms move horizontally AND vertically; chopping
+  // retains its independent articulated grip without a static extra arm.
   const armSwing = walking ? Math.round(stride * 2) : 0;
+  const armReach = walking ? Math.round(stride * dir) : 0;
   if (!chopping || dir > 0) {
-    px(ctx, bx - 6, by - 14 + armSwing, 2, 7, outline);
-    px(ctx, bx - 5, by - 13 + armSwing, 2, 5, coatLight);
+    px(ctx, bx - 6 + armReach, by - 14 + armSwing, 2, 7, outline);
+    px(ctx, bx - 5 + armReach, by - 13 + armSwing, 2, 5, coatLight);
   }
   if (!chopping || dir < 0) {
-    px(ctx, bx + 4, by - 14 - armSwing, 2, 7, outline);
-    px(ctx, bx + 4, by - 13 - armSwing, 1, 5, coatShade);
+    px(ctx, bx + 4 - armReach, by - 14 - armSwing, 2, 7, outline);
+    px(ctx, bx + 4 - armReach, by - 13 - armSwing, 1, 5, coatShade);
   }
-  if (!chopping) px(ctx, bx + dir * 5 - 1, by - 8 - armSwing, 2, 2, skin);
+  if (!chopping) {
+    px(ctx, bx + dir * 5 - 1 - armReach, by - 8 - armSwing, 2, 2, skin);
+  }
   // No hat equipment currently exists; leave the starting head uncovered.
   // A short, shaded hairstyle keeps the face readable in 320x180 pixel art.
   px(ctx, bx - 4, by - 23, 8, 8, outline);

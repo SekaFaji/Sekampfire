@@ -2405,7 +2405,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
 // ============ input ============
 function handleKey(g: any, meta: any, k: string, down: boolean) {
   if (g.menu === "audio" && down && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
-    const row = audioRows(g)[g.menuSel];
+    const row: any = audioRows(g)[g.menuSel];
     if (row && row.onAdjust) row.onAdjust(k === "arrowleft" || k === "a" ? -1 : 1);
     return;
   }

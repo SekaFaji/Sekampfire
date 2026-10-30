@@ -1963,6 +1963,15 @@ function titleActions(g: any, meta: any): any[] {
     { label: "HOW TO PLAY", act: () => { g.menu = "help"; } },
   ]);
 }
+function returnToMainMenu(g: any) {
+  // End-of-run rewards have already been banked and the checkpoint cleared.
+  // Returning to the title must never start or re-bank a completed run.
+  setupTitleScene(g);
+  g.resumeData = loadRunSnapshot();
+  g.titleSel = 0;
+  g.menu = null;
+}
+
 function activateTitleItem(g: any, meta: any, idx: number) {
   const actions = titleActions(g, meta);
   const chosen = actions[idx];
@@ -2020,6 +2029,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawTextC(ctx, "+" + g.lastResult.ash + " ASH BANKED. (TOTAL " + meta.ash + ")", W / 2, 72, "#ffd98a");
     uiButton(ctx, g, 100, 94, 120, 15, "TRY AGAIN", { onDown: () => startRun(g, meta) });
     uiButton(ctx, g, 100, 113, 120, 13, "UPGRADES", { onDown: () => { g.menu = "shop"; g.menuSel = 0; } });
+    uiButton(ctx, g, 100, 130, 120, 13, "MAIN MENU", { onDown: () => returnToMainMenu(g) });
   } else if (g.ui === "win" && g.lastResult) {
     ctx.fillStyle = "rgba(8,10,26,0.55)";
     ctx.fillRect(0, 0, W, H);
@@ -2030,6 +2040,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     uiButton(ctx, g, 90, 82, 140, 14, "ENDLESS WINTER", { onDown: () => goEndless(g) });
     uiButton(ctx, g, 90, 100, 140, 13, "UPGRADES", { onDown: () => { g.menu = "shop"; g.menuSel = 0; } });
     uiButton(ctx, g, 90, 117, 140, 13, "NEW RUN", { onDown: () => startRun(g, meta) });
+    uiButton(ctx, g, 90, 134, 140, 13, "MAIN MENU", { onDown: () => returnToMainMenu(g) });
   }
 }
 
@@ -2063,6 +2074,10 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     else if (g.ui === "dead") startRun(g, meta);
     else if (g.ui === "win") goEndless(g);
     else if (g.ui === "run") { g.pressE = true; g.keys.act = true; }
+  }
+  if (k === "m" && !g.menu && (g.ui === "dead" || g.ui === "win")) {
+    returnToMainMenu(g);
+    return;
   }
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
   if (k === "b") {

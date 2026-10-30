@@ -183,7 +183,7 @@ function goEndless(g: any) {
   g.endlessMode = true;
   g.ui = "run";
   g.menu = null;
-  toast(g, "Endless winter. Survive as long as you can.");
+  toast(g, "Endless seasons. Survive as long as you can.");
   saveRunSnapshot(g);
 }
 
@@ -1475,7 +1475,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawBig(ctx, "DAWN AT LAST", W / 2, 28, 3, "#ffd98a");
     drawTextC(ctx, "THE LONG NIGHT HAS PASSED. THE CABIN IS YOURS.", W / 2, 52, "#c8d2e8");
     drawTextC(ctx, "NIGHTS " + g.lastResult.nights + " - ASH +" + g.lastResult.ash, W / 2, 62, "#ffd98a");
-    uiButton(ctx, g, 90, 82, 140, 14, "ENDLESS WINTER", { onDown: () => goEndless(g) });
+    uiButton(ctx, g, 90, 82, 140, 14, "ENDLESS SEASONS", { onDown: () => goEndless(g) });
     uiButton(ctx, g, 90, 100, 140, 13, "SHOP", { onDown: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } });
     uiButton(ctx, g, 90, 117, 140, 13, "NEW RUN", { onDown: () => startRun(g, meta) });
     uiButton(ctx, g, 90, 134, 140, 13, "MAIN MENU", { onDown: () => returnToMainMenu(g) });

@@ -28,10 +28,14 @@ A cozy pixel-art winter survival game. Keep the fire burning, chop wood, build u
 - The river reflects the player's walking and chopping poses, animated trees, camp structures, the fire and the dog. The land/ground overlay is excluded from the reflection to avoid false stripes.
 - The waterline now blends into the world, and the game canvas has no black frame beneath the river.
 - Snowy footsteps fade behind the player in winter. Existing rabbits, foxes, the fire and weather have more subtle ambient movement.
+- Birds, foxes, rabbits and the dog have more independent idle movements and fewer repetitive notifications. Wind, rain, fog and snow effects crossfade smoothly when weather changes.
+- Procedural sound effects now use filtered noise for quieter steps, chopping and construction, with occasional soft fire crackles.
 - Gentle fire and wind ambience, footsteps, chopping and building cues use browser-generated sound (no downloaded audio files). Sound starts only after a tap or key press and can be muted in **Settings → Sound**.
 
 ## Tech
 
 - Everything runs in a single React canvas: custom 3x5 pixel font, immediate-mode in-canvas UI, procedurally drawn pixel art - no image or audio assets.
 - `index.html` is the whole game: the TSX source is embedded and compiled in the browser (React UMD + Babel standalone), so there is no build step.
-- Progress saves to localStorage as `sekampfire-meta-v1`.
+- Permanent ash and upgrades save to localStorage as `sekampfire-meta-v1`.
+- An unfinished run is checkpointed separately under `sekampfire-run-v1`. **Continue Run** appears on the title screen after reload, with a separate **New Run** option. Refreshing or backgrounding the browser does not grant idle/offline rewards; time is paused while away.
+- On death, retirement or victory the checkpoint is cleared before banking ash, so a completed run cannot be resumed for duplicate rewards. Local browser storage may still be cleared by the browser or user.

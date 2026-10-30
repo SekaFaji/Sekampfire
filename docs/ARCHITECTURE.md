@@ -9,7 +9,10 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/config.ts` — stage, crafting, upgrade and world constants
 - `src/game/rules.ts` — extracted pure carry/storage rules with unit tests
 - `src/game/math.ts` — common math helpers and tests
-- `src/game/game.ts` — **temporary migration module** containing the existing rendering, simulation, save logic, audio and in-canvas UI. Still too large; it will be extracted in reviewed slices, not rewritten wholesale.
+- `src/game/audio.ts` — browser-safe procedural sounds and configurable mixer
+- `src/game/weather.ts` — independently testable weather intensity calculations
+- `src/game/graphics.ts` — visual-quality preference
+- `src/game/game.ts` — **temporary migration module** containing the existing rendering, simulation, save logic and in-canvas UI. Still too large; it will be extracted in reviewed slices, not rewritten wholesale.
 - `public/privacy.html` — published policy (Vite copies public files into `dist/`)
 - `.github/workflows/` — reproducible test and static Pages deployment
 

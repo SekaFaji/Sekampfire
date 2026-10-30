@@ -7,7 +7,7 @@ import { weatherIntensity } from "./weather";
 import { completedNights, visualSeason, visualPalette } from "./palette";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
 import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
-import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange } from "./save";
+import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
 
 function resumeRun(g: any, data: any) {

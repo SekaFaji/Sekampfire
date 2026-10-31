@@ -1211,7 +1211,8 @@ function resetAllProgress(g: any, meta: any) {
     try { localStorage.removeItem(key); } catch (_e) {}
   }
   Object.assign(meta, {
-    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null
+    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null,
+    museumBuilt:false, collection:cleanLogCollection(null)
   });
   setupTitleScene(g);
   g.resumeData = null;

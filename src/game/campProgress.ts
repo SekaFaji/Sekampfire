@@ -16,7 +16,7 @@ export const CAMP_STATIONS = {
   pile: {
     label: "LOG STORAGE",
     prices: [12, 20],
-    benefits: ["+12 STORED WOOD", "+20 MORE STORED WOOD"],
+    benefits: ["+20 STORED WOOD", "+20 MORE STORED WOOD"],
   },
 } as const;
 export type StationId = keyof typeof CAMP_STATIONS;
@@ -49,7 +49,7 @@ export function stationCraftCost(g: any, recipe: any): number {
   return Math.max(1, recipe.cost - (stationLevel(g, "bench") >= 2 ? 2 : 0));
 }
 export function stationPileBonus(g: any): number {
-  return [0, 12, 32][stationLevel(g, "pile")];
+  return [0, 20, 40][stationLevel(g, "pile")];
 }
 /** Spend only from actual carried and stored wood after reconfirmation. */
 export function purchaseStation(g: any, id: StationId): boolean {

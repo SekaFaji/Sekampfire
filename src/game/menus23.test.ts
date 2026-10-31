@@ -77,7 +77,7 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     expect(shopRows(g,m)).toHaveLength(1);
     expect(shopRows(g,m)[0].right).toBe("OWNED");
     g.shopTab=2;
-    expect(shopRows(g,m)).toHaveLength(1); // visual layer intentionally displays no rows
+    expect(shopRows(g,m)).toHaveLength(0); // placeholder tab displays no rows
     expect(m.up.dog).toBe(1);
   });
   it("Shop header remains clear of all three tabs and close hit target", () => {

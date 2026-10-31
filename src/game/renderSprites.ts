@@ -303,6 +303,12 @@ function drawDog(ctx: any, g: any) {
   px(ctx, dir > 0 ? x + 6 : x - 6, y - 5, 1, 1, "#2a2a2e");
   const wag = Math.sin(g.animT * (d.phase === "idle" ? 5 : 12)) > 0 ? -1 : 0;
   px(ctx, dir > 0 ? x - 5 : x + 4, y - 5 + wag, 1, 2, "#c2c8ce");
+  // Exactly one/two real dropped logs carried visibly above the dog's back.
+  for (let i = 0; i < Math.min(2,d.wood||0); i++) {
+    px(ctx,x-3+i*3,y-9-bob,4,2,"#67432a");
+    px(ctx,x-2+i*3,y-9-bob,2,1,"#b78b50");
+    px(ctx,x-3+i*3,y-9-bob,1,2,"#d0a878");
+  }
 }
 
 function drawFire(ctx: any, g: any) {

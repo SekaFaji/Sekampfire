@@ -75,7 +75,7 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     expect(shopRows(g,m)).toHaveLength(6);
     g.shopTab=1;
     expect(shopRows(g,m)).toHaveLength(1);
-    expect(shopRows(g,m)[0].right).toBe("OWNED");
+    expect(shopRows(g,m)[0].right).toBe("EQUIPPED");
     g.shopTab=2;
     expect(shopRows(g,m)).toHaveLength(0); // placeholder tab displays no rows
     expect(m.up.dog).toBe(1);

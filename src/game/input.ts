@@ -23,7 +23,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     return;
   }
   if (down && g.menu === "shop" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
-    g.shopTab = k === "arrowleft" || k === "a" ? 0 : 1;
+    g.shopTab = Math.max(0,Math.min(2,(g.shopTab||0)+(k==="arrowleft"||k==="a"?-1:1)));
     g.menuSel = 0; g.upConfirm = null;
     return;
   }

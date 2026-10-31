@@ -978,7 +978,8 @@ function pauseRows(g: any, meta: any) {
       onDown: () => { g.settingsFrom = "pause"; g.menu = "settings"; g.menuSel = 0; },
     },
     {
-      label: "END RUN", right: "+" + Math.floor(g.ashEarned) + " ASH", desc: "BANK ALL EARNED ASH. TAP TWICE.", h: 15,
+      label: "END RUN", right: g.endRunConfirm ? "CONFIRM?" : "+" + Math.floor(g.ashEarned) + " ASH",
+      desc: g.endRunConfirm ? "TAP AGAIN TO BANK YOUR RUN ASH" : "BANK ALL EARNED ASH. TAP TWICE.", h: 15,
       enabled: true,
       onDown: () => {
         if (!g.endRunConfirm) { g.endRunConfirm = true; return; }
@@ -2011,5 +2012,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, moveSel, closeMenu, drawSideArrows };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows };
 export { W, H } from "./config";

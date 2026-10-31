@@ -74,14 +74,16 @@ function App() {
     const cb = {
       toast: (text: string) => toast(g, text),
       end: (kind: string, stats: any) => {
-        // Retire, death, and victory are terminal: never bank a checkpoint twice.
+        // A pending victory is not banked. Terminal banking is idempotent.
+        if (g.ashBanked) return;
+        g.ashBanked = true;
         clearRunSnapshot();
         const m = metaRef.current;
         m.ash = (m.ash || 0) + stats.ash;
         m.totalAsh = (m.totalAsh || 0) + stats.ash;
         m.best = Math.max(m.best || 0, stats.nights);
         m.runs = (m.runs || 0) + 1;
-        if (kind === "won") m.wonEver = true;
+        if (kind === "won" || g.won) m.wonEver = true;
         saveMeta(m);
         g.lastResult = { ...stats, kind };
         g.menu = null;

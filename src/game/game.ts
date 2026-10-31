@@ -19,8 +19,11 @@ import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable,
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
-  // Reset all UI pointers, particle state and transient actions before restore.
+  // Reset transient objects without dropping bound end-of-run/fullscreen
+  // callbacks. These are attached once by the React shell.
+  const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  g.cb = cb; g.fsToggle = fsToggle;
   const n = (key: string, lo: number, hi: number, fallback: number) =>
     finiteRange(data[key], lo, hi, fallback);
   const flag = (key: string) => data[key] === true;
@@ -50,6 +53,7 @@ function resumeRun(g: any, data: any) {
   g.endlessMode = flag("endlessMode");
   g.endlessN = Math.floor(n("endlessN", 0, 100000, 0));
   g.ashEarned = n("ashEarned", 0, 10000000, 0);
+  g.victoryPending = flag("victoryPending");
   g.depth = n("depth", 0, 10000, 0);
   g.builtBench = flag("builtBench");
   g.builtPile = flag("builtPile");
@@ -93,7 +97,9 @@ function resumeRun(g: any, data: any) {
     }));
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
-  g.ui = "run";
+  g.ui = g.victoryPending ? "win" : "run";
+  if (g.victoryPending) g.lastResult = {kind:"won",nights:g.night,ash:Math.floor(g.ashEarned)};
+  g.won = flag("won") || g.victoryPending;
   g.menu = null;
   g.resumeData = null;
   g.keys = {};
@@ -121,7 +127,7 @@ function createEngine(): any {
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
-    won: false, endlessMode: false, endlessN: 0, over: false,
+    won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
@@ -129,7 +135,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, craftConfirm: null, lastResult: null,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
     crafts: {} as any, eventCd: 6,
@@ -170,7 +176,9 @@ function spawnTrees(g: any, count: number) {
 }
 
 function startRunEngine(g: any, meta: any) {
+  const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  g.cb = cb; g.fsToggle = fsToggle;
   genScenery(g, Math.floor(Math.random() * 1e9));
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
@@ -188,8 +196,8 @@ function startRun(g: any, meta: any) {
 }
 
 function goEndless(g: any) {
-  // Victory ash was banked on the win screen; never award it a second time.
-  g.ashEarned = 0;
+  // Continuing keeps pending Ash in this run; banking happens ONLY on End Run.
+  g.victoryPending = false;
   g.endlessMode = true;
   g.ui = "run";
   g.menu = null;
@@ -198,7 +206,9 @@ function goEndless(g: any) {
 }
 
 function setupTitleScene(g: any) {
+  const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  g.cb = cb; g.fsToggle = fsToggle;
   genScenery(g, 777);
   spawnTrees(g, 26);
   g.time = DAY_LEN - 3;
@@ -340,7 +350,13 @@ function update(g: any, meta: any, dt: number, cb: any) {
       g.weather = "clear";
       g.won = true;
       g.ashEarned += 100;
-      cb.end("won", { nights: g.night, ash: Math.floor(g.ashEarned) });
+      // Pause on a resumable completion choice. Do not bank until the player
+      // explicitly selects Finish; both options preserve a safe save path.
+      g.victoryPending = true;
+      g.lastResult = { kind: "won", nights: g.night, ash: Math.floor(g.ashEarned) };
+      saveRunSnapshot(g);
+      g.ui = "win";
+      g.menu = null;
       return;
     }
     if (g.endlessMode) {
@@ -399,6 +415,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         } else cb.toast("Bring 15 logs here to build the workbench.");
       } else if (nearBench) {
         g.menu = "bench";
+        g.craftTab=0;
         g.menuSel = 0;
         g.craftConfirm = null;
         g.buildConfirm = null;
@@ -854,7 +871,7 @@ function drawHUD(ctx: any, g: any, meta: any) {
     ctx.fillRect(6, 34, Math.round(54 * wood / cap), 2);
   }
   if (g.builtPile) drawText(ctx, "PILE " + g.stored + "/" + pileCap(g), 69, 26, "#d8d0bd");
-  drawText(ctx, "ASH " + Math.floor(g.ashEarned), 134, 26, "#d8caf2");
+  drawText(ctx, "RUN ASH " + Math.floor(g.ashEarned), 126, 26, "#d8caf2");
   if (g.player.torchT > 0) drawText(ctx, "TORCH " + Math.ceil(g.player.torchT), 6, 40, "#ffd977");
 
   const rx = W - 81;
@@ -935,6 +952,7 @@ function closeZone(ctx: any, g: any, x: number, y: number) {
 function closeMenu(g: any) {
   g.craftConfirm = null;
   g.buildConfirm = null;
+  g.endRunConfirm = false;
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
     g.menu = "settings";
     g.menuSel = 0;
@@ -962,10 +980,13 @@ function pauseRows(g: any, meta: any) {
       onDown: () => { g.settingsFrom = "pause"; g.menu = "settings"; g.menuSel = 0; },
     },
     {
-      label: "END RUN", right: "+" + Math.floor(g.ashEarned) + " ASH", desc: "HEAD HOME AND BANK YOUR ASH", h: 15,
+      label: "END RUN", right: g.endRunConfirm ? "CONFIRM?" : "+" + Math.floor(g.ashEarned) + " ASH",
+      desc: g.endRunConfirm ? "TAP AGAIN TO BANK YOUR RUN ASH" : "BANK ALL EARNED ASH. TAP TWICE.", h: 15,
       enabled: true,
       onDown: () => {
+        if (!g.endRunConfirm) { g.endRunConfirm = true; return; }
         g.settingsFrom = null;
+        g.endRunConfirm = false;
         if (g.cb && g.cb.end) g.cb.end("retired", { nights: g.night, ash: Math.floor(g.ashEarned) });
       },
     },
@@ -1030,11 +1051,14 @@ function benchRows(g: any, meta: any) {
   });
   // Convenient alternate place to improve the workbench itself.
   recipes.push(stationUpgradeRow(g, "bench"));
-  return recipes;
+  // Tools keep the starting essentials discoverable. Supplies contain
+  // firekeeping gear and the workbench's own upgrade.
+  return g.craftTab === 1 ? recipes.slice(3) : recipes.slice(0,3);
 }
 
 function shopRows(g: any, meta: any) {
-  return UPGRADES.map((u: any) => {
+  if (g.shopTab === 2) return [];
+  return UPGRADES.filter((u: any) => g.shopTab === 1 ? u.id === "dog" : u.id !== "dog").map((u: any) => {
     const lvl = meta.up[u.id] || 0;
     const maxed = lvl >= u.max;
     const cost = maxed ? 0 : u.costs[lvl];
@@ -1062,7 +1086,7 @@ function shopRows(g: any, meta: any) {
 
 function menuRows(g: any, meta: any): any[] {
   if (g.menu === "bench") return benchRows(g, meta);
-  if (g.menu === "shop") return g.shopTab === 1 ? [] : shopRows(g, meta);
+  if (g.menu === "shop") return g.shopTab === 2 ? [] : shopRows(g, meta);
   if (g.menu === "build") return buildRows(g, meta);
   if (g.menu === "settings") return settingsRows(g, meta);
   if (g.menu === "audio") return audioRows(g);
@@ -1076,6 +1100,7 @@ function moveSel(g: any, meta: any, dir: number) {
   if (!rows.length) return;
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
   if (g.menu === "bench") g.craftConfirm = null;
+  if (g.menu === "pause") g.endRunConfirm = false;
   if (g.menu === "build" || g.menu === "bench") g.buildConfirm = null;
 }
 
@@ -1109,8 +1134,8 @@ function doBuildAction(g: any, meta: any) {
 }
 
 function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[]) {
-  const n = rows.length;
-  const pw = 272, ph = 32 + n * 15 + 12;
+  const n = rows.length, tabs = g.menu === "build" || g.menu === "bench";
+  const pw = 272, ph = 32 + n * 15 + 12 + (tabs ? 18 : 0);
   const x0 = Math.round((W - pw) / 2);
   const y0 = Math.max(8, Math.round((H - ph) / 2) - 4);
   panel(ctx, x0, y0, pw, ph);
@@ -1118,6 +1143,23 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
   drawText(ctx, right, x0 + pw - 24 - textW(right), y0 + 5, "#cfc2f0");
   closeZone(ctx, g, x0 + pw - 12, y0 + 5);
   let y = y0 + 16;
+  if (tabs) {
+    const isBuild = g.menu === "build";
+    const active = isBuild ? g.buildTab : g.craftTab;
+    const labels = isBuild ? ["STRUCTURES","UPGRADES"] : ["TOOLS","SUPPLIES"];
+    for (let t = 0; t < 2; t++) {
+      const tx = x0 + 7 + t * 129;
+      px(ctx, tx, y, 124, 15, t===active ? "#77502e" : "#29394b");
+      px(ctx, tx, y, 124, 1, t===active ? "#d4ad74" : "#657389");
+      drawTextC(ctx, labels[t], tx + 62, y + 4, "#ffe6ba");
+      const index = t;
+      g.zones.push({x:tx,y,w:124,h:15,onDown:()=>{
+        if (isBuild) g.buildTab=index; else g.craftTab=index;
+        g.menuSel=0;g.buildConfirm=null;g.craftConfirm=null;
+      }});
+    }
+    y += 18;
+  }
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     if (i === g.menuSel) {
@@ -1152,6 +1194,7 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
 }
 
 function buildRows(g: any, meta: any) {
+  if (g.buildTab === 1) return stationIds.map(id => stationUpgradeRow(g, id));
   const rows: any[] = [];
   const total = () => g.player.wood + g.stored;
   if (g.stage < 6) {
@@ -1172,7 +1215,6 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
-  for (const id of stationIds) rows.push(stationUpgradeRow(g, id));
   return rows;
 }
 
@@ -1326,7 +1368,7 @@ function drawMenu(ctx: any, g: any, meta: any) {
     drawListMenu(ctx, g, g.menu === "reset1" ? "RESET SAVE? 1/2" : "FINAL WARNING 2/2",
       "!", resetRows(g, meta));
   } else if (g.menu === "pause") {
-    drawListMenu(ctx, g, "PAUSED", "ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
+    drawListMenu(ctx, g, "PAUSED", "RUN ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
   } else if (g.menu === "help") {
     drawHelpMenu(ctx, g);
   } else if (g.menu === "privacy") {
@@ -1372,7 +1414,7 @@ function drawRunChrome(ctx: any, g: any) {
     onUp: () => { g.keys.act = false; g.chopBlocked = false; },
   });
   uiButton(ctx, g, 77, H - 22, 47, 18, "BUILD", {
-    water: true, onDown: () => { g.menu = "build"; g.menuSel = 0; g.keys.act = false; },
+    water: true, onDown: () => { g.menu = "build"; g.buildTab=0; g.menuSel = 0; g.keys.act = false; },
   });
   const t = g.player.torchT;
   const tLbl = t > 0 ? "TORCH " + Math.ceil(t) : "TORCH";
@@ -1492,12 +1534,12 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawBig(ctx, "SEKAMPFIRE", W / 2 + 2, 18 + 2, 5, "#3a2408");
     drawBig(ctx, "SEKAMPFIRE", W / 2, 18, 5, "#ffd98a");
     drawTextC(ctx, "FOUR SEASONS. ONE FIRE.", W / 2, 50, "#c8d2e8");
-    drawTextC(ctx, "ASH " + meta.ash + " - BEST " + (meta.best || 0) + " NIGHTS", W / 2, 60, "#8a94ac");
+    drawTextC(ctx, "BANKED ASH " + meta.ash + " - BEST " + (meta.best || 0) + " NIGHTS", W / 2, 60, "#d0c9d3");
     // Main decisions stay compact and centred; optional help and socials
     // occupy separate side areas without cluttering keyboard navigation.
     const items = titleActions(g, meta);
-    const menuTop = 75, rowStep = 15;
-    const menuHeight = items.length * rowStep + 5;
+    const menuTop = 76, rowStep = 14;
+    const menuHeight = items.length * rowStep + 2;
     panel(ctx, 98, menuTop, 124, menuHeight);
     g.titleSel = clamp(g.titleSel || 0, 0, items.length - 1);
     for (let i = 0; i < items.length; i++) {
@@ -1553,11 +1595,16 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawBig(ctx, "DAWN AT LAST", W / 2 + 2, 28 + 2, 3, "#3a2408");
     drawBig(ctx, "DAWN AT LAST", W / 2, 28, 3, "#ffd98a");
     drawTextC(ctx, "THE LONG NIGHT HAS PASSED. THE CABIN IS YOURS.", W / 2, 52, "#c8d2e8");
-    drawTextC(ctx, "NIGHTS " + g.lastResult.nights + " - ASH +" + g.lastResult.ash, W / 2, 62, "#ffd98a");
-    uiButton(ctx, g, 90, 82, 140, 14, "ENDLESS SEASONS", { onDown: () => goEndless(g) });
-    uiButton(ctx, g, 90, 100, 140, 13, "SHOP", { onDown: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } });
-    uiButton(ctx, g, 90, 117, 140, 13, "NEW RUN", { onDown: () => startRun(g, meta) });
-    uiButton(ctx, g, 90, 134, 140, 13, "MAIN MENU", { onDown: () => returnToMainMenu(g) });
+    drawTextC(ctx, "NIGHTS " + g.lastResult.nights + " - RUN ASH +" + Math.floor(g.ashEarned), W / 2, 62, "#ffd98a");
+    drawTextC(ctx, "YOUR FIRST CAMP IS COMPLETE!", W / 2, 72, "#d6e4eb");
+    uiButton(ctx, g, 83, 92, 154, 17, "END RUN + BANK ASH", { onDown: () => {
+      if (g.cb && g.cb.end) {
+        g.cb.end("won", { nights: g.night, ash: Math.floor(g.ashEarned) });
+        returnToMainMenu(g);
+      }
+    } });
+    uiButton(ctx, g, 83, 114, 154, 17, "CONTINUE SURVIVING", { onDown: () => goEndless(g) });
+    drawTextC(ctx, "CONTINUE: BANK LATER VIA MENU > END RUN", W / 2, 143, "#c0cae0");
   }
 }
 
@@ -1968,5 +2015,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, moveSel, closeMenu, drawSideArrows };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows };
 export { W, H } from "./config";

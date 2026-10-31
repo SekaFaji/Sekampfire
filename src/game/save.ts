@@ -41,7 +41,7 @@ function captureRunSnapshot(g: any): any {
   if (g.ui !== "run" || g.over) return null;
   const keys = ["time","night","isNight","weather","aurora","nightSkyEvent","fuel","fireLit","everLit",
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
-    "ashEarned","depth","builtBench","builtPile","benchLogs","pileLogs",
+    "ashEarned","won","victoryPending","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];

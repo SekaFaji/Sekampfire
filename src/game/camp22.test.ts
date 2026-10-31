@@ -26,12 +26,13 @@ describe("real station upgrade progression", () => {
     blocked.onDown();
     expect(g.player.wood+g.stored).toBe(before);
     expect(g.stage).toBe(5);
-    for(const [index,id,cost] of [[1,"hearth",10],[2,"bench",10],[3,"pile",12]] as const) {
+    g.buildTab=1;
+    for(const [index,id,cost] of [[0,"hearth",10],[1,"bench",10],[2,"pile",12]] as const) {
       let row=buildRows(g,meta)[index];
       expect(row.label).toContain("LV0");
       row.onDown();
       expect(g.buildConfirm).toBe(id);
-      expect(g.player.wood+g.stored).toBe(before - ([1,2,3].indexOf(index)===0?0:index===2?10:20));
+      expect(g.player.wood+g.stored).toBe(before - (index===0?0:index===1?10:20));
       row=buildRows(g,meta)[index];
       expect(row.right).toBe("CONFIRM?");
       row.onDown();
@@ -40,6 +41,7 @@ describe("real station upgrade progression", () => {
     }
     expect(g.player.wood+g.stored).toBe(before-32);
     expect(canCompleteCabin(g)).toBe(true);
+    g.buildTab=0;
     // The player still has to gather the cabin's 65 wood after upgrading.
     expect(buildRows(g,meta)[0].enabled).toBe(false);
     g.player.wood = 5;
@@ -79,25 +81,25 @@ describe("real station upgrade progression", () => {
     g.crafts.lantern=true;expect(stationTorchBonus(g)).toBe(20);
   });
   it("unlocks workbench recipes by tier, preserves confirmation and discounts on level two", () => {
-    const g=camp(); g.menu="bench";
-    expect(benchRows(g,meta)).toHaveLength(7);
-    expect(benchRows(g,meta)[4].right).toBe("BENCH LV1");
-    expect(benchRows(g,meta)[5].right).toBe("BENCH LV2");
+    const g=camp(); g.menu="bench";g.craftTab=1;
+    expect(benchRows(g,meta)).toHaveLength(4);
+    expect(benchRows(g,meta)[1].right).toBe("BENCH LV1");
+    expect(benchRows(g,meta)[2].right).toBe("BENCH LV2");
     const wood=g.player.wood+g.stored;
-    benchRows(g,meta)[4].onDown();
+    benchRows(g,meta)[1].onDown();
     expect(g.player.wood+g.stored).toBe(wood);
     g.campUpgrades.bench=1;
-    expect(benchRows(g,meta)[4].right).toBe("9 WOOD");
-    benchRows(g,meta)[4].onDown();
+    expect(benchRows(g,meta)[1].right).toBe("9 WOOD");
+    benchRows(g,meta)[1].onDown();
     expect(g.craftConfirm).toBe("kindling");
     expect(g.player.wood+g.stored).toBe(wood);
-    benchRows(g,meta)[4].onDown();
+    benchRows(g,meta)[1].onDown();
     expect(g.crafts.kindling).toBe(true);
     expect(g.player.wood+g.stored).toBe(wood-9);
     g.campUpgrades.bench=2;
     expect(stationCraftCost(g,CRAFTS[0])).toBe(4);
-    expect(benchRows(g,meta)[5].right).toBe("13 WOOD");
-    benchRows(g,meta)[5].onDown();benchRows(g,meta)[5].onDown();
+    expect(benchRows(g,meta)[2].right).toBe("13 WOOD");
+    benchRows(g,meta)[2].onDown();benchRows(g,meta)[2].onDown();
     expect(g.crafts.lantern).toBe(true);
     closeMenu(g);
     expect(g.craftConfirm).toBeNull();

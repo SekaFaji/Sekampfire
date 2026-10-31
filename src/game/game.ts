@@ -972,11 +972,6 @@ function pauseRows(g: any, meta: any) {
       onDown: () => { g.settingsFrom = "pause"; g.menu = "settings"; g.menuSel = 0; },
     },
     {
-      label: "LOG MUSEUM", right: museumHasBuilding(meta) ? "VIEW" : "LOCKED",
-      desc: "PERMANENT COLLECTION", h: 15, enabled: true,
-      onDown: () => { g.menu = "museum"; g.menuSel = 0; g.endRunConfirm = false; },
-    },
-    {
       label: "END RUN", right: g.endRunConfirm ? "CONFIRM?" : "+" + Math.floor(g.ashEarned) + " ASH",
       desc: g.endRunConfirm ? "TAP AGAIN TO BANK YOUR RUN ASH" : "BANK ALL EARNED ASH. TAP TWICE.", h: 15,
       enabled: true,
@@ -986,6 +981,11 @@ function pauseRows(g: any, meta: any) {
         g.endRunConfirm = false;
         if (g.cb && g.cb.end) g.cb.end("retired", { nights: g.night, ash: Math.floor(g.ashEarned) });
       },
+    },
+    {
+      label: "LOG MUSEUM", right: museumHasBuilding(meta) ? "VIEW" : "LOCKED",
+      desc: "PERMANENT COLLECTION", h: 15, enabled: true,
+      onDown: () => { g.menu = "museum"; g.menuSel = 0; g.endRunConfirm = false; },
     },
   ];
 }

@@ -1055,6 +1055,7 @@ function benchRows(g: any, meta: any) {
 }
 
 function shopRows(g: any, meta: any) {
+  if (g.shopTab === 2) return [];
   return UPGRADES.filter((u: any) => g.shopTab === 1 ? u.id === "dog" : u.id !== "dog").map((u: any) => {
     const lvl = meta.up[u.id] || 0;
     const maxed = lvl >= u.max;

@@ -306,6 +306,7 @@ function drawDog(ctx: any, g: any) {
 }
 
 function drawFire(ctx: any, g: any) {
+  const hearthLevel = Math.max(0, Math.min(2, g.campUpgrades?.hearth || 0));
   if (g.stage >= 1) {
     // A low wooden windbreak sits outside the fire's ember bed.
     // Alternating rough-cut logs and pegs distinguish it from a stone ring.
@@ -335,6 +336,21 @@ function drawFire(ctx: any, g: any) {
     px(ctx, CX - 12, 144, 2, 8, "#7a828c");
     px(ctx, CX + 10, 144, 2, 8, "#7a828c");
   }
+  if (hearthLevel >= 1) {
+    // Reinforced hearth: stone base and warm wood rim, distinct from Wood Ring.
+    px(ctx, CX - 12, 149, 24, 3, "#51483e");
+    px(ctx, CX - 11, 148, 7, 2, "#847a64");
+    px(ctx, CX + 4, 148, 7, 2, "#847a64");
+    px(ctx, CX - 9, 151, 4, 1, "#c3a783");
+    px(ctx, CX + 5, 151, 4, 1, "#c3a783");
+  }
+  if (hearthLevel >= 2) {
+    // Level two stone fireback retains a compact silhouette under the cabin.
+    px(ctx, CX - 12, 138, 3, 11, "#65645e");
+    px(ctx, CX + 9, 138, 3, 11, "#65645e");
+    px(ctx, CX - 12, 137, 24, 2, "#9b8874");
+    px(ctx, CX - 8, 139, 16, 1, "#6f746d");
+  }
   px(ctx, CX - 6, 147, 7, 2, "#5a3a22");
   px(ctx, CX - 1, 148, 7, 2, "#4a2f1a");
   if (g.fireLit) {
@@ -356,6 +372,22 @@ function drawFire(ctx: any, g: any) {
 // the crafting bench, left of the fire
 function drawBench(ctx: any, g: any) {
   const bx = BENCH_X, y = 152;
+  const tier = Math.max(0, Math.min(2, g.campUpgrades?.bench || 0));
+  if (tier >= 1) {
+    // Larger craftsman's backboard and tool hooks.
+    px(ctx, bx - 9, y - 25, 2, 15, "#674628");
+    px(ctx, bx + 7, y - 25, 2, 15, "#674628");
+    px(ctx, bx - 9, y - 24, 18, 3, "#98683e");
+    px(ctx, bx - 6, y - 20, 1, 7, "#bd9d69");
+    px(ctx, bx + 2, y - 20, 2, 4, "#8b9a9e");
+  }
+  if (tier >= 2) {
+    // A small awning and shelf make the final workshop visibly different.
+    px(ctx, bx - 13, y - 29, 26, 3, "#62412c");
+    px(ctx, bx - 12, y - 30, 24, 1, "#c19b61");
+    px(ctx, bx + 4, y - 17, 7, 2, "#bf8950");
+    px(ctx, bx + 8, y - 20, 2, 3, "#d5b777");
+  }
   ctx.fillStyle = "rgba(20,20,40,0.3)";
   ctx.fillRect(bx - 11, y - 1, 23, 2);
   px(ctx, bx - 8, y - 7, 2, 7, "#54371f");
@@ -382,6 +414,21 @@ function drawBench(ctx: any, g: any) {
 // the wood pile, right of the fire - grows with stored wood
 function drawPile(ctx: any, g: any) {
   const bx = PILE_X, y = 152;
+  const tier = Math.max(0, Math.min(2, g.campUpgrades?.pile || 0));
+  if (tier >= 1) {
+    // Open-sided timber rack stays visible even while storage is empty.
+    px(ctx, bx - 12, y - 18, 2, 18, "#634229");
+    px(ctx, bx + 10, y - 18, 2, 18, "#634229");
+    px(ctx, bx - 12, y - 18, 24, 2, "#996b3e");
+    px(ctx, bx - 10, y - 8, 20, 1, "#8e623c");
+  }
+  if (tier >= 2) {
+    // Covered log store; roof keeps stored timber readable below it.
+    px(ctx, bx - 14, y - 22, 28, 3, "#563927");
+    px(ctx, bx - 13, y - 23, 26, 1, "#bf965c");
+    px(ctx, bx - 13, y - 19, 2, 3, "#99754c");
+    px(ctx, bx + 11, y - 19, 2, 3, "#99754c");
+  }
   const per = g.stage >= 4 ? 7 : 3;
   const rows = clamp(Math.ceil(g.stored / per), 0, 6);
   if (rows === 0) {

@@ -61,6 +61,10 @@ function captureRunSnapshot(g: any): any {
     t:t.t,dir:t.dir
   }));
   state.crafts = { ...g.crafts };
+  if (g.dog && Number.isFinite(g.dog.x)) {
+    state.dog = {x:clamp(g.dog.x,10,1590),dir:g.dog.dir===-1?-1:1,
+      wood:Math.max(0,Math.min(2,Math.floor(g.dog.wood||0)))};
+  }
   return { version: RUN_SAVE_VERSION, state };
 }
 function saveRunSnapshot(g: any) {

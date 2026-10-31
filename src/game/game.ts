@@ -17,14 +17,16 @@ import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosph
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { activePet, updateDogCompanion } from "./companion";
+import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 
-function resumeRun(g: any, data: any) {
+function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
   // Reset transient objects without dropping bound end-of-run/fullscreen
   // callbacks. These are attached once by the React shell.
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
   g.cb = cb; g.fsToggle = fsToggle;
+  g.museumBuilt = !!meta?.museumBuilt;
   const n = (key: string, lo: number, hi: number, fallback: number) =>
     finiteRange(data[key], lo, hi, fallback);
   const flag = (key: string) => data[key] === true;
@@ -135,7 +137,7 @@ function createEngine(): any {
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
-    won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false,
+    won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
@@ -172,7 +174,7 @@ function spawnTrees(g: any, count: number) {
   for (let n = 0; n < count; n++) {
     for (let attempt = 0; attempt < 60; attempt++) {
       const x = 16 + Math.random() * (WORLD_W - 32);
-      if (x > CX - 100 && x < CX + 56) continue;
+      if (x > CX - 100 && x < (g.museumBuilt ? MUSEUM_X+20 : CX+56)) continue;
       if (g.trees.some((t: any) => Math.abs(t.x - x) < 16)) continue;
       const y = 136 + Math.random() * 18; // Keep pickups clear of foreground water.
       const tier = treeTierFor(x);
@@ -187,6 +189,7 @@ function startRunEngine(g: any, meta: any) {
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
   g.cb = cb; g.fsToggle = fsToggle;
+  g.museumBuilt = !!meta.museumBuilt;
   genScenery(g, Math.floor(Math.random() * 1e9));
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
@@ -303,6 +306,7 @@ function spawnEvent(g: any) {
 // ============ update ============
 function update(g: any, meta: any, dt: number, cb: any) {
   if (g.over) return;
+  g.museumBuilt = !!meta.museumBuilt;
   const p = g.player;
   const cap = carryCap(g, meta);
   const pcap = pileCap(g);
@@ -400,6 +404,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearPit = Math.abs(p.x - CX) < 22;
   const nearBench = Math.abs(p.x - BENCH_X) < 22;
   const nearPile = Math.abs(p.x - PILE_X) < 22;
+  const nearMuseum = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
   const tree = nearestTree(g, p);
   if (g.stokeCd > 0) g.stokeCd -= dt;
 
@@ -407,7 +412,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.pressE) {
     g.pressE = false;
     if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
-      if (nearBench && !g.builtBench) {
+      if (nearMuseum) {
+        g.menu = "museum";
+        g.menuSel = 0;
+        g.keys.act = false;
+      } else if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
           cb.toast("Hammering away. It is almost up.");
@@ -530,6 +539,12 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (ft.t >= 0.55) {
       const w = ft.wood;
       g.pickups.push({ x: ft.x, y: ft.y, w });
+      const found = discoverLog(meta);
+      if (found) {
+        saveMeta(meta);
+        const rarity = LOG_COLLECTION.find(log => log.id === found)!;
+        cb.toast("MUSEUM DISCOVERY: " + rarity.name + " (" + rarity.rarity + ")");
+      }
       for (let k = 0; k < 10; k++) {
         g.chips.push({ x: ft.x + (Math.random() * 30 - 15), y: ft.y - 4, vx: Math.random() * 60 - 30, vy: -(Math.random() * 40 + 10), life: 0.5 });
       }
@@ -652,6 +667,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
+  else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
   else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
@@ -1200,6 +1216,31 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
+  // One-time permanent structure: once purchased it appears in every later
+  // run and the unique log collection lives in persistent meta, not run wood.
+  rows.push({
+    label:meta.museumBuilt ? "VISIT LOG MUSEUM" : "BUILD LOG MUSEUM",
+    right:meta.museumBuilt ? museumCount(meta)+"/4 FOUND"
+      : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
+    desc:meta.museumBuilt ? "PERMANENT COLLECTION - TAP TO VIEW" :
+      g.buildConfirm==="museum" ? "TAP AGAIN TO BUILD PERMANENT MUSEUM"
+      : "KEEP SPECIAL LOGS THROUGH ALL RUNS",
+    h:15,enabled:!!meta.museumBuilt || total()>=MUSEUM_COST,
+    onDown:()=>{
+      if(meta.museumBuilt){g.buildConfirm=null;g.menu="museum";return;}
+      if(total()<MUSEUM_COST){g.buildConfirm=null;toast(g,"NOT ENOUGH WOOD.");return;}
+      if(g.buildConfirm!=="museum"){g.buildConfirm="museum";return;}
+      g.buildConfirm=null;
+      const fromCarried=Math.min(g.player.wood,MUSEUM_COST);
+      g.player.wood-=fromCarried;
+      g.stored-=MUSEUM_COST-fromCarried;
+      meta.museumBuilt=true;
+      g.museumBuilt=true;
+      saveMeta(meta);
+      AUDIO.effect("build");
+      toast(g,"LOG MUSEUM BUILT FOREVER! VIEW YOUR COLLECTION.");
+    }
+  });
   return rows;
 }
 
@@ -1211,7 +1252,8 @@ function resetAllProgress(g: any, meta: any) {
     try { localStorage.removeItem(key); } catch (_e) {}
   }
   Object.assign(meta, {
-    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null
+    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null,
+    museumBuilt:false, collection:cleanLogCollection(null)
   });
   setupTitleScene(g);
   g.resumeData = null;
@@ -1354,6 +1396,8 @@ function drawMenu(ctx: any, g: any, meta: any) {
       "!", resetRows(g, meta));
   } else if (g.menu === "pause") {
     drawListMenu(ctx, g, "PAUSED", "RUN ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
+  } else if (g.menu === "museum") {
+    drawMuseumPage(ctx, g, meta, () => closeMenu(g));
   } else if (g.menu === "help") {
     drawHelpMenu(ctx, g);
   } else if (g.menu === "privacy") {
@@ -1469,7 +1513,7 @@ function drawSideArrows(ctx: any, g: any) {
 function titleActions(g: any, meta: any): any[] {
   const run = [
     ...(g.resumeData ? [{
-      label: "CONTINUE RUN", act: () => resumeRun(g, g.resumeData)
+      label: "CONTINUE RUN", act: () => resumeRun(g, g.resumeData, meta)
     }, {
       label: "NEW RUN", act: () => startRun(g, meta)
     }] : [{
@@ -1478,6 +1522,7 @@ function titleActions(g: any, meta: any): any[] {
   ];
   return run.concat([
     { label: "SHOP", act: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } },
+    { label: "LOG MUSEUM", act: () => { g.menu = "museum"; g.menuSel = 0; } },
     { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
   ]);
 }
@@ -1866,8 +1911,11 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const nearPit2 = Math.abs(p.x - CX) < 22;
     const nearBench2 = Math.abs(p.x - BENCH_X) < 22;
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
+    const nearMuseum2 = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
     const tr = nearestTree(g, p);
-    if (nearBench2) {
+    if (nearMuseum2) {
+      drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
+    } else if (nearBench2) {
       const lbl = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");
     }

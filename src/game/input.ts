@@ -49,6 +49,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   }
   if (k === "e" || k === "enter" || k === " ") {
     if (isList) activateSel(g, meta);
+    else if (g.menu === "museum") closeMenu(g);
     else if (g.menu === "help") { if ((g.helpPage || 0) >= 6) closeMenu(g); else g.helpPage = (g.helpPage || 0) + 1; }
     else if (g.menu === "privacy" || g.menu === "credits") closeMenu(g);
     else if (g.ui === "title") activateTitleItem(g, meta, g.titleSel);

@@ -31,13 +31,13 @@ function canvas() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("compact title and independent buttons", () => {
-  it("shows only run, upgrades and settings in the main selection", () => {
+  it("shows run, Shop, Log Museum and Settings in the compact title selection", () => {
     const g = createEngine();
     const meta = { ash: 4, best: 5, up: {} };
     g.resumeData = null;
-    expect(titleActions(g, meta).map(a => a.label)).toEqual(["START RUN", "SHOP", "SETTINGS"]);
+    expect(titleActions(g, meta).map(a => a.label)).toEqual(["START RUN", "SHOP", "LOG MUSEUM", "SETTINGS"]);
     g.resumeData = { time: 9 };
-    expect(titleActions(g, meta).map(a => a.label)).toEqual(["CONTINUE RUN", "NEW RUN", "SHOP", "SETTINGS"]);
+    expect(titleActions(g, meta).map(a => a.label)).toEqual(["CONTINUE RUN", "NEW RUN", "SHOP", "LOG MUSEUM", "SETTINGS"]);
   });
   it("routes the standalone tutorial and Discord/YouTube hit zones", () => {
     const open = vi.fn();
@@ -60,7 +60,7 @@ describe("compact title and independent buttons", () => {
     expect(open).toHaveBeenNthCalledWith(1, "https://discord.gg/794QQWJEeP", "_blank", "noopener,noreferrer");
     expect(open).toHaveBeenNthCalledWith(2, "https://youtube.com/@sekafajigames", "_blank", "noopener,noreferrer");
     expect(hit(160, 85)).toBeDefined();
-    expect(hit(160, 146)).toBeUndefined();
+    expect(hit(160, 146)).toBeUndefined(); // four title actions do not waste or cover extra space
   });
 });
 

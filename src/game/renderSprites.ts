@@ -5,6 +5,7 @@ import { visualSeason, visualPalette } from "./palette";
 import { drawTree, drawFallingTree } from "./renderTrees";
 import { drawSideLegs } from "./playerLegs";
 import { drawSeasonalWildlife } from "./renderWildlife";
+import { drawMuseumHut } from "./museum";
 import { drawWoodlandSilhouettes } from "./renderAtmosphere";
 
 // ============ sprites ============
@@ -509,6 +510,7 @@ function drawStructures(ctx: any, g: any) {
   if (g.builtPile) drawPile(ctx, g);
   else if (g.pileBuildT >= 0) drawConstruction(ctx, g, PILE_X, false);
   else drawSite(ctx, g, PILE_X, g.pileLogs);
+  if (g.museumBuilt) drawMuseumHut(ctx);
   if (st >= 2 && st < 6) {
     px(ctx, CX + 16, 142, 18, 3, "#8a5a34");
     px(ctx, CX + 17, 145, 2, 5, "#6b4a32");

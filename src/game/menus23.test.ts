@@ -99,7 +99,8 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     const g=createEngine(),m=meta();
     g.builtBench=true;g.builtPile=true;g.menu="build";
     g.buildTab=0;
-    expect(buildRows(g,m)).toHaveLength(1);
+    expect(buildRows(g,m)).toHaveLength(2);
+    expect(buildRows(g,m)[1].label).toBe("BUILD LOG MUSEUM");
     g.buildTab=1;
     expect(buildRows(g,m)).toHaveLength(3);
     g.menu="bench";g.craftTab=0;

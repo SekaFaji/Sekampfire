@@ -1037,20 +1037,31 @@ function shopRows(g: any, meta: any) {
     const maxed = lvl >= u.max;
     const cost = maxed ? 0 : u.costs[lvl];
     const confirm = g.upConfirm === u.id;
-    const enabled = !maxed && meta.ash >= cost;
+    const pet = u.id === "dog", equipped = pet && activePet(meta) === "dog";
+    const enabled = (pet && maxed) || (!maxed && meta.ash >= cost);
     return {
       label: u.name.toUpperCase() + (u.max > 1 ? " " + lvl + "/" + u.max : ""),
-      right: maxed ? "OWNED" : confirm ? "BUY?" : cost + " ASH",
-      desc: maxed ? u.desc : confirm ? "PRESS AGAIN TO CONFIRM" : u.desc,
+      right: pet && maxed ? equipped ? "EQUIPPED" : "EQUIP" : maxed ? "OWNED" : confirm ? "BUY?" : cost + " ASH",
+      desc: pet && maxed ? (equipped ? "FOLLOWS YOU; TAP TO UNEQUIP" : "TAP TO EQUIP (2 LOGS)")
+        : maxed ? u.desc : confirm ? "PRESS AGAIN TO CONFIRM" : u.desc,
       h: 15,
       enabled,
       onDown: () => {
-        if (maxed) { toast(g, u.name.toUpperCase() + " is already yours."); return; }
+        if (maxed) {
+          if (pet) {
+            meta.petEquipped = equipped ? null : "dog";
+            g.upConfirm = null;
+            saveMeta(meta);
+            toast(g, equipped ? "GOOD DOG WILL REST." : "GOOD DOG IS EQUIPPED.");
+          } else toast(g, u.name.toUpperCase() + " is already yours.");
+          return;
+        }
         if (meta.ash < cost) { toast(g, "Not enough ash."); return; }
         if (g.upConfirm !== u.id) { g.upConfirm = u.id; return; }
         g.upConfirm = null;
         meta.ash -= cost;
         meta.up[u.id] = lvl + 1;
+        if (pet) meta.petEquipped = "dog";
         saveMeta(meta);
         toast(g, u.name.toUpperCase() + " unlocked.");
       },
@@ -1200,7 +1211,7 @@ function resetAllProgress(g: any, meta: any) {
     try { localStorage.removeItem(key); } catch (_e) {}
   }
   Object.assign(meta, {
-    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}
+    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null
   });
   setupTitleScene(g);
   g.resumeData = null;

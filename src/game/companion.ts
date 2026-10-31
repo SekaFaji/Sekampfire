@@ -25,8 +25,11 @@ function approach(d: any, target: number, dt: number): boolean {
  */
 export function updateDogCompanion(g: any, meta: any, dt: number): void {
   if (activePet(meta) !== "dog") {
-    if (g.dog?.wood > 0 && g.pickups.length < 200) {
-      g.pickups.push({x: g.dog.x, y: 152, w: g.dog.wood});
+    if (g.dog?.wood > 0) {
+      // Unequipping never destroys or duplicates wood. If the pickup array is
+      // full, hold it invisibly until a drop slot becomes available.
+      if (g.pickups.length >= 200) { g.dog.hidden = true; return; }
+      g.pickups.push({x:g.dog.x,y:152,w:g.dog.wood});
     }
     g.dog = null;
     return;
@@ -34,6 +37,7 @@ export function updateDogCompanion(g: any, meta: any, dt: number): void {
   const p = g.player;
   if (!g.dog) g.dog = {x:clamp(p.x - p.dir*13,10,1590),y:156,dir:p.dir,wood:0,phase:"idle"};
   const d = g.dog;
+  d.hidden = false;
   d.wood = Math.max(0, Math.min(2, Math.floor(d.wood || 0)));
   d.y = 156;
   // In a wide world, the dog can catch up after a long teleport or resume.

@@ -4,6 +4,17 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 
 **Play:** https://sekafaji.github.io/Sekampfire/
 
+## Camp progression and night spectacles
+
+- **Aurora:** a 20% chance at ordinary nightfall. Glowing sky bands render above nighttime darkness; aurora survival still earns the existing Ash bonus.
+- **Shooting Star Parade:** a separate rarer sky event which spawns repeated meteor streaks through the night. Nighttime skies remain purely cosmetic except for the existing Aurora bonus.
+- **Wood Axe:** crafted axe now uses a brown carved wooden wedge and bindings; Grandpa's Axe remains metallic.
+- **Camp improvements:** the **BUILD** button now includes **Fireplace, Workbench and Log Storage**, each upgradeable twice with wood. The first selection arms a confirmation; tapping again pays wood.
+- **First-tier requirement:** improve all three stations to level 1 before the final **Cabin and Hearth** stage. Level 2 upgrades are optional.
+- Fireplace tiers strengthen warmth near the campfire and reduce fuel burn. Log storage tiers provide 12 and then 20 extra capacity beyond the previous limit. Workbench tiers unlock the **Kindling Bundle** and **Ember Lantern** recipes; a mastered workbench reduces future craft prices by 2 wood.
+- The workbench upgrade is also available inside the workbench menu. Built stations change sprite appearances as they improve.
+- These are **run-scoped**, not permanent Ash upgrades. Existing saved runs use the same v1 checkpoint key; absent station levels load as zero.
+
 ## Development (Windows, macOS or Linux)
 
 Requirements: Node.js 22+ and npm. The production build bundles the game and all runtime dependencies; it does not load Babel, React or Tailwind from a CDN.

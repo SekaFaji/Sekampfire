@@ -60,7 +60,7 @@ describe("compact title and independent buttons", () => {
     expect(open).toHaveBeenNthCalledWith(1, "https://discord.gg/794QQWJEeP", "_blank", "noopener,noreferrer");
     expect(open).toHaveBeenNthCalledWith(2, "https://youtube.com/@sekafajigames", "_blank", "noopener,noreferrer");
     expect(hit(160, 85)).toBeDefined();
-    expect(hit(160, 146)).toBeDefined(); // final compact row now belongs to Settings
+    expect(hit(160, 146)).toBeUndefined(); // four title actions do not waste or cover extra space
   });
 });
 

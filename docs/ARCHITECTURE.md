@@ -7,6 +7,8 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/main.tsx` — application entry, styles and React mount
 - `src/App.tsx` — Canvas lifecycle, viewport container, pointer/keyboard events, animation and checkpoint scheduling
 - `src/game/config.ts` — stage, crafting, upgrade and world constants
+- `src/game/campProgress.ts` — run-scoped station upgrades, costs, progression requirements and safe wood debit
+- `src/game/nightSky.ts` — independently tested aurora and meteor parade rendering/probabilities
 - `src/game/rules.ts` — extracted pure carry/storage rules with unit tests
 - `src/game/math.ts` — common math helpers and tests
 - `src/game/audio.ts` — browser-safe procedural sounds and configurable mixer

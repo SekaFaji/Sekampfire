@@ -17,14 +17,16 @@ import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosph
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { activePet, updateDogCompanion } from "./companion";
+import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 
-function resumeRun(g: any, data: any) {
+function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
   // Reset transient objects without dropping bound end-of-run/fullscreen
   // callbacks. These are attached once by the React shell.
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
   g.cb = cb; g.fsToggle = fsToggle;
+  g.museumBuilt = !!meta?.museumBuilt;
   const n = (key: string, lo: number, hi: number, fallback: number) =>
     finiteRange(data[key], lo, hi, fallback);
   const flag = (key: string) => data[key] === true;
@@ -135,7 +137,7 @@ function createEngine(): any {
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
-    won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false,
+    won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
@@ -187,6 +189,7 @@ function startRunEngine(g: any, meta: any) {
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
   g.cb = cb; g.fsToggle = fsToggle;
+  g.museumBuilt = !!meta.museumBuilt;
   genScenery(g, Math.floor(Math.random() * 1e9));
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
@@ -303,6 +306,7 @@ function spawnEvent(g: any) {
 // ============ update ============
 function update(g: any, meta: any, dt: number, cb: any) {
   if (g.over) return;
+  g.museumBuilt = !!meta.museumBuilt;
   const p = g.player;
   const cap = carryCap(g, meta);
   const pcap = pileCap(g);
@@ -530,6 +534,12 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (ft.t >= 0.55) {
       const w = ft.wood;
       g.pickups.push({ x: ft.x, y: ft.y, w });
+      const found = discoverLog(meta);
+      if (found) {
+        saveMeta(meta);
+        const rarity = LOG_COLLECTION.find(log => log.id === found)!;
+        cb.toast("MUSEUM DISCOVERY: " + rarity.name + " (" + rarity.rarity + ")");
+      }
       for (let k = 0; k < 10; k++) {
         g.chips.push({ x: ft.x + (Math.random() * 30 - 15), y: ft.y - 4, vx: Math.random() * 60 - 30, vy: -(Math.random() * 40 + 10), life: 0.5 });
       }
@@ -1355,6 +1365,8 @@ function drawMenu(ctx: any, g: any, meta: any) {
       "!", resetRows(g, meta));
   } else if (g.menu === "pause") {
     drawListMenu(ctx, g, "PAUSED", "RUN ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
+  } else if (g.menu === "museum") {
+    drawMuseumPage(ctx, g, meta, () => closeMenu(g));
   } else if (g.menu === "help") {
     drawHelpMenu(ctx, g);
   } else if (g.menu === "privacy") {
@@ -1470,7 +1482,7 @@ function drawSideArrows(ctx: any, g: any) {
 function titleActions(g: any, meta: any): any[] {
   const run = [
     ...(g.resumeData ? [{
-      label: "CONTINUE RUN", act: () => resumeRun(g, g.resumeData)
+      label: "CONTINUE RUN", act: () => resumeRun(g, g.resumeData, meta)
     }, {
       label: "NEW RUN", act: () => startRun(g, meta)
     }] : [{
@@ -1479,6 +1491,7 @@ function titleActions(g: any, meta: any): any[] {
   ];
   return run.concat([
     { label: "SHOP", act: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } },
+    { label: "LOG MUSEUM", act: () => { g.menu = "museum"; g.menuSel = 0; } },
     { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
   ]);
 }

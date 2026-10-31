@@ -1631,7 +1631,7 @@ function renderReflectionSubjects(rctx: any, g: any, colors: any, camX: number) 
       drawCritter(rctx, critter, g);
     }
   }
-  if (g.dog && g.dog.x >= camX - 20 && g.dog.x <= camX + W + 20) drawDog(rctx, g);
+  if (g.dog && !g.dog.hidden && g.dog.x >= camX - 20 && g.dog.x <= camX + W + 20) drawDog(rctx, g);
   if (g.player.x >= camX - 20 && g.player.x <= camX + W + 20) drawPlayer(rctx, g);
   rctx.restore();
 }
@@ -1844,7 +1844,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   for (const c of g.critters) {
     ents.push({ y: c.y, f: () => drawCritter(ctx, c, g) });
   }
-  if (g.dog) ents.push({ y: g.dog.y, f: () => drawDog(ctx, g) });
+  if (g.dog && !g.dog.hidden) ents.push({ y: g.dog.y, f: () => drawDog(ctx, g) });
   ents.push({ y: 152, f: () => drawPlayer(ctx, g) });
   ents.sort((a, b) => a.y - b.y);
   for (const e of ents) e.f();

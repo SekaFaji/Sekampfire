@@ -1,4 +1,5 @@
 import { META_KEY, LEGACY_KEYS, UPGRADES } from "./config";
+import { stationIds } from "./campProgress";
 import { clamp } from "./math";
 
 function saveMeta(m: any) { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) { } }
@@ -41,9 +42,14 @@ function captureRunSnapshot(g: any): any {
   const keys = ["time","night","isNight","weather","aurora","nightSkyEvent","fuel","fireLit","everLit",
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
     "ashEarned","depth","builtBench","builtPile","benchLogs","pileLogs",
-    "benchBuildT","pileBuildT","stored","treeId","scenerySeed"];
+    "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
+  // Keep the existing v1 checkpoint key/version. Persist only validated tier
+  // numbers; old checkpoints simply load all station levels as zero.
+  state.campUpgrades = Object.fromEntries(stationIds.map(id => [
+    id, Math.min(2, Math.max(0, Math.floor(Number(g.campUpgrades?.[id]) || 0)))
+  ]));
   state.player = { x: g.player.x, dir: g.player.dir, wood: g.player.wood,
     warmth: g.player.warmth, torchT: g.player.torchT };
   state.trees = g.trees.map((t: any) => ({

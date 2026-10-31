@@ -3,6 +3,10 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 — user-approved unfinished features / fixes
+- [x] Patch #21: bright visible aurora at 20% chance per ordinary night, meteor parade for repeated night-long shooting stars and carved wooden Wood Axe sprite; source-tested, phone QA still pending.
+- [x] Patch #22: real two-tier upgrades for fireplace, workbench, log storage; requires all three level one before final cabin. Kindling and lantern recipes unlocked at workshop levels. Source tests plus save compatibility; on-device balance and visuals still require QA.
+- [ ] Playtest newly extended cabin progression: check time-to-finish, wood gathering burden, feeling of station upgrade rewards, old saved runs, and pacing of tier-two optional goals.
+
 - [x] Redesign main title: four-season subtitle, tighten dynamic menu, SHOP label, preserve main actions and social links.
 - [x] Functional Shop with existing permanent Ash upgrades and a neutral inactive Coming Soon tab; no premium/payment hint.
 - [x] Replace text-only How to Play with seven illustrated real-sprite steps and touchscreen/keyboard paging (device QA still pending).

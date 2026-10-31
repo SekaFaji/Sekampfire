@@ -1,6 +1,7 @@
 import { META_KEY, LEGACY_KEYS, UPGRADES } from "./config";
 import { stationIds } from "./campProgress";
 import { clamp } from "./math";
+import { cleanLogCollection } from "./museum";
 
 function saveMeta(m: any) { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) { } }
 function safeCount(v: any): number {
@@ -19,11 +20,13 @@ function loadMeta(): any {
         return { ash: safeCount(m.ash), totalAsh: safeCount(m.totalAsh),
           best: safeCount(m.best), runs: safeCount(m.runs),
           wonEver: !!m.wonEver, up,
-          petEquipped: m.petEquipped === null ? null : up.dog ? "dog" : null };
+          petEquipped: m.petEquipped === null ? null : up.dog ? "dog" : null,
+          museumBuilt: m.museumBuilt === true, collection: cleanLogCollection(m.collection) };
       }
     }
   } catch (e) { /* Corrupted local saves should never prevent the game starting. */ }
-  return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null };
+  return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null,
+    museumBuilt:false, collection:cleanLogCollection(null) };
 }
 
 

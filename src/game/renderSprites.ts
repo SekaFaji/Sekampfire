@@ -185,12 +185,24 @@ function drawSwingTool(ctx: any, x: number, y: number, dir: number, progress: nu
   if (!tier) {
     px(ctx, 1, -11, 2, 2, "#937348");  // visible twig branch
     px(ctx, -2, -6, 2, 2, "#8c6540");
+  } else if (tier === 1) {
+    // Hand-carved wood axe: tapered brown wooden blade with visible grain,
+    // lashings and a pale cut face. NO blue-grey stone/metal pixels.
+    px(ctx, -3, -14, 7, 3, "#52361f"); // dark wood socket
+    px(ctx, 2, -17, 4, 7, "#8e5a30"); // carved broad wedge
+    px(ctx, 4, -16, 3, 5, "#ba8046"); // warm wooden cutting edge
+    px(ctx, 6, -15, 1, 3, "#d7a772"); // freshly carved bright tip
+    px(ctx, 2, -15, 1, 4, "#644025"); // carved grain line
+    px(ctx, -2, -13, 5, 1, "#c3a16a"); // rope lash
+    px(ctx, -1, -11, 4, 1, "#d5b47b");
+    px(ctx, 0, -9, 1, 2, "#745133");
   } else {
-    px(ctx, -2, -14, 6, 3, tier === 2 ? "#788b9b" : "#91aab4");
-    px(ctx, 2, -16, 4, 5, tier === 2 ? "#c1d5e2" : "#d2e0e5");
-    px(ctx, 5, -15, 2, 3, "#f2f6f4"); // tapered cutting edge, not hammer head
+    // Grandpa's proper forged metal axe remains the distinct late-game tier.
+    px(ctx, -2, -14, 6, 3, "#788b9b");
+    px(ctx, 2, -16, 4, 5, "#c1d5e2");
+    px(ctx, 5, -15, 2, 3, "#f2f6f4");
     px(ctx, -2, -14, 1, 2, "#4b555b");
-    if (tier === 2) px(ctx, 0, -12, 2, 1, "#ddb76b");
+    px(ctx, 0, -12, 2, 1, "#ddb76b");
   }
   ctx.restore();
 }

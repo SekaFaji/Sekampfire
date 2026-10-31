@@ -972,33 +972,65 @@ function pauseRows(g: any, meta: any) {
   ];
 }
 
+function stationUpgradeRow(g: any, id: "hearth" | "bench" | "pile") {
+  const info = CAMP_STATIONS[id], level = stationLevel(g, id);
+  const available = stationAvailable(g, id);
+  const maxed = level >= 2, cost = stationCost(g, id);
+  const total = g.player.wood + g.stored;
+  const confirming = g.buildConfirm === id && available && !maxed && total >= cost;
+  return {
+    label: info.label + " LV" + level + (maxed ? " MAX" : " -> LV" + (level + 1)),
+    right: maxed ? "MAX" : !available ? "BUILD FIRST" : confirming ? "CONFIRM?" : cost + " WOOD",
+    desc: maxed ? "FULLY UPGRADED" : !available ? "BUILD THIS STATION FIRST"
+      : confirming ? "TAP AGAIN TO UPGRADE" : info.benefits[level],
+    h: 15, enabled: available && !maxed && total >= cost,
+    onDown: () => {
+      if (!available) { g.buildConfirm = null; toast(g, "BUILD THE " + info.label + " FIRST."); return; }
+      if (maxed) { g.buildConfirm = null; toast(g, info.label + " IS MAX LEVEL."); return; }
+      if (g.player.wood + g.stored < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
+      if (g.buildConfirm !== id) { g.buildConfirm = id; return; }
+      g.buildConfirm = null;
+      if (!purchaseStation(g, id)) { toast(g, "NOT ENOUGH WOOD."); return; }
+      g.ashEarned += 2;
+      AUDIO.effect("build");
+      toast(g, info.label + " NOW LEVEL " + stationLevel(g, id) + ".");
+    }
+  };
+}
+
 function benchRows(g: any, meta: any) {
-  return CRAFTS.map((c: any) => {
+  const recipes = CRAFTS.map((c: any) => {
+    const level = stationLevel(g, "bench"), locked = level < (c.benchTier || 0);
     const owned = !!g.crafts[c.id];
+    const cost = stationCraftCost(g, c);
     const total = g.player.wood + g.stored;
-    const enabled = !owned && total >= c.cost;
+    const enabled = !locked && !owned && total >= cost;
     const confirm = g.craftConfirm === c.id && enabled;
     return {
       label: c.name.toUpperCase(),
-      right: owned ? "OWNED" : confirm ? "CONFIRM?" : c.cost + " WOOD",
-      desc: confirm ? "TAP AGAIN TO CRAFT - " + c.cost + " WOOD" : c.desc,
-      h: 15,
-      enabled,
+      right: locked ? "BENCH LV" + c.benchTier : owned ? "OWNED" : confirm ? "CONFIRM?" : cost + " WOOD",
+      desc: locked ? "UPGRADE WORKBENCH IN BUILD" :
+        confirm ? "TAP AGAIN TO CRAFT - " + cost + " WOOD" : c.desc,
+      h: 15, enabled,
       onDown: () => {
-        // The first selection never spends a single log. Only a second
-        // deliberate selection of this same item can craft it.
+        g.buildConfirm = null;
+        if (locked) { g.craftConfirm = null; toast(g, "UPGRADE WORKBENCH IN BUILD FIRST."); return; }
         if (g.crafts[c.id]) { g.craftConfirm = null; toast(g, c.name.toUpperCase() + " is already crafted."); return; }
-        if (g.player.wood + g.stored < c.cost) { g.craftConfirm = null; toast(g, "Not enough wood."); return; }
+        const realCost = stationCraftCost(g, c);
+        if (g.player.wood + g.stored < realCost) { g.craftConfirm = null; toast(g, "Not enough wood."); return; }
         if (g.craftConfirm !== c.id) { g.craftConfirm = c.id; return; }
         g.craftConfirm = null;
-        const fromCarried = Math.min(g.player.wood, c.cost);
+        const fromCarried = Math.min(g.player.wood, realCost);
         g.player.wood -= fromCarried;
-        g.stored -= c.cost - fromCarried;
+        g.stored -= realCost - fromCarried;
         g.crafts[c.id] = true;
         toast(g, c.name.toUpperCase() + " crafted.");
       },
     };
   });
+  // Convenient alternate place to improve the workbench itself.
+  recipes.push(stationUpgradeRow(g, "bench"));
+  return recipes;
 }
 
 function shopRows(g: any, meta: any) {
@@ -1120,21 +1152,27 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
 }
 
 function buildRows(g: any, meta: any) {
-  // the workbench and wood pile are no longer built from this menu:
-  // carry 15 logs to each marked site and press ACT there to build
   const rows: any[] = [];
-  const have = () => g.player.wood + g.stored;
+  const total = () => g.player.wood + g.stored;
   if (g.stage < 6) {
     const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
+    const needsStations = g.stage === 5 && !canCompleteCabin(g);
     rows.push({
-      label: STAGES[g.stage].name.toUpperCase(), right: cost + " WOOD", desc: STAGES[g.stage].desc.toUpperCase(), h: 15,
-      enabled: have() >= cost,
-      onDown: () => doBuildAction(g, meta),
+      label: STAGES[g.stage].name.toUpperCase(),
+      right: needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
+      desc: needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
+        g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
+      h: 15, enabled: !needsStations && total() >= cost,
+      onDown: () => {
+        if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
+        if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
+        if (g.buildConfirm !== "stage") { g.buildConfirm = "stage"; return; }
+        g.buildConfirm = null;
+        doBuildAction(g, meta);
+      },
     });
   }
-  if (!rows.length) {
-    rows.push({ label: "NOTHING LEFT TO BUILD", right: "", desc: "THE CAMP IS COMPLETE", h: 15, enabled: false, onDown: () => { } });
-  }
+  for (const id of stationIds) rows.push(stationUpgradeRow(g, id));
   return rows;
 }
 

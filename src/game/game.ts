@@ -60,7 +60,7 @@ function resumeRun(g: any, data: any) {
   g.campUpgrades = Object.fromEntries(stationIds.map(id => [
     id, Math.floor(finiteRange(data.campUpgrades?.[id], 0, 2, 0))
   ]));
-  g.stored = n("stored", 0, 72, 0);
+  g.stored = n("stored", 0, 80, 0);
   g.trees = data.trees.slice(0, 150).filter((t: any) =>
     t && typeof t === "object" && Number.isFinite(t.x) && Number.isFinite(t.y)
       && Number.isFinite(t.id)).map((t: any) => ({

@@ -16,6 +16,7 @@ import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
+import { activePet, updateDogCompanion } from "./companion";
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
@@ -97,6 +98,13 @@ function resumeRun(g: any, data: any) {
     }));
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
+  if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
+    g.dog = {
+      x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:156,
+      dir:data.dog.dir === -1 ? -1 : 1,
+      wood:Math.floor(finiteRange(data.dog.wood,0,2,0)),phase:"idle"
+    };
+  }
   g.ui = g.victoryPending ? "win" : "run";
   if (g.victoryPending) g.lastResult = {kind:"won",nights:g.night,ash:Math.floor(g.ashEarned)};
   g.won = flag("won") || g.victoryPending;
@@ -604,42 +612,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   for (const t of g.trees) if (t.hitT > 0) t.hitT = Math.max(0, t.hitT - dt * 3);
 
-  // ---- dog ----
-  if (meta.up.dog) {
-    if (!g.dog) g.dog = { x: PILE_X, y: 156, phase: "idle", t: 8, dir: 1, target: null };
-    const d = g.dog;
-    d.t -= dt;
-    if (d.phase === "idle" && d.t <= 0 && g.builtPile) {
-      if (g.trees.length) {
-        let best: any = null, bd = 1e9;
-        for (const t of g.trees) {
-          const dd = Math.abs(t.x - CX);
-          if (dd < bd) { bd = dd; best = t; }
-        }
-        d.target = best;
-        d.phase = "go";
-      } else d.t = 6;
-    }
-    if (d.phase === "go" && d.target) {
-      if (!g.trees.includes(d.target)) { d.phase = "idle"; d.t = 4; d.target = null; }
-      else {
-        const dx = d.target.x - d.x;
-        d.dir = dx > 0 ? 1 : -1;
-        d.x += clamp(dx, -120 * dt, 120 * dt);
-        if (Math.abs(dx) < 4) d.phase = "return";
-      }
-    }
-    if (d.phase === "return") {
-      const dx = PILE_X - d.x;
-      d.dir = dx > 0 ? 1 : -1;
-      d.x += clamp(dx, -120 * dt, 120 * dt);
-      if (Math.abs(dx) < 3) {
-        d.phase = "idle"; d.t = 20 + Math.random() * 12;
-        g.stored += Math.min(2, Math.max(0, pcap - g.stored));
-        if (Math.random() < 0.3) cb.toast("The dog drops sticks at the pile. (+2 stored)");
-      }
-    }
-  }
+  // ---- following pet and real-log retrieval ----
+  updateDogCompanion(g, meta, dt);
 
   // ---- meters ----
   const f = g.fireLit ? g.fuel / 100 : 0;

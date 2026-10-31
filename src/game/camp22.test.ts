@@ -40,6 +40,10 @@ describe("real station upgrade progression", () => {
     }
     expect(g.player.wood+g.stored).toBe(before-32);
     expect(canCompleteCabin(g)).toBe(true);
+    // The player still has to gather the cabin's 65 wood after upgrading.
+    expect(buildRows(g,meta)[0].enabled).toBe(false);
+    g.player.wood = 21;
+    g.stored = 52; // Woodshed 40 + level-one log rack 12.
     expect(buildRows(g,meta)[0].enabled).toBe(true);
     expect(g.ashEarned).toBe(6);
   });

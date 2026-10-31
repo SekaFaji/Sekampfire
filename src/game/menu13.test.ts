@@ -79,13 +79,13 @@ describe("the real Ash Shop and inert future tab", () => {
     const purchase = vi.fn();
     const c = canvas();
     drawShopTabs(c.ctx, g, meta, [{ label: "TEST UPGRADE", right: "10 ASH", desc: "A UPGRADE", enabled: true, onDown: purchase }], vi.fn());
-    expect(hit(g, 60, 50)).toBeDefined();
-    hit(g, 218, 30).onDown();
+    expect(hit(g, 60, 57)).toBeDefined();
+    hit(g, 157, 39).onDown();
     expect(g.shopTab).toBe(1);
     expect(meta.ash).toBe(90);
     g.zones = [];
     drawShopTabs(c.ctx, g, meta, [], vi.fn());
-    expect(hit(g, 60, 50)).toBeUndefined();
+    expect(hit(g, 60, 57)).toBeUndefined();
     expect(purchase).not.toHaveBeenCalled();
     handleKey(g, meta, "a", true);
     expect(g.shopTab).toBe(0);

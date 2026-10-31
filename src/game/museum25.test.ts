@@ -94,6 +94,25 @@ describe("real log collection discoveries",()=>{
     expect(toasts.some(x=>x.includes("MUSEUM DISCOVERY"))).toBe(true);
   });
 });
+describe("permanent hut can be visited in the world",()=>{
+  it("opens the museum by pressing ACT next to its physical building",()=>{
+    const g=game(),m=meta();m.museumBuilt=true;
+    g.player.x=MUSEUM_X;g.pressE=true;g.keys.act=true;
+    g.time=8;g.isNight=false;g.trees=[];g.pickups=[];
+    update(g,m,0.02,{end:()=>{},toast:()=>{}});
+    expect(g.actionLabel).toBe("MUSEUM");
+    expect(g.menu).toBe("museum");
+    expect(g.keys.act).toBe(false);
+  });
+  it("does not open an unbuilt hut or interfere with other ACT targets",()=>{
+    const g=game(),m=meta();g.player.x=MUSEUM_X;
+    g.pressE=true;g.time=8;g.trees=[];g.pickups=[];
+    update(g,m,0.02,{end:()=>{},toast:()=>{}});
+    expect(g.menu).toBe("build");
+    expect(g.actionLabel).not.toBe("MUSEUM");
+  });
+});
+
 describe("actual pixel-art museum and navigation",()=>{
   it("four collectible log designs are visibly different and have finite pixel bounds",()=>{
     const seen = new Set<string>();

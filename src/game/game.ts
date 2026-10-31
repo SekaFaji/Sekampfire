@@ -17,6 +17,8 @@ import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosph
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { activePet, updateDogCompanion } from "./companion";
+import { MUSEUM_COST, MUSEUM_X, LOG_RELICS, rollLogRelic, addLogRelic, buildLogMuseum, museumHasBuilding, normalizeMuseum } from "./logMuseum";
+import { drawLogMuseumWorld, drawLogMuseumMenu } from "./logMuseumArt";
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
@@ -400,6 +402,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearPit = Math.abs(p.x - CX) < 22;
   const nearBench = Math.abs(p.x - BENCH_X) < 22;
   const nearPile = Math.abs(p.x - PILE_X) < 22;
+  const nearMuseum = museumHasBuilding(meta) && Math.abs(p.x - MUSEUM_X) < 20;
   const tree = nearestTree(g, p);
   if (g.stokeCd > 0) g.stokeCd -= dt;
 
@@ -407,7 +410,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.pressE) {
     g.pressE = false;
     if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
-      if (nearBench && !g.builtBench) {
+      if (nearMuseum) {
+        g.keys.act = false;
+        g.menu = "museum";
+        g.menuSel = 0;
+      } else if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
           cb.toast("Hammering away. It is almost up.");
@@ -535,6 +542,16 @@ function update(g: any, meta: any, dt: number, cb: any) {
       }
       g.shake = Math.max(g.shake, 0.15);
       cb.toast(`Tree felled. ${w} wood on the ground.`);
+      // One non-fuel collectible roll per felled tree, only after the
+      // museum exists. Duplicates remain in the permanent collection.
+      if (museumHasBuilding(meta)) {
+        const relic = rollLogRelic();
+        if (relic && addLogRelic(meta, relic)) {
+          saveMeta(meta);
+          const info = LOG_RELICS.find(x => x.id === relic);
+          cb.toast("MUSEUM FIND: " + (info ? info.name : relic).toUpperCase() + "!");
+        }
+      }
       g.falling.splice(i, 1);
     }
   }
@@ -652,6 +669,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
+  else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
   else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
@@ -954,6 +972,11 @@ function pauseRows(g: any, meta: any) {
       onDown: () => { g.settingsFrom = "pause"; g.menu = "settings"; g.menuSel = 0; },
     },
     {
+      label: "LOG MUSEUM", right: museumHasBuilding(meta) ? "VIEW" : "LOCKED",
+      desc: "PERMANENT COLLECTION", h: 15, enabled: true,
+      onDown: () => { g.menu = "museum"; g.menuSel = 0; g.endRunConfirm = false; },
+    },
+    {
       label: "END RUN", right: g.endRunConfirm ? "CONFIRM?" : "+" + Math.floor(g.ashEarned) + " ASH",
       desc: g.endRunConfirm ? "TAP AGAIN TO BANK YOUR RUN ASH" : "BANK ALL EARNED ASH. TAP TWICE.", h: 15,
       enabled: true,
@@ -1200,6 +1223,30 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
+  // Permanent museum is independent of the six camp stages. Once
+  // constructed, its collected logs and building survive every new run.
+  rows.push({
+    label: "LOG MUSEUM",
+    right: museumHasBuilding(meta) ? "VIEW" :
+      !meta.wonEver ? "LOCKED" :
+      g.buildConfirm === "museum" ? "CONFIRM?" : MUSEUM_COST + " WOOD",
+    desc: museumHasBuilding(meta) ? "OPEN YOUR PERMANENT COLLECTION" :
+      !meta.wonEver ? "COMPLETE YOUR FIRST CAMP TO UNLOCK" :
+      g.buildConfirm === "museum" ? "TAP AGAIN TO BUILD FOREVER" : "PERMANENT BUILDING, ACROSS ALL RUNS",
+    h: 15, enabled: museumHasBuilding(meta) || (meta.wonEver && total() >= MUSEUM_COST),
+    onDown: () => {
+      if (museumHasBuilding(meta)) { g.buildConfirm = null; g.menu = "museum"; return; }
+      if (!meta.wonEver) { g.buildConfirm = null; toast(g, "COMPLETE THE FIRST CAMP FIRST."); return; }
+      if (total() < MUSEUM_COST) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
+      if (g.buildConfirm !== "museum") { g.buildConfirm = "museum"; return; }
+      g.buildConfirm = null;
+      if (!buildLogMuseum(g, meta)) { toast(g, "NOT ENOUGH WOOD."); return; }
+      saveMeta(meta);
+      AUDIO.effect("build");
+      toast(g, "LOG MUSEUM BUILT! YOUR COLLECTION IS PERMANENT.");
+      g.menu = "museum";
+    }
+  });
   return rows;
 }
 
@@ -1211,7 +1258,8 @@ function resetAllProgress(g: any, meta: any) {
     try { localStorage.removeItem(key); } catch (_e) {}
   }
   Object.assign(meta, {
-    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null
+    ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null,
+    museum: normalizeMuseum(null)
   });
   setupTitleScene(g);
   g.resumeData = null;
@@ -1354,6 +1402,8 @@ function drawMenu(ctx: any, g: any, meta: any) {
       "!", resetRows(g, meta));
   } else if (g.menu === "pause") {
     drawListMenu(ctx, g, "PAUSED", "RUN ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
+  } else if (g.menu === "museum") {
+    drawLogMuseumMenu(ctx, g, meta, () => closeMenu(g));
   } else if (g.menu === "help") {
     drawHelpMenu(ctx, g);
   } else if (g.menu === "privacy") {
@@ -1478,6 +1528,7 @@ function titleActions(g: any, meta: any): any[] {
   ];
   return run.concat([
     { label: "SHOP", act: () => { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; } },
+    ...(meta.wonEver || museumHasBuilding(meta) ? [{label:"MUSEUM", act:()=>{g.menu="museum";g.menuSel=0;}}] : []),
     { label: "SETTINGS", act: () => { g.menu = "settings"; g.menuSel = 0; } },
   ]);
 }
@@ -1832,6 +1883,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
   const ents: { y: number; f: () => void }[] = [];
   ents.push({ y: 150, f: () => drawStructures(ctx, g) });
+  ents.push({ y: 151, f: () => drawLogMuseumWorld(ctx, meta) });
   for (const tr of g.trees) {
     if (tr.x < camX - 60 || tr.x > camX + W + 60) continue;
     ents.push({ y: tr.y, f: () => drawTree(ctx, tr, g.animT, g.windAmt || 0, colors) });

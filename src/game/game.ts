@@ -14,6 +14,7 @@ import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
 import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
+import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
@@ -36,6 +37,8 @@ function resumeRun(g: any, data: any) {
   g.previousWeather = g.weather;
   g.weatherBlend = 1;
   g.aurora = flag("aurora");
+  g.nightSkyEvent = data.nightSkyEvent === "parade" ? "parade" : g.aurora ? "aurora" : "none";
+  g.paradeTimer = 0;
   g.fuel = n("fuel", 0, 100, 0);
   g.fireLit = flag("fireLit") && g.fuel > 0;
   g.everLit = flag("everLit") || g.fireLit;
@@ -107,6 +110,7 @@ function createEngine(): any {
   return {
     animT: 0, time: 10, isNight: false, night: 0, weather: "clear", aurora: false,
     weatherBlend: 1, previousWeather: "clear", scenerySeed: 777, resumeData: null,
+    nightSkyEvent: "none", paradeTimer: 0,
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, camX: CX - W / 2, shake: 0,
@@ -307,16 +311,20 @@ function update(g: any, meta: any, dt: number, cb: any) {
     g.previousWeather = g.weather;
     g.weather = pickWeather(g);
     g.weatherBlend = 0;
-    g.aurora = g.weather === "clear" && Math.random() < 0.25;
+    g.nightSkyEvent = rollNightSkyEvent();
+    g.aurora = g.nightSkyEvent === "aurora";
+    g.paradeTimer = 0;
     if (g.longNightPending) {
       g.longNightPending = false;
       g.longNightActive = true;
       g.weather = "blizzard";
       g.aurora = false;
+      g.nightSkyEvent = "none";
       cb.toast("THE LONG NIGHT. Hold the fire until dawn!");
     } else {
       let w = `Night ${g.night} falls. (${WEATHER_TEXT[g.weather]})`;
-      if (g.aurora) w += " An aurora shimmers above the peaks.";
+      if (g.aurora) w += " The AURORA lights up the sky!";
+      if (g.nightSkyEvent === "parade") w += " A SHOOTING STAR PARADE begins!";
       cb.toast(w);
     }
   }
@@ -340,6 +348,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
     spawnTrees(g, 8);
     if (g.night > 0) cb.toast(`Dawn breaks. Night ${g.night} survived.`);
     g.aurora = false;
+    g.nightSkyEvent = "none";
+    g.meteors = [];
     g.depth = Math.max(0, g.night - 5) + (g.endlessMode ? g.endlessN * 0.6 : 0);
   }
 
@@ -657,6 +667,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
   g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
+  updateShootingStarParade(g, dt);
   const ease = 1 - Math.exp(-Math.max(0, dt) * 13);
   g.moveFeedbackLeft += ((g.pleft || g.keys.left) ? 1 - g.moveFeedbackLeft : -g.moveFeedbackLeft) * ease;
   g.moveFeedbackRight += ((g.pright || g.keys.right) ? 1 - g.moveFeedbackRight : -g.moveFeedbackRight) * ease;
@@ -1669,23 +1680,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
       px(ctx, mx - 1, my + 1, 2, 1, "#c8d2e2");
       px(ctx, mx + 1, my - 2, 1, 1, "#c8d2e2");
     }
-    if (g.aurora) {
-      for (let x = 0; x < W; x += 4) {
-        const h1 = 26 + Math.sin(x * 0.05 + g.animT * 0.7) * 12 + Math.sin(x * 0.11 - g.animT * 0.4) * 6;
-        ctx.fillStyle = "rgba(58,255,200,0.055)";
-        ctx.fillRect(x, 16, 4, h1);
-        ctx.fillStyle = "rgba(80,160,255,0.04)";
-        ctx.fillRect(x, 8, 4, h1 * 0.7);
-      }
-    }
-    // shooting stars
-    for (const m of g.meteors) {
-      ctx.fillStyle = `rgba(230,240,255,${clamp(m.life, 0, 1)})`;
-      ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, 1);
-      ctx.fillStyle = `rgba(180,200,240,${clamp(m.life, 0, 1) * 0.6})`;
-      ctx.fillRect(Math.round(m.x - m.vx * 0.02), Math.round(m.y - m.vy * 0.02), 1, 1);
-      ctx.fillRect(Math.round(m.x - m.vx * 0.05), Math.round(m.y - m.vy * 0.05), 1, 1);
-    }
+
   } else {
     const sf = q / 0.52;
     const sx = 16 + sf * 288, sy = 64 - Math.sin(clamp(sf, 0, 1) * Math.PI) * 38;
@@ -1858,6 +1853,8 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     punch(x0 + 66 - camX, 131, 15);
   }
   ctx.drawImage(off, 0, 0);
+  // Spectacles appear ABOVE the night mask (previously darkened away).
+  drawNightSkyEvent(ctx, g, darkA);
 
   if (g.fireLit && lightR > 0) {
     ctx.globalCompositeOperation = "lighter";

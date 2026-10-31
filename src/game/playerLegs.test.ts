@@ -107,7 +107,7 @@ describe("directional footsteps at real 320x180 pixel coordinates", () => {
         expect(v.counts.save).toBe(v.counts.restore);
         expect(v.marks.some(m => m.color === "#dfac84" && m.w === 3 && m.h === 3)).toBe(true);
         if (tier === 0) expect(v.marks.some(m => m.color === "#91aab4")).toBe(false);
-        if (tier === 1) expect(v.marks.some(m => m.color === "#91aab4")).toBe(true);
+        if (tier === 1) { expect(v.marks.some(m => m.color === "#ba8046")).toBe(true); expect(v.marks.some(m => m.color === "#91aab4")).toBe(false); }
         if (tier === 2) expect(v.marks.some(m => m.color === "#788b9b")).toBe(true);
       }
     }

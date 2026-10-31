@@ -3,6 +3,11 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 — user-approved unfinished features / fixes
+- [x] Patch #23: compact dynamic title menu, separate Shop header and Upgrades/Pets/Coming Soon tabs, compact Build Structures/Upgrades and Craft Tools/Supplies tabs, banked vs pending Ash labels, Long Night victory choice to bank or continue and resume safe checkpoint. Source-tested; phone QA pending.
+- [x] Patch #24: Good Dog retains ownership, moves into Pets for equip/unequip, follows, carries up to 2 actual world-drop logs, deposits to storage/player and persists cargo. Source-tested; device gameplay QA pending.
+- [x] Patch #25: four permanent uniquely shaped collectible logs, constructed permanent Museum building, collection persisted separately from run resources, no loss of ordinary wood; provisional odds. Tests source-only, device quality QA pending.
+- [ ] Pending brainstorm: new guided run levels / unlock order, moving Long Night to a later stage, firewood-based Ash earning/balance and long-term museum duplicate uses. Do not implement without agreement.
+
 - [x] Patch #21: bright visible aurora at 20% chance per ordinary night, meteor parade for repeated night-long shooting stars and carved wooden Wood Axe sprite; source-tested, phone QA still pending.
 - [x] Patch #22: real two-tier upgrades for fireplace, workbench, log storage; requires all three level one before final cabin. Kindling and lantern recipes unlocked at workshop levels. Source tests plus save compatibility; on-device balance and visuals still require QA.
 - [ ] Playtest newly extended cabin progression: check time-to-finish, wood gathering burden, feeling of station upgrade rewards, old saved runs, and pacing of tier-two optional goals.

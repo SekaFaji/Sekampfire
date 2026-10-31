@@ -67,7 +67,7 @@ describe("seven illustrations of real beginner progression", () => {
 describe("the real Ash Shop and inert future tab", () => {
   it("preserves the same central title actions except for Shop name", () => {
     const g = createEngine(); g.resumeData = null;
-    expect(titleActions(g, { ash: 30, up: {} }).map(a => a.label)).toEqual(["START RUN", "SHOP", "SETTINGS"]);
+    expect(titleActions(g, { ash: 30, up: {} }).map(a => a.label)).toEqual(["START RUN", "SHOP", "LOG MUSEUM", "SETTINGS"]);
     const row = titleActions(g, { ash: 30, up: {} })[1];
     row.act();
     expect(g.menu).toBe("shop");

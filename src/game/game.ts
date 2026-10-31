@@ -174,7 +174,7 @@ function spawnTrees(g: any, count: number) {
   for (let n = 0; n < count; n++) {
     for (let attempt = 0; attempt < 60; attempt++) {
       const x = 16 + Math.random() * (WORLD_W - 32);
-      if (x > CX - 100 && x < CX + 56) continue;
+      if (x > CX - 100 && x < (g.museumBuilt ? MUSEUM_X+20 : CX+56)) continue;
       if (g.trees.some((t: any) => Math.abs(t.x - x) < 16)) continue;
       const y = 136 + Math.random() * 18; // Keep pickups clear of foreground water.
       const tier = treeTierFor(x);
@@ -1210,6 +1210,31 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
+  // One-time permanent structure: once purchased it appears in every later
+  // run and the unique log collection lives in persistent meta, not run wood.
+  rows.push({
+    label:meta.museumBuilt ? "VISIT LOG MUSEUM" : "BUILD LOG MUSEUM",
+    right:meta.museumBuilt ? museumCount(meta)+"/4 FOUND"
+      : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
+    desc:meta.museumBuilt ? "PERMANENT COLLECTION - TAP TO VIEW" :
+      g.buildConfirm==="museum" ? "TAP AGAIN TO BUILD PERMANENT MUSEUM"
+      : "KEEP SPECIAL LOGS THROUGH ALL RUNS",
+    h:15,enabled:!!meta.museumBuilt || total()>=MUSEUM_COST,
+    onDown:()=>{
+      if(meta.museumBuilt){g.buildConfirm=null;g.menu="museum";return;}
+      if(total()<MUSEUM_COST){g.buildConfirm=null;toast(g,"NOT ENOUGH WOOD.");return;}
+      if(g.buildConfirm!=="museum"){g.buildConfirm="museum";return;}
+      g.buildConfirm=null;
+      const fromCarried=Math.min(g.player.wood,MUSEUM_COST);
+      g.player.wood-=fromCarried;
+      g.stored-=MUSEUM_COST-fromCarried;
+      meta.museumBuilt=true;
+      g.museumBuilt=true;
+      saveMeta(meta);
+      AUDIO.effect("build");
+      toast(g,"LOG MUSEUM BUILT FOREVER! VIEW YOUR COLLECTION.");
+    }
+  });
   return rows;
 }
 

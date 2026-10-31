@@ -43,42 +43,40 @@ export function drawIllustratedGuide(ctx: any, g: any, close: () => void) {
   action(ctx, g, 234, 150, 57, page === TUTORIAL_PAGES.length - 1 ? "DONE" : "NEXT",
     () => { if (page + 1 === TUTORIAL_PAGES.length) close(); else g.helpPage = page + 1; });
 }
-/** Ash upgrades stay unchanged. The second tab is deliberately inert and
- * contains no payment, premium or store-provider reference.
+/** The 3-tab Shop keeps its title, Ash and close action on a separate
+ * header row; tabs never overlap the close hitbox at y=13..29.
  */
 export function drawShopTabs(ctx: any, g: any, meta: any, rows: any[], close: () => void) {
   frame(ctx, 24, 8, 272, 164);
   drawText(ctx, "SHOP", 32, 13, "#ffd98a");
-  const ash = "ASH " + Math.floor(meta.ash || 0);
-  drawText(ctx, ash, 270 - textW(ash), 13, "#e6d2a2");
+  const ash = "BANKED ASH " + Math.floor(meta.ash || 0);
+  drawText(ctx, ash, 272 - textW(ash), 13, "#e6d2a2");
   exit(ctx, g, close);
-  const tab = g.shopTab === 1 ? 1 : 0;
-  action(ctx, g, 30, 25, 124, "UPGRADES",
-    () => { g.shopTab = 0; g.menuSel = 0; g.upConfirm = null; }, true, tab === 0);
-  action(ctx, g, 166, 25, 124, "COMING SOON",
-    () => { g.shopTab = 1; g.menuSel = 0; g.upConfirm = null; }, true, tab === 1);
-  if (tab === 1) {
-    drawTextC(ctx, "MORE TO DISCOVER", 160, 81, "#e6cf98");
-    drawTextC(ctx, "COMING SOON", 160, 94, "#aab7ca");
-    drawTextC(ctx, "NOTHING TO BUY HERE YET.", 160, 107, "#8496b2");
-    return;
+  const tab = Math.max(0, Math.min(2, g.shopTab || 0));
+  for (const [id, label, x] of [[0,"UPGRADES",30],[1,"PETS",116],[2,"COMING SOON",202]] as const) {
+    action(ctx,g,x,33,82,label,()=>{g.shopTab=id;g.menuSel=0;g.upConfirm=null;},true,tab===id);
   }
-  g.menuSel = Math.max(0, Math.min(g.menuSel || 0, rows.length - 1));
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i], y = 43 + i * 15;
-    if (i === g.menuSel) {
-      ctx.fillStyle = "rgba(255,218,147,0.13)";
-      ctx.fillRect(28, y, 264, 15);
-      ctx.fillStyle = "#dcb779";
-      ctx.fillRect(28, y + 1, 2, 13);
+  if (tab === 2) {
+    drawTextC(ctx, "MORE TO DISCOVER", 160, 84, "#e6cf98");
+    drawTextC(ctx, "COMING SOON", 160, 97, "#aab7ca");
+    drawTextC(ctx, "NOTHING TO BUY HERE YET.", 160, 110, "#8496b2");
+  } else {
+    g.menuSel = Math.max(0, Math.min(g.menuSel || 0, rows.length - 1));
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i], y = 52 + i * 15;
+      if (i === g.menuSel) {
+        ctx.fillStyle = "rgba(255,218,147,0.13)";
+        ctx.fillRect(28,y,264,15);
+        ctx.fillStyle = "#dcb779";
+        ctx.fillRect(28,y+1,2,13);
+      }
+      drawText(ctx, r.label, 34, y + 1, !r.enabled ? "#8f9cae" : "#ffe3b4");
+      drawText(ctx, r.right, 285 - textW(r.right), y + 1, "#c8b89b");
+      drawText(ctx, r.desc, 34, y + 8, "#a6b4c6");
+      const index = i;
+      g.zones.push({x:28,y,w:264,h:15,onDown:()=>{g.menuSel=index;rows[index].onDown();}});
     }
-    drawText(ctx, r.label, 34, y + 1, !r.enabled ? "#8f9cae" : "#ffe3b4");
-    drawText(ctx, r.right, 285 - textW(r.right), y + 1, "#c8b89b");
-    drawText(ctx, r.desc, 34, y + 8, "#a6b4c6");
-    const index = i;
-    g.zones.push({ x: 28, y, w: 264, h: 15, onDown: () => {
-      g.menuSel = index; rows[index].onDown();
-    } });
   }
-  drawTextC(ctx, "ASH UPGRADES STAY WITH YOU", 160, 158, "#acbad0");
+  drawTextC(ctx, tab === 1 ? "PETS ARE PERMANENT. EQUIP ONE AT A TIME."
+    : "ASH IS BANKED BY ENDING A RUN",160,158,"#acbad0");
 }

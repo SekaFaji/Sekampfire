@@ -97,7 +97,9 @@ function resumeRun(g: any, data: any) {
     }));
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
-  g.ui = "run";
+  g.ui = g.victoryPending ? "win" : "run";
+  if (g.victoryPending) g.lastResult = {kind:"won",nights:g.night,ash:Math.floor(g.ashEarned)};
+  g.won = flag("won") || g.victoryPending;
   g.menu = null;
   g.resumeData = null;
   g.keys = {};

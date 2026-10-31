@@ -404,6 +404,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearPit = Math.abs(p.x - CX) < 22;
   const nearBench = Math.abs(p.x - BENCH_X) < 22;
   const nearPile = Math.abs(p.x - PILE_X) < 22;
+  const nearMuseum = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
   const tree = nearestTree(g, p);
   if (g.stokeCd > 0) g.stokeCd -= dt;
 
@@ -411,7 +412,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.pressE) {
     g.pressE = false;
     if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
-      if (nearBench && !g.builtBench) {
+      if (nearMuseum) {
+        g.menu = "museum";
+        g.menuSel = 0;
+        g.keys.act = false;
+      } else if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
           cb.toast("Hammering away. It is almost up.");
@@ -662,6 +667,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
+  else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
   else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
@@ -1905,8 +1911,11 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const nearPit2 = Math.abs(p.x - CX) < 22;
     const nearBench2 = Math.abs(p.x - BENCH_X) < 22;
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
+    const nearMuseum2 = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
     const tr = nearestTree(g, p);
-    if (nearBench2) {
+    if (nearMuseum2) {
+      drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
+    } else if (nearBench2) {
       const lbl = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");
     }

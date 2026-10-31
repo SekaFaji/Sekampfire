@@ -52,7 +52,8 @@ describe("character states", () => {
     expect(stick.counts.rotations).toBe(1);
     expect(axe.counts.rotations).toBe(1);
     expect(stick.pixels.some(p => p.color === "#91aab4")).toBe(false);
-    expect(axe.pixels.some(p => p.color === "#91aab4")).toBe(true);
+    expect(axe.pixels.some(p => p.color === "#ba8046")).toBe(true);
+    expect(axe.pixels.some(p => p.color === "#91aab4")).toBe(false);
     expect(stick.counts.saves).toBe(stick.counts.restores);
     expect(axe.counts.saves).toBe(axe.counts.restores);
   });

@@ -18,11 +18,12 @@ function loadMeta(): any {
         for (const u of UPGRADES) up[u.id] = Math.min(u.max, safeCount(m.up && m.up[u.id]));
         return { ash: safeCount(m.ash), totalAsh: safeCount(m.totalAsh),
           best: safeCount(m.best), runs: safeCount(m.runs),
-          wonEver: !!m.wonEver, up };
+          wonEver: !!m.wonEver, up,
+          petEquipped: m.petEquipped === null ? null : up.dog ? "dog" : null };
       }
     }
   } catch (e) { /* Corrupted local saves should never prevent the game starting. */ }
-  return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {} };
+  return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null };
 }
 
 

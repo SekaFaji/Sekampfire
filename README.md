@@ -11,7 +11,7 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 - **Wood Axe:** crafted axe now uses a brown carved wooden wedge and bindings; Grandpa's Axe remains metallic.
 - **Camp improvements:** the **BUILD** button now includes **Fireplace, Workbench and Log Storage**, each upgradeable twice with wood. The first selection arms a confirmation; tapping again pays wood.
 - **First-tier requirement:** improve all three stations to level 1 before the final **Cabin and Hearth** stage. Level 2 upgrades are optional.
-- Fireplace tiers strengthen warmth near the campfire and reduce fuel burn. Log storage tiers provide 12 and then 20 extra capacity beyond the previous limit. Workbench tiers unlock the **Kindling Bundle** and **Ember Lantern** recipes; a mastered workbench reduces future craft prices by 2 wood.
+- Fireplace tiers strengthen warmth near the campfire and reduce fuel burn. Log storage tiers provide 20 and then 20 more capacity beyond the previous limit. Workbench tiers unlock the **Kindling Bundle** and **Ember Lantern** recipes; a mastered workbench reduces future craft prices by 2 wood.
 - The workbench upgrade is also available inside the workbench menu. Built stations change sprite appearances as they improve.
 - These are **run-scoped**, not permanent Ash upgrades. Existing saved runs use the same v1 checkpoint key; absent station levels load as zero.
 

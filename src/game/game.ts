@@ -406,6 +406,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         } else cb.toast("Bring 15 logs here to build the workbench.");
       } else if (nearBench) {
         g.menu = "bench";
+        g.craftTab=0;
         g.menuSel = 0;
         g.craftConfirm = null;
         g.buildConfirm = null;
@@ -1040,7 +1041,9 @@ function benchRows(g: any, meta: any) {
   });
   // Convenient alternate place to improve the workbench itself.
   recipes.push(stationUpgradeRow(g, "bench"));
-  return recipes;
+  // Tools keep the starting essentials discoverable. Supplies contain
+  // firekeeping gear and the workbench's own upgrade.
+  return g.craftTab === 1 ? recipes.slice(3) : recipes.slice(0,3);
 }
 
 function shopRows(g: any, meta: any) {
@@ -1120,8 +1123,8 @@ function doBuildAction(g: any, meta: any) {
 }
 
 function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[]) {
-  const n = rows.length;
-  const pw = 272, ph = 32 + n * 15 + 12;
+  const n = rows.length, tabs = g.menu === "build" || g.menu === "bench";
+  const pw = 272, ph = 32 + n * 15 + 12 + (tabs ? 18 : 0);
   const x0 = Math.round((W - pw) / 2);
   const y0 = Math.max(8, Math.round((H - ph) / 2) - 4);
   panel(ctx, x0, y0, pw, ph);
@@ -1129,6 +1132,23 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
   drawText(ctx, right, x0 + pw - 24 - textW(right), y0 + 5, "#cfc2f0");
   closeZone(ctx, g, x0 + pw - 12, y0 + 5);
   let y = y0 + 16;
+  if (tabs) {
+    const isBuild = g.menu === "build";
+    const active = isBuild ? g.buildTab : g.craftTab;
+    const labels = isBuild ? ["STRUCTURES","UPGRADES"] : ["TOOLS","SUPPLIES"];
+    for (let t = 0; t < 2; t++) {
+      const tx = x0 + 7 + t * 129;
+      px(ctx, tx, y, 124, 15, t===active ? "#77502e" : "#29394b");
+      px(ctx, tx, y, 124, 1, t===active ? "#d4ad74" : "#657389");
+      drawTextC(ctx, labels[t], tx + 62, y + 4, "#ffe6ba");
+      const index = t;
+      g.zones.push({x:tx,y,w:124,h:15,onDown:()=>{
+        if (isBuild) g.buildTab=index; else g.craftTab=index;
+        g.menuSel=0;g.buildConfirm=null;g.craftConfirm=null;
+      }});
+    }
+    y += 18;
+  }
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     if (i === g.menuSel) {
@@ -1163,6 +1183,7 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
 }
 
 function buildRows(g: any, meta: any) {
+  if (g.buildTab === 1) return stationIds.map(id => stationUpgradeRow(g, id));
   const rows: any[] = [];
   const total = () => g.player.wood + g.stored;
   if (g.stage < 6) {
@@ -1183,7 +1204,6 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
-  for (const id of stationIds) rows.push(stationUpgradeRow(g, id));
   return rows;
 }
 
@@ -1383,7 +1403,7 @@ function drawRunChrome(ctx: any, g: any) {
     onUp: () => { g.keys.act = false; g.chopBlocked = false; },
   });
   uiButton(ctx, g, 77, H - 22, 47, 18, "BUILD", {
-    water: true, onDown: () => { g.menu = "build"; g.menuSel = 0; g.keys.act = false; },
+    water: true, onDown: () => { g.menu = "build"; g.buildTab=0; g.menuSel = 0; g.keys.act = false; },
   });
   const t = g.player.torchT;
   const tLbl = t > 0 ? "TORCH " + Math.ceil(t) : "TORCH";

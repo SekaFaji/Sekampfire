@@ -44,7 +44,7 @@ describe("real station upgrade progression", () => {
     expect(g.ashEarned).toBe(6);
   });
   it("enforces two tiers, costs and no negative wood or repeat purchases", () => {
-    const g=camp(); g.player.wood=0;g.stored=60;
+    const g=camp(); g.player.wood=30;g.stored=70;
     for(const [id,first,second] of [["hearth",10,18],["bench",10,16],["pile",12,20]] as const){
       expect(stationCost(g,id)).toBe(first);
       expect(purchaseStation(g,id)).toBe(true);

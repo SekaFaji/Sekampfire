@@ -19,8 +19,11 @@ import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable,
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
-  // Reset all UI pointers, particle state and transient actions before restore.
+  // Reset transient objects without dropping bound end-of-run/fullscreen
+  // callbacks. These are attached once by the React shell.
+  const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  g.cb = cb; g.fsToggle = fsToggle;
   const n = (key: string, lo: number, hi: number, fallback: number) =>
     finiteRange(data[key], lo, hi, fallback);
   const flag = (key: string) => data[key] === true;
@@ -171,7 +174,9 @@ function spawnTrees(g: any, count: number) {
 }
 
 function startRunEngine(g: any, meta: any) {
+  const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  g.cb = cb; g.fsToggle = fsToggle;
   genScenery(g, Math.floor(Math.random() * 1e9));
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
@@ -199,7 +204,9 @@ function goEndless(g: any) {
 }
 
 function setupTitleScene(g: any) {
+  const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  g.cb = cb; g.fsToggle = fsToggle;
   genScenery(g, 777);
   spawnTrees(g, 26);
   g.time = DAY_LEN - 3;

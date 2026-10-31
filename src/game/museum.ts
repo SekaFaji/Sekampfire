@@ -126,5 +126,5 @@ export function drawMuseumPage(ctx: any, g: any, meta: any, close:()=>void): voi
     drawText(ctx,unlocked?log.name:"UNKNOWN LOG",x+44,y+10,unlocked?"#e5d7c2":"#8797ac");
     drawText(ctx,unlocked?log.rarity:"NOT FOUND",x+44,y+22,unlocked?log.color:"#67768b");
   });
-  drawTextC(ctx,meta.museumBuilt?"FIND UNIQUE LOGS BY CHOPPING TREES":"COLLECTIONS STAY THROUGH EVERY RUN",160,160,"#9eafbf");
+  if (meta.museumBuilt) drawTextC(ctx,"FIND UNIQUE LOGS BY CHOPPING TREES",160,160,"#9eafbf");
 }

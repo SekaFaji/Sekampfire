@@ -42,8 +42,8 @@ describe("real station upgrade progression", () => {
     expect(canCompleteCabin(g)).toBe(true);
     // The player still has to gather the cabin's 65 wood after upgrading.
     expect(buildRows(g,meta)[0].enabled).toBe(false);
-    g.player.wood = 21;
-    g.stored = 52; // Woodshed 40 + level-one log rack 12.
+    g.player.wood = 5;
+    g.stored = 60; // Woodshed 40 + level-one log rack 20.
     expect(buildRows(g,meta)[0].enabled).toBe(true);
     expect(g.ashEarned).toBe(6);
   });
@@ -63,9 +63,9 @@ describe("real station upgrade progression", () => {
   it("new storage tiers raise real capacity while preserving woodshed stage bonus", () => {
     const g=camp(); g.stage=0;
     expect(pileCap(g)).toBe(12);
-    g.campUpgrades.pile=1;expect(pileCap(g)).toBe(24);
-    g.campUpgrades.pile=2;expect(pileCap(g)).toBe(44);
-    g.stage=4;expect(pileCap(g)).toBe(72);
+    g.campUpgrades.pile=1;expect(pileCap(g)).toBe(32);
+    g.campUpgrades.pile=2;expect(pileCap(g)).toBe(52);
+    g.stage=4;expect(pileCap(g)).toBe(80);
     g.builtPile=false;expect(pileCap(g)).toBe(0);
   });
   it("station perks improve fire retention, wood-stoking and lantern duration", () => {

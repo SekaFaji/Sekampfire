@@ -15,6 +15,7 @@ import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot,
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
+import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 
 function resumeRun(g: any, data: any) {
   if (!data) return;
@@ -56,7 +57,10 @@ function resumeRun(g: any, data: any) {
   g.pileLogs = n("pileLogs", 0, SITE_COST, 0);
   g.benchBuildT = n("benchBuildT", -1, BUILD_TIME, -1);
   g.pileBuildT = n("pileBuildT", -1, BUILD_TIME, -1);
-  g.stored = n("stored", 0, 40, 0);
+  g.campUpgrades = Object.fromEntries(stationIds.map(id => [
+    id, Math.floor(finiteRange(data.campUpgrades?.[id], 0, 2, 0))
+  ]));
+  g.stored = n("stored", 0, 72, 0);
   g.trees = data.trees.slice(0, 150).filter((t: any) =>
     t && typeof t === "object" && Number.isFinite(t.x) && Number.isFinite(t.y)
       && Number.isFinite(t.id)).map((t: any) => ({
@@ -120,6 +124,7 @@ function createEngine(): any {
     won: false, endlessMode: false, endlessN: 0, over: false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
+    campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
@@ -360,7 +365,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     g.pressT = false;
     if (g.fireLit && p.torchT <= 0 && g.fuel > 12) {
       g.fuel -= 8;
-      p.torchT = meta.up.scarf ? 50 : 30;
+      p.torchT = (meta.up.scarf ? 50 : 30) + stationTorchBonus(g);
       cb.toast("You take an ember. The fire dimmed a little.");
     } else if (!g.fireLit) {
       cb.toast("No fire to take an ember from.");
@@ -396,6 +401,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         g.menu = "bench";
         g.menuSel = 0;
         g.craftConfirm = null;
+        g.buildConfirm = null;
         g.keys.act = false;
       } else if (nearPit) {
         if (!g.fireLit) {
@@ -414,10 +420,10 @@ function update(g: any, meta: any, dt: number, cb: any) {
           }
         } else if (p.wood > 0 && g.fuel < 99) {
           p.wood--;
-          g.fuel = Math.min(100, g.fuel + 16);
+          g.fuel = Math.min(100, g.fuel + stationStokeGain(g));
         } else if (g.stored > 0 && g.fuel < 99) {
           g.stored--;
-          g.fuel = Math.min(100, g.fuel + 16);
+          g.fuel = Math.min(100, g.fuel + stationStokeGain(g));
         }
       } else if (nearPile && !g.builtPile) {
         g.keys.act = false;
@@ -454,8 +460,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // ---- hold action: keep chopping / stoking ----
   if (g.keys.act && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
     if (nearPit && g.fireLit && g.stokeCd <= 0 && g.fuel < 99) {
-      if (p.wood > 0) { p.wood--; g.fuel = Math.min(100, g.fuel + 16); g.stokeCd = 0.3; }
-      else if (g.stored > 0) { g.stored--; g.fuel = Math.min(100, g.fuel + 16); g.stokeCd = 0.3; }
+      if (p.wood > 0) { p.wood--; g.fuel = Math.min(100, g.fuel + stationStokeGain(g)); g.stokeCd = 0.3; }
+      else if (g.stored > 0) { g.stored--; g.fuel = Math.min(100, g.fuel + stationStokeGain(g)); g.stokeCd = 0.3; }
     } else if (!nearPit && !nearBench && !nearPile && tree) {
       p.chopTree = tree;
       p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
@@ -629,7 +635,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (g.stage >= 5 && Math.abs(p.x - CX) < 50) drain *= 0.6;
   let d = drain;
   const wr = 20 + f * 34;
-  if (g.fireLit && Math.abs(p.x - CX) < wr) d -= 6 * (g.stage >= 2 ? 1.25 : 1);
+  if (g.fireLit && Math.abs(p.x - CX) < wr) d -= 6 * (g.stage >= 2 ? 1.25 : 1) + stationLevel(g, "hearth") * 0.7;
   if (g.aurora && g.isNight) d -= 0.3;
   p.warmth = clamp(p.warmth - d * dt, 0, 100);
   if (p.warmth <= 0) {
@@ -645,6 +651,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (g.weather === "rain" && g.stage < 3) burn *= 1.35;
     if (g.weather === "blizzard") burn *= 1.8;
     if (g.crafts.refl) burn *= 0.8;
+    burn *= stationFuelFactor(g);
     g.fuel -= burn * dt;
     if (g.fuel <= 0) {
       g.fuel = 0; g.fireLit = false;
@@ -927,6 +934,7 @@ function closeZone(ctx: any, g: any, x: number, y: number) {
 // close the open menu; settings opened from pause returns to the pause menu
 function closeMenu(g: any) {
   g.craftConfirm = null;
+  g.buildConfirm = null;
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
     g.menu = "settings";
     g.menuSel = 0;
@@ -1036,6 +1044,7 @@ function moveSel(g: any, meta: any, dir: number) {
   if (!rows.length) return;
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
   if (g.menu === "bench") g.craftConfirm = null;
+  if (g.menu === "build" || g.menu === "bench") g.buildConfirm = null;
 }
 
 function activateSel(g: any, meta: any) {
@@ -1047,6 +1056,7 @@ function activateSel(g: any, meta: any) {
 
 function doBuildAction(g: any, meta: any) {
   if (g.stage >= 6) { g.menu = null; return; }
+  if (g.stage === 5 && !canCompleteCabin(g)) { toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
   const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
   if (g.player.wood + g.stored < cost) { toast(g, "Not enough wood."); return; }
   const fromCarried = Math.min(g.player.wood, cost);
@@ -1631,6 +1641,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;
   if (g.menu !== "bench") g.craftConfirm = null;
+  if (g.menu !== "bench" && g.menu !== "build") g.buildConfirm = null;
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
   const q = clamp(g.time / total, 0, 1);

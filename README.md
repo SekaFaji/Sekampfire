@@ -4,6 +4,12 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 
 **Play:** https://sekafaji.github.io/Sekampfire/
 
+## Patch #28: Endless Night mode preview (locked)
+
+- The title screen now has a subdued **ENDLESS NIGHT** button directly above **HOW TO PLAY**.
+- Tapping it opens a short **COMING SOON** explanation for a possible future standalone survival mode. It does not start gameplay, unlock content, spend Ash or modify saves.
+- The existing campaign, its finite Long Night finale, the win/bank choice and optional **Continue Surviving** are unchanged. Endless Night is a separate mode proposal whose rules are still being designed.
+
 ## Patch #27: Grooty and cleaner gameplay messages
 
 - **Cleaner screen:** the 203×25 always-visible tutorial objective banner is gone. The small `?` button below the resource HUD opens the same guide, and talking to Grooty in the camp still shows every tutorial task.
@@ -16,7 +22,7 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 - **Five levels per run:** First Flame, Log Storage, Tools of the Trade, A Warmer Home and the Homestead. The current objective is tracked during gameplay and can be expanded into a checklist.
 - **Grooty:** a friendly talking tree with a face stays beside the camp to explain the next task. Approach the tree and press ACT, or tap the small ? button to see its advice.
 - **Runs reset to Level 1:** progress in the five lessons is not permanent. Existing permanent Ash purchases and the Museum remain permanent; future Camp Legacy Ash upgrades will be designed separately.
-- **Long Night:** after the final cabin, the existing one-night finale and Bank/Continue choice remain unchanged in this foundation patch. The new escalating endless Long Night is reserved for a follow-up update.
+- **Long Night:** after the final cabin, the existing one-night finale and Bank/Continue choice remain unchanged in this foundation patch. A separate optional Endless Night mode is only a locked preview for now.
 - **Museum:** no title-menu entry. Build the permanent collection hut inside the camp and use ACT to visit it; existing collections are not lost.
 
 ## Permanent progression, companions and log collecting

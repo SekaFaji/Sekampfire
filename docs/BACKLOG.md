@@ -3,10 +3,12 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 — user-approved unfinished features / fixes
+- [x] Patch #28: locked ENDLESS NIGHT preview added directly above How to Play in the title-screen right-side controls. Click opens Coming Soon explanation with keyboard/touch close; no new gameplay mode, save keys or Ash costs. Source tests added; phone layout QA still required.
+
 - [x] Patch #27: rename Grooty across visible dialogue, world labels and tutorials; replace persistent objective panel with a tiny ? shortcut and use one queued top-center fading message strip for temporary events. Source tests added; real Android visual QA pending.
 
 - [x] Patch #26 source: five real run-scoped tutorial levels with optional guide HUD access, fixed talking-tree guide Grooty with ACT dialogue and dynamic hints, Museum removed from title actions but retained as camp building. Version-one run checkpoints store objective counters; new runs reset to Level 1. Automated tests added; Android browser playtesting still pending.
-- [ ] Next gameplay patch (planned): transform the Long Night into a lasting, escalating survival mode after all tutorial levels. Preserve clear Ash banking and existing saves while changing it.
+- [ ] Future optional separate **Endless Night** game mode: concept not finalized. Keep the current finite campaign Long Night and its Bank/Continue choices as-is. The menu preview is intentionally locked until a later design decision.
 - [ ] Later: Ash-funded Camp Legacy upgrades preserving actual station levels between runs. No permanent tutorial level unlocks.
 
 - [x] Patch #23: compact dynamic title menu, separate Shop header and Upgrades/Pets/Coming Soon tabs, compact Build Structures/Upgrades and Craft Tools/Supplies tabs, banked vs pending Ash labels, Long Night victory choice to bank or continue and resume safe checkpoint. Source-tested; phone QA pending.

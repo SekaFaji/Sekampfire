@@ -18,7 +18,8 @@ import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
-import { ROOTY_X, drawRooty, advanceGuide, drawGuideHud, drawGuideDialog } from "./guide";
+import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
+import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -129,8 +130,7 @@ function resumeRun(g: any, data: any, meta?: any) {
 
 
 function toast(g: any, text: string) {
-  g.toasts.push({ text, life: 4.6 });
-  if (g.toasts.length > 3) g.toasts.shift();
+  addStatusMessage(g, text);
 }
 
 // ============ engine ============
@@ -204,7 +204,7 @@ function startRunEngine(g: any, meta: any) {
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
-  toast(g, "Rooty the talking tree can guide you beside the camp.");
+  toast(g, "Grooty the talking tree can guide you beside the camp.");
 }
 
 function startRun(g: any, meta: any) {
@@ -414,7 +414,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearBench = Math.abs(p.x - BENCH_X) < 22;
   const nearPile = Math.abs(p.x - PILE_X) < 22;
   const nearMuseum = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
-  const nearRooty = Math.abs(p.x - ROOTY_X) < 17;
+  const nearGrooty = Math.abs(p.x - GROOTY_X) < 17;
   const tree = nearestTree(g, p);
   if (g.stokeCd > 0) g.stokeCd -= dt;
 
@@ -426,7 +426,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         g.menu = "museum";
         g.menuSel = 0;
         g.keys.act = false;
-      } else if (nearRooty) {
+      } else if (nearGrooty) {
         g.menu = "guide";
         g.keys.act = false;
       } else if (nearBench && !g.builtBench) {
@@ -684,7 +684,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
   else if (nearMuseum) g.actionLabel = "MUSEUM";
-  else if (nearRooty) g.actionLabel = "TALK";
+  else if (nearGrooty) g.actionLabel = "TALK";
   else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
   else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
@@ -704,11 +704,8 @@ function updateAmbient(g: any, dt: number) {
   const ease = 1 - Math.exp(-Math.max(0, dt) * 13);
   g.moveFeedbackLeft += ((g.pleft || g.keys.left) ? 1 - g.moveFeedbackLeft : -g.moveFeedbackLeft) * ease;
   g.moveFeedbackRight += ((g.pright || g.keys.right) ? 1 - g.moveFeedbackRight : -g.moveFeedbackRight) * ease;
-  // toasts
-  for (let i = g.toasts.length - 1; i >= 0; i--) {
-    g.toasts[i].life -= dt;
-    if (g.toasts[i].life <= 0) g.toasts.splice(i, 1);
-  }
+  // One visible event at a time, fixed near the upper HUD.
+  tickStatusMessages(g, dt);
   // sparks
   if (g.fireLit) {
     g.sparkAcc += dt;
@@ -891,20 +888,6 @@ function drawHUD(ctx: any, g: any, meta: any) {
   if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
     const t = "THE LONG NIGHT";
     drawText(ctx, t, Math.round(W / 2 - textW(t) / 2), 44, "#8fd0ff");
-  }
-}
-
-// toasts: centered mid-screen above the player, soft shadow, no black box
-function drawToasts(ctx: any, g: any) {
-  const list = g.toasts;
-  for (let idx = 0; idx < list.length; idx++) {
-    const t = list[list.length - 1 - idx];
-    const f = clamp(t.life / 0.8, 0, 1);
-    const y = 60 - idx * 9;
-    const x = Math.round(W / 2 - textW(t.text) / 2);
-    ctx.globalAlpha = f;
-    drawTextO(ctx, t.text, x, y, "#ffe9c8", "#060a18");
-    ctx.globalAlpha = 1;
   }
 }
 
@@ -1133,7 +1116,7 @@ function activateSel(g: any, meta: any) {
 
 function doBuildAction(g: any, meta: any) {
   if (g.stage >= 6) { g.menu = null; return; }
-  if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH ROOTYS FIRST FOUR LESSONS BEFORE THE CABIN."); return; }
+  if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH GROOTYS FIRST FOUR LESSONS BEFORE THE CABIN."); return; }
   if (g.stage === 5 && !canCompleteCabin(g)) { toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
   const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
   if (g.player.wood + g.stored < cost) { toast(g, "Not enough wood."); return; }
@@ -1225,11 +1208,11 @@ function buildRows(g: any, meta: any) {
     rows.push({
       label: STAGES[g.stage].name.toUpperCase(),
       right: needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
-      desc: needsGuide ? "COMPLETE ROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
+      desc: needsGuide ? "COMPLETE GROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
         g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
       h: 15, enabled: !needsGuide && !needsStations && total() >= cost,
       onDown: () => {
-        if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH ROOTYS FIRST FOUR LESSONS."); return; }
+        if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH GROOTYS FIRST FOUR LESSONS."); return; }
         if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
         if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
         if (g.buildConfirm !== "stage") { g.buildConfirm = "stage"; return; }
@@ -1899,7 +1882,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   }
 
   const ents: { y: number; f: () => void }[] = [];
-  ents.push({ y: 149.5, f: () => drawRooty(ctx, g) });
+  ents.push({ y: 149.5, f: () => drawGrooty(ctx, g) });
   ents.push({ y: 150, f: () => drawStructures(ctx, g) });
   for (const tr of g.trees) {
     if (tr.x < camX - 60 || tr.x > camX + W + 60) continue;
@@ -1936,10 +1919,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const nearBench2 = Math.abs(p.x - BENCH_X) < 22;
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
     const nearMuseum2 = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
-    const nearRooty2 = Math.abs(p.x - ROOTY_X) < 17;
+    const nearGrooty2 = Math.abs(p.x - GROOTY_X) < 17;
     const tr = nearestTree(g, p);
-    if (nearRooty2) {
-      drawTextO(ctx,"ROOTY",ROOTY_X-10,103-bob,"#ffe9a0","#060a18");
+    if (nearGrooty2) {
+      drawTextO(ctx,"GROOTY",GROOTY_X-10,103-bob,"#ffe9a0","#060a18");
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
     } else if (nearBench2) {
@@ -2067,10 +2050,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   if (!inRun) drawScreen(ctx, g, meta);
   if (inRun && !g.over) {
     drawHUD(ctx, g, meta);
-    if (!g.menu) { drawGuideHud(ctx, g); drawMovementFeedback(ctx, g); drawRunChrome(ctx, g); drawSideArrows(ctx, g); }
+    if (!g.menu) { drawGuideShortcut(ctx, g); drawMovementFeedback(ctx, g); drawRunChrome(ctx, g); drawSideArrows(ctx, g); }
   }
   if (g.menu) drawMenu(ctx, g, meta);
-  if (inRun) drawToasts(ctx, g);
+  if (inRun) drawStatusMessages(ctx, g);
 }
 
 // ============ App ============

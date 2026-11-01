@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
-import { GUIDE_LEVELS, ROOTY_X, guideProgress, advanceGuide, drawRooty, drawGuideHud, drawGuideDialog } from "./guide";
+import { GUIDE_LEVELS, GROOTY_X, guideProgress, advanceGuide, drawGrooty, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { createEngine, update, titleActions, handleKey, buildRows } from "./game";
 import { captureRunSnapshot, loadRunSnapshot } from "./save";
 
@@ -88,8 +88,8 @@ describe("Patch #26 run-scoped tutorial",()=>{
     expect(title.guideChops).toBe(0);
     expect(title.guideStoredTen).toBe(false);
   });
-  it("Rooty is interactable near camp, is not chop target and does not appear in title menu",()=>{
-    const g=running();g.player.x=ROOTY_X;g.pressE=true;
+  it("Grooty is interactable near camp, is not chop target and does not appear in title menu",()=>{
+    const g=running();g.player.x=GROOTY_X;g.pressE=true;
     const m=meta();update(g,m,0.02,callbacks());
     expect(g.menu).toBe("guide");expect(g.keys.act).toBe(false);
     expect(g.actionLabel).toBe("TALK");
@@ -98,10 +98,14 @@ describe("Patch #26 run-scoped tutorial",()=>{
     ]);
     handleKey(g,m,"enter",true);expect(g.menu).toBeNull();
   });
-  it("draws Rooty, the objective tracker and dialogue as finite pixel shapes",()=>{
+  it("draws Grooty, the minimal help shortcut and dialogue as finite pixel shapes",()=>{
     const g=running();const c=canvas();
-    drawRooty(c.ctx,g);expect(c.rects.length).toBeGreaterThan(20);
-    drawGuideHud(c.ctx,g);expect(g.zones.some((z:any)=>z.y===46)).toBe(true);
+    drawGrooty(c.ctx,g);expect(c.rects.length).toBeGreaterThan(20);
+    const before = c.rects.length;
+    drawGuideShortcut(c.ctx,g);
+    expect(g.zones.some((z:any)=>z.x===8&&z.y===45&&z.w===17&&z.h===16)).toBe(true);
+    // The former 203x25 objective panel must never cover the world.
+    expect(c.rects.slice(before).some(r=>r.w>=200&&r.h>=20)).toBe(false);
     g.zones.at(-1).onDown();expect(g.menu).toBe("guide");
     drawGuideDialog(c.ctx,g,()=>{g.menu=null;});
     expect(g.zones.some((z:any)=>z.x===268&&z.y===13)).toBe(true);

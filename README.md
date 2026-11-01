@@ -4,6 +4,14 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 
 **Play:** https://sekafaji.github.io/Sekampfire/
 
+## Patch #26: First Camp tutorials and Rooty
+
+- **Five levels per run:** First Flame, Log Storage, Tools of the Trade, A Warmer Home and the Homestead. The current objective is tracked during gameplay and can be expanded into a checklist.
+- **Rooty:** a friendly talking tree with a face stays beside the camp to explain the next task. Approach the tree and press ACT, or tap the objective tracker to see its advice.
+- **Runs reset to Level 1:** progress in the five lessons is not permanent. Existing permanent Ash purchases and the Museum remain permanent; future Camp Legacy Ash upgrades will be designed separately.
+- **Long Night:** after the final cabin, the existing one-night finale and Bank/Continue choice remain unchanged in this foundation patch. The new escalating endless Long Night is reserved for a follow-up update.
+- **Museum:** no title-menu entry. Build the permanent collection hut inside the camp and use ACT to visit it; existing collections are not lost.
+
 ## Permanent progression, companions and log collecting
 
 - **Finish / continue:** After surviving the Long Night, choose **End Run & Bank Ash** or **Continue Surviving**, which retains unbanked Run Ash. Victory choice persists across checkpoint reloads. Menu > End Run requires confirmation. Existing Ash earning rates and the Long Night trigger have not been changed.
@@ -11,7 +19,7 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 - **Shop:** **Upgrades / Pets / Coming Soon** with the close button above the three tabs. Owned Good Dog remains on the original `up.dog` permanent save key and can be equipped/unequipped through Pets.
 - **Dog:** follows the player, carries at most **2 actual dropped logs**, deposits them in wood storage or hands them to the player, and never creates wood from nothing. Cargo and position persist with run checkpoints.
 - **BUILD / CRAFT:** Build uses **Structures / Upgrades** tabs; the workbench uses **Tools / Supplies**.
-- **Permanent Log Museum:** build once under **BUILD > Structures** for 20 wood, then visit from Build or the title screen. The small display building appears in later runs; its collection is permanent.
+- **Permanent Log Museum:** build once under **BUILD > Structures** for 20 wood, then visit from Build or the physical camp building. The small display building appears in later runs; its collection is permanent.
 - **Four original log collectibles:** Ordinary (common), Twisted (uncommon), Hand (rare) and Figure-8 (legendary). The first felled tree grants the common discovery; later unique finds use provisional odds for playtesting. They are separate from ordinary firewood and cannot be accidentally burned.
 - Future run tiers, a later Long Night, and a new Ash-from-firewood formula remain **undecided**, not secretly implemented.
 

@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { GUIDE_LEVELS, ROOTY_X, guideProgress, advanceGuide, drawRooty, drawGuideHud, drawGuideDialog } from "./guide";
-import { createEngine, update, titleActions, handleKey } from "./game";
+import { createEngine, update, titleActions, handleKey, buildRows } from "./game";
 import { captureRunSnapshot, loadRunSnapshot } from "./save";
 
 let storage: Map<string,string>;
@@ -66,6 +66,15 @@ describe("Patch #26 run-scoped tutorial",()=>{
     expect(guideProgress(g).level).toBeNull();
     expect(notes.at(-1)).toContain("ALL LESSONS");
     advanceGuide(g,t=>notes.push(t));expect(notes).toHaveLength(3);
+  });
+  it("requires finished teaching levels before the last cabin, not only enough wood",()=>{
+    const g=running(),m=meta();
+    g.stage=5;g.builtBench=true;g.builtPile=true;
+    g.campUpgrades={hearth:1,bench:1,pile:1};g.player.wood=5;g.stored=70;
+    expect(buildRows(g,m)[0].right).toBe("FINISH LV1-4");
+    expect(buildRows(g,m)[0].enabled).toBe(false);
+    g.guideLevel=4;
+    expect(buildRows(g,m)[0].enabled).toBe(true);
   });
   it("retains guide state in a v1 checkpoint but resets the level when starting a new run",()=>{
     const g=running();g.guideLevel=3;g.guideChops=4;g.guideStokes=2;g.guideStoredTen=true;

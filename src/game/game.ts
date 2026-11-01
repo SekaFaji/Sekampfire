@@ -18,7 +18,7 @@ import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
-import { GGROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
+import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 
 function resumeRun(g: any, data: any, meta?: any) {

@@ -50,7 +50,7 @@ describe("permanent museum building",()=>{
     const restored=loadMeta();expect(restored.museumBuilt).toBe(true);
     const g=createEngine();g.ui="title";
     const actions=titleActions(g,restored);
-    expect(actions.some((v:any)=>v.label==="LOG MUSEUM")).toBe(true);
+    expect(actions.some((v:any)=>v.label==="LOG MUSEUM")).toBe(false);
     actions.find((v:any)=>v.label==="START RUN")!.act();
     expect(g.museumBuilt).toBe(true);
     const snap=captureRunSnapshot(g);

@@ -1,11 +1,11 @@
 import { CX } from "./config";
-import { drawText, drawTextC, textW } from "./font";
+import { drawText, drawTextC } from "./font";
 import { px } from "./renderUtils";
 import { stationLevel } from "./campProgress";
 import { visualSeason } from "./palette";
 
-/** Rooty is a fixed world NPC, never a harvestable tree or an inventory item. */
-export const ROOTY_X = CX - 92;
+/** Grooty is a fixed world NPC, never a harvestable tree or an inventory item. */
+export const GROOTY_X = CX - 92;
 type Objective = { label: string; hint: string; met: (g: any) => boolean };
 type Level = { title: string; greeting: string; goals: Objective[] };
 export const GUIDE_LEVELS: Level[] = [
@@ -55,14 +55,14 @@ export function advanceGuide(g: any, notify: (message: string) => void) {
     climbed++;
   }
   if (climbed) {
-    if (g.guideLevel === GUIDE_LEVELS.length) notify("ROOTY: ALL LESSONS DONE! PREPARE FOR THE LONG NIGHT.");
-    else notify("ROOTY: WELL DONE! LEVEL " + (g.guideLevel + 1) + " - " + GUIDE_LEVELS[g.guideLevel].title);
+    if (g.guideLevel === GUIDE_LEVELS.length) notify("GROOTY: ALL LESSONS DONE! PREPARE FOR THE LONG NIGHT.");
+    else notify("GROOTY: WELL DONE! LEVEL " + (g.guideLevel + 1) + " - " + GUIDE_LEVELS[g.guideLevel].title);
   }
 }
 
 /** Original pixel shapes: seasonal leaves, friendly carved face and subtle blink. */
-export function drawRooty(ctx: any, g: any) {
-  const x = ROOTY_X, y = 150, season = visualSeason(g);
+export function drawGrooty(ctx: any, g: any) {
+  const x = GROOTY_X, y = 150, season = visualSeason(g);
   const leaves = season === "autumn" ? ["#b56d38","#d19a4e","#e9ba68"]
     : season === "winter" ? ["#5d8790","#8db4b8","#dde9e8"]
     : season === "spring" ? ["#608f5f","#87b66c","#aed388"]
@@ -87,19 +87,19 @@ export function drawRooty(ctx: any, g: any) {
   px(ctx,x,y-15,3,1,"#513421");
 }
 
-export function drawGuideHud(ctx: any, g: any) {
+/** The full checklist lives in Grooty's dialogue; only a tiny help
+ * shortcut remains on the game screen. It stays outside the event bar. */
+export function drawGuideShortcut(ctx: any, g: any) {
   if (g.menu || g.ui !== "run") return;
-  const p = guideProgress(g);
-  const title = p.level ? "LV " + (p.index + 1) + "/5 " + p.level.title : "TUTORIAL COMPLETE";
-  const objective = p.next ? p.next.label : "PREPARE FOR THE LONG NIGHT";
-  ctx.fillStyle = "rgba(8,16,29,0.82)";
-  ctx.fillRect(6,46,203,25);
-  ctx.fillStyle = "#aa814a";ctx.fillRect(6,46,203,1);
-  drawText(ctx,title,11,50,"#f1d499");
-  drawText(ctx,objective,11,60,"#dce4df");
-  ctx.fillStyle="#3e594a";ctx.fillRect(190,50,14,16);
-  drawTextC(ctx,"?",197,55,"#f4dfac");
-  g.zones.push({x:6,y:46,w:203,h:25,onDown:()=>{g.menu="guide";g.keys.act=false;}});
+  const x=8,y=45,w=17,h=16;
+  ctx.fillStyle="rgba(10,21,32,0.70)";
+  ctx.fillRect(x,y,w,h);
+  ctx.fillStyle="#9c845e";
+  ctx.fillRect(x,y,w,1);
+  ctx.fillRect(x,y,1,h);
+  ctx.fillRect(x+w-1,y,1,h);
+  drawTextC(ctx,"?",x+9,y+5,"#ffe0a8");
+  g.zones.push({x,y,w,h,onDown:()=>{g.menu="guide";g.keys.act=false;}});
 }
 
 export function drawGuideDialog(ctx: any, g: any, close: () => void) {
@@ -107,7 +107,7 @@ export function drawGuideDialog(ctx: any, g: any, close: () => void) {
   ctx.fillStyle="rgba(9,16,26,0.97)";ctx.fillRect(x,y,w,h);
   ctx.fillStyle="#b38a54";
   ctx.fillRect(x,y,w,1);ctx.fillRect(x,y+h-1,w,1);ctx.fillRect(x,y,1,h);ctx.fillRect(x+w-1,y,1,h);
-  drawText(ctx,"ROOTY - YOUR CAMP GUIDE",32,16,"#f5d69a");
+  drawText(ctx,"GROOTY - YOUR CAMP GUIDE",32,16,"#f5d69a");
   ctx.fillStyle="#405368";ctx.fillRect(268,13,21,16);
   drawTextC(ctx,"X",278,18,"#ffdfb0");
   g.zones.push({x:268,y:13,w:21,h:16,onDown:close});
@@ -124,7 +124,7 @@ export function drawGuideDialog(ctx: any, g: any, close: () => void) {
     });
     if (p.next) {
       ctx.fillStyle="#2a3743";ctx.fillRect(29,133,262,25);
-      drawText(ctx,"ROOTY SAYS:",34,137,"#f4d295");
+      drawText(ctx,"GROOTY SAYS:",34,137,"#f4d295");
       drawText(ctx,p.next.hint,34,147,"#c6dbe3");
     }
     drawText(ctx,p.done+" / "+p.total+" GOALS COMPLETE",32,122,"#bbc9d3");

@@ -80,3 +80,35 @@ export function drawShopTabs(ctx: any, g: any, meta: any, rows: any[], close: ()
   drawTextC(ctx, tab === 1 ? "PETS ARE PERMANENT. EQUIP ONE AT A TIME."
     : "ASH IS BANKED BY ENDING A RUN",160,158,"#acbad0");
 }
+
+/** Informational preview only. This is NOT a playable mode or an unlock;
+ * the normal campaign Long Night and its finish/continue options are unchanged.
+ */
+export function drawEndlessNightPreview(ctx: any, g: any, close: () => void) {
+  frame(ctx, 24, 8, 272, 164);
+  drawText(ctx, "ENDLESS NIGHT", 34, 17, "#ffd98a");
+  exit(ctx, g, close);
+
+  ctx.fillStyle = "#182633";
+  ctx.fillRect(34, 36, 252, 100);
+  ctx.fillStyle = "#5b7689";
+  ctx.fillRect(34, 36, 252, 1);
+
+  // A small original moon-and-stars motif fits the existing pixel UI.
+  ctx.fillStyle = "#e5d2a5";
+  ctx.fillRect(153, 46, 13, 13);
+  ctx.fillStyle = "#182633";
+  ctx.fillRect(160, 43, 10, 13);
+  ctx.fillStyle = "#96b4c5";
+  for (const [x, y] of [[135, 53], [185, 57], [147, 65], [177, 47]] as const) {
+    ctx.fillRect(x, y, 1, 3);
+    ctx.fillRect(x - 1, y + 1, 3, 1);
+  }
+
+  drawTextC(ctx, "COMING SOON", 160, 74, "#ffd98a");
+  drawTextC(ctx, "A SEPARATE SURVIVAL CHALLENGE.", 160, 92, "#d7e3ea");
+  drawTextC(ctx, "KEEP THE CAMPFIRE BURNING.", 160, 102, "#d7e3ea");
+  drawTextC(ctx, "SURVIVE AS LONG AS YOU CAN.", 160, 112, "#d7e3ea");
+  drawTextC(ctx, "DETAILS STILL BEING PLANNED.", 160, 126, "#93aaba");
+  action(ctx, g, 103, 145, 114, "BACK TO MENU", close);
+}

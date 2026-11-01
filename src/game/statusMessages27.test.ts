@@ -27,7 +27,7 @@ describe("Patch #27 compact message flow",()=>{
     expect(bar).toBeDefined();
     expect(bar!.x).toBeGreaterThanOrEqual(50);
     expect(bar!.x+bar!.w).toBeLessThanOrEqual(270);
-    expect(rects.filter(r=>r.y===43&&r.h>=13)).toHaveLength(1);
+    expect(rects.filter(r=>r.y===43&&r.h>=13&&r.w>=78)).toHaveLength(1);
     expect(g.toasts).toHaveLength(2);
     tickStatusMessages(g,4);
     expect(g.toasts[0].text).toBe("Workbench built.");

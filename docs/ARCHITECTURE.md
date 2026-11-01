@@ -9,6 +9,7 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/config.ts` — stage, crafting, upgrade and world constants
 - `src/game/companion.ts` — conservative real-drop retrieval by equipped Good Dog, with carry and delivery rules
 - `src/game/museum.ts` — permanent collectible definitions, discovery rolls and original pixel-art museum rendering
+- `src/game/guide.ts` - pure run-local tutorial objectives, Rooty's permanent world sprite, guide dialogue and HUD
 - `src/game/campProgress.ts` — run-scoped station upgrades, costs, progression requirements and safe wood debit
 - `src/game/nightSky.ts` — independently tested aurora and meteor parade rendering/probabilities
 - `src/game/rules.ts` — extracted pure carry/storage rules with unit tests
@@ -37,7 +38,7 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 1. Game simulation must remain separate from browser-specific packaging. Do not introduce Android or iOS bridge calls into the simulation.
 2. Maintain the original 320×180 logical coordinate system; adapt display scaling around it.
 3. Browser build must remain fully standalone/offline-asset compatible: no runtime Babel, React CDN or Tailwind CDN.
-4. Keep existing localStorage key names and checkpoint versions unchanged unless explicitly implementing tested migrations. Do not silently invalidate existing saves.
+4. Keep existing localStorage key names and checkpoint versions unchanged unless explicitly implementing tested migrations. Tutorial progress belongs to a run snapshot, not permanent meta; old v1 snapshots must resume. Do not silently invalidate existing saves.
 5. Source changes must not alter unrelated game balance or art. Make focused PRs with a list of affected files, behaviour and test evidence.
 6. Never claim a device/browser playtest that was not performed. Add real-device test notes separately.
 7. Keep the public privacy policy accurate if new analytics, SDKs or networking are introduced.

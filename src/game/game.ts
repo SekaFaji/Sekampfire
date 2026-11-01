@@ -18,7 +18,7 @@ import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
-import { ROOTY_X, drawRooty, guideProgress, advanceGuide, drawGuideHud, drawGuideDialog } from "./guide";
+import { ROOTY_X, drawRooty, advanceGuide, drawGuideHud, drawGuideDialog } from "./guide";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -1133,6 +1133,7 @@ function activateSel(g: any, meta: any) {
 
 function doBuildAction(g: any, meta: any) {
   if (g.stage >= 6) { g.menu = null; return; }
+  if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH ROOTYS FIRST FOUR LESSONS BEFORE THE CABIN."); return; }
   if (g.stage === 5 && !canCompleteCabin(g)) { toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
   const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
   if (g.player.wood + g.stored < cost) { toast(g, "Not enough wood."); return; }
@@ -1220,13 +1221,15 @@ function buildRows(g: any, meta: any) {
   if (g.stage < 6) {
     const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
     const needsStations = g.stage === 5 && !canCompleteCabin(g);
+    const needsGuide = g.stage === 5 && g.guideLevel < 4;
     rows.push({
       label: STAGES[g.stage].name.toUpperCase(),
-      right: needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
-      desc: needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
+      right: needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
+      desc: needsGuide ? "COMPLETE ROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
         g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
-      h: 15, enabled: !needsStations && total() >= cost,
+      h: 15, enabled: !needsGuide && !needsStations && total() >= cost,
       onDown: () => {
+        if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH ROOTYS FIRST FOUR LESSONS."); return; }
         if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
         if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
         if (g.buildConfirm !== "stage") { g.buildConfirm = "stage"; return; }

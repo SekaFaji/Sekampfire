@@ -18,7 +18,7 @@ const camp = () => {
 };
 describe("real station upgrade progression", () => {
   it("starts at level zero and requires all three station levels for final cabin", () => {
-    const g=camp();g.stage=5;
+    const g=camp();g.stage=5;g.guideLevel=4;
     expect(canCompleteCabin(g)).toBe(false);
     const blocked=buildRows(g,meta)[0];
     expect(blocked.right).toContain("3 STATIONS LV1");

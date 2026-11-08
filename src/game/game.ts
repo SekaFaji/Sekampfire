@@ -1929,8 +1929,16 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
     const nearMuseum2 = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
     const nearGrooty2 = Math.abs(p.x - GROOTY_X) < 17;
+    const leftFence2 = !g.fenceLeft && Math.abs(p.x - WEST_POST_X) < 13;
+    const rightFence2 = !g.fenceRight && Math.abs(p.x - EAST_POST_X) < 13;
+    const expansion2 = campEstablished(g) && g.campExpansion < 1 &&
+      Math.abs(p.x - EXPANSION_MARKER_X) < 14;
     const tr = nearestTree(g, p);
-    if (nearGrooty2) {
+    if (leftFence2 || rightFence2) {
+      drawTextO(ctx, "1 LOG", p.x - 10, 112 - bob, "#ffe9a0", "#060a18");
+    } else if (expansion2) {
+      drawTextO(ctx, "5 LOGS", p.x - 12, 112 - bob, "#ffe9a0", "#060a18");
+    } else if (nearGrooty2) {
       drawTextO(ctx,"GROOTY",GROOTY_X-10,103-bob,"#ffe9a0","#060a18");
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");

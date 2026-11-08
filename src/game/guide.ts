@@ -2,6 +2,7 @@ import { CX } from "./config";
 import { drawText, drawTextC } from "./font";
 import { px } from "./renderUtils";
 import { stationLevel } from "./campProgress";
+import { campEstablished } from "./campBoundary";
 import { visualSeason } from "./palette";
 
 /** Grooty is a fixed world NPC, never a harvestable tree or an inventory item. */
@@ -9,13 +10,16 @@ export const GROOTY_X = CX - 92;
 type Objective = { label: string; hint: string; met: (g: any) => boolean };
 type Level = { title: string; greeting: string; goals: Objective[] };
 export const GUIDE_LEVELS: Level[] = [
-  { title: "FIRST FLAME", greeting: "HELLO, LITTLE CAMPER! KEEP THAT FIRE ALIVE.", goals: [
+  { title: "FIRST CAMP", greeting: "WELCOME! LET US CLAIM A PLACE TO CALL HOME.", goals: [
     { label: "CHOP ONE TREE", hint: "HOLD ACT NEAR A TREE. KEEP STILL!", met: g => (g.guideChops || 0) >= 1 },
+    { label: "BUILD THE LEFT FENCE POST", hint: "PLACE ONE LOG AT THE LEFT CAMP MARKER.", met: g => !!g.fenceLeft },
+    { label: "BUILD THE RIGHT FENCE POST", hint: "PLACE ONE LOG AT THE RIGHT CAMP MARKER.", met: g => !!g.fenceRight },
     { label: "LIGHT THE CAMPFIRE", hint: "PRESS ACT BESIDE THE FIRE PIT.", met: g => !!g.everLit },
     { label: "FEED ONE LOG TO THE FIRE", hint: "BRING WOOD TO THE LIT FIRE AND PRESS ACT.", met: g => (g.guideStokes || 0) >= 1 },
     { label: "SURVIVE YOUR FIRST NIGHT", hint: "STAY WARM UNTIL THE SUN RISES.", met: g => g.night >= 1 && !g.isNight },
   ] },
-  { title: "LOG STORAGE", greeting: "A CAMP NEEDS A PLACE FOR ITS WOOD.", goals: [
+  { title: "LOG STORAGE", greeting: "FIVE LOGS CAN CLAIM MORE LAND TO THE EAST.", goals: [
+    { label: "EXPAND YOUR CAMP FOR 5 LOGS", hint: "FIND THE EAST FENCE MARKER AND PRESS ACT.", met: g => campEstablished(g) && g.campExpansion >= 1 },
     { label: "BUILD LOG STORAGE", hint: "CARRY 15 LOGS TO THE PILE SITE AND USE ACT.", met: g => !!g.builtPile },
     { label: "STORE 10 LOGS", hint: "TAKE LOGS TO THE FINISHED PILE AND PRESS ACT.", met: g => !!g.guideStoredTen || g.stored >= 10 },
     { label: "UPGRADE STORAGE TO LV1", hint: "OPEN BUILD, THEN UPGRADES.", met: g => stationLevel(g, "pile") >= 1 },
@@ -119,7 +123,7 @@ export function drawGuideDialog(ctx: any, g: any, close: () => void) {
     drawText(ctx,"LEVEL " + (p.index+1) + " - " + p.level.title,32,39,"#ffdf9d");
     drawText(ctx,p.level.greeting,32,51,"#a7ceb3");
     p.level.goals.forEach((goal,i)=>{
-      drawText(ctx,(goal.met(g)?"[X] ":"[ ] ")+goal.label,32,68+i*14,
+      drawText(ctx,(goal.met(g)?"[X] ":"[ ] ")+goal.label,32,65+i*9,
         goal.met(g)?"#91b99d":"#e6dac3");
     });
     if (p.next) {

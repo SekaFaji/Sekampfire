@@ -3,6 +3,8 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #30 source: fix overlapping lock and double-drawn ENDLESS NIGHT title label by drawing the button exactly once with separated icon/text spacing. Preserve the Coming Soon popup and original touch zone; pixel-geometry regression test added. Phone visual QA pending.
+
 - [x] Patch #29: source-based HUD refresh at 320x180. Live full-width framed minimap, three compact resource panels, wooden in-water buttons, warmer Grooty shortcut and queued notification strip. Touch hitboxes and gameplay preserved; added render geometry tests. Phone screenshot QA remains pending.
 
 - [x] Patch #28: locked ENDLESS NIGHT preview added directly above How to Play in the title-screen right-side controls. Click opens Coming Soon explanation with keyboard/touch close; no new gameplay mode, save keys or Ash costs. Source tests added; phone layout QA still required.

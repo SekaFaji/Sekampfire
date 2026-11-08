@@ -2,7 +2,9 @@
 
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
-## Priority 0 — user-approved unfinished features / fixes
+## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #29: source-based HUD refresh at 320x180. Live full-width framed minimap, three compact resource panels, wooden in-water buttons, warmer Grooty shortcut and queued notification strip. Touch hitboxes and gameplay preserved; added render geometry tests. Phone screenshot QA remains pending.
+
 - [x] Patch #28: locked ENDLESS NIGHT preview added directly above How to Play in the title-screen right-side controls. Click opens Coming Soon explanation with keyboard/touch close; no new gameplay mode, save keys or Ash costs. Source tests added; phone layout QA still required.
 
 - [x] Patch #27: rename Grooty across visible dialogue, world labels and tutorials; replace persistent objective panel with a tiny ? shortcut and use one queued top-center fading message strip for temporary events. Source tests added; real Android visual QA pending.

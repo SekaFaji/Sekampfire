@@ -20,6 +20,7 @@ import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
+import { drawCampHUD, drawCampMinimap } from "./hud";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -837,60 +838,6 @@ function skyColor(q: number): string {
 }
 
 // ============ HUD ============
-function drawBar(ctx: any, x: number, y: number, w: number, v: number, c1: string, c2: string) {
-  ctx.fillStyle = "rgba(8,12,28,0.75)";
-  ctx.fillRect(x - 1, y - 1, w + 2, 7);
-  ctx.fillStyle = "rgba(60,70,100,0.8)";
-  ctx.fillRect(x, y, w, 5);
-  const f = (clamp(v, 0, 100) / 100) * w;
-  if (f > 0) {
-    ctx.fillStyle = c1;
-    ctx.fillRect(x, y, Math.round(f / 2), 5);
-    ctx.fillStyle = c2;
-    ctx.fillRect(x + Math.round(f / 2), y, Math.round(f) - Math.round(f / 2), 5);
-  }
-}
-
-function drawHUD(ctx: any, g: any, meta: any) {
-  const cap = carryCap(g, meta);
-  const wood = clamp(g.player.wood, 0, cap);
-  // Subtle transparent ribbons preserve readability without covering the sky.
-  ctx.fillStyle = "rgba(8,16,31,0.53)";
-  ctx.fillRect(2, 2, 78, 20);
-  ctx.fillRect(3, 23, 194, 15);
-  ctx.fillRect(W - 85, 19, 83, g.endlessMode ? 32 : 25);
-  ctx.fillStyle = "rgba(185,157,112,0.34)";
-  ctx.fillRect(3, 22, 194, 1);
-  ctx.fillRect(W - 85, 19, 83, 1);
-  drawText(ctx, "WARMTH", 6, 5, "#dce3ee");
-  drawBar(ctx, 32, 6, 46, g.player.warmth, "#c23b2e", "#ff8a5c");
-  drawText(ctx, "FUEL", 6, 15, "#dce3ee");
-  drawBar(ctx, 32, 16, 46, g.fireLit ? g.fuel : 0, "#ff8c1a", "#ffe9a0");
-
-  drawText(ctx, "WOOD", 6, 26, "#e8dcc8");
-  drawText(ctx, wood + "/" + cap, 28, 26, wood >= cap ? "#ffd98a" : "#f1e5cd");
-  // Very small wood progress indicator: the numeric count remains authoritative.
-  ctx.fillStyle = "rgba(73,58,39,0.85)";
-  ctx.fillRect(6, 34, 54, 2);
-  if (wood > 0) {
-    ctx.fillStyle = wood >= cap ? "#f0bb69" : "#bd9360";
-    ctx.fillRect(6, 34, Math.round(54 * wood / cap), 2);
-  }
-  if (g.builtPile) drawText(ctx, "PILE " + g.stored + "/" + pileCap(g), 69, 26, "#d8d0bd");
-  drawText(ctx, "RUN ASH " + Math.floor(g.ashEarned), 126, 26, "#d8caf2");
-  if (g.player.torchT > 0) drawText(ctx, "TORCH " + Math.ceil(g.player.torchT), 6, 40, "#ffd977");
-
-  const rx = W - 81;
-  drawText(ctx, g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1), rx, 22, "#e0e5ef");
-  drawText(ctx, WEATHER_TEXT[g.weather] || "", rx, 30, "#c8d2e8");
-  drawText(ctx, visualSeason(g).toUpperCase() + " " + seasonDay(g) + "/7", rx, 38, "#dfc99a");
-  if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, rx, 46, "#8fd0ff");
-  if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
-    const t = "THE LONG NIGHT";
-    drawText(ctx, t, Math.round(W / 2 - textW(t) / 2), 44, "#8fd0ff");
-  }
-}
-
 // ============ in-canvas UI ============
 function panel(ctx: any, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = "rgba(8,12,26,0.9)";
@@ -914,22 +861,32 @@ function uiButton(ctx: any, g: any, x: number, y: number, w: number, h: number, 
   ctx.fillStyle = water ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.4)";
   ctx.fillRect(x + 1, y + 2, w, h - 1);
   if (water) {
-    ctx.fillStyle = !enabled ? "rgba(17,32,45,0.34)"
-      : opts.accent ? (pressed ? "rgba(128,78,34,0.48)" : "rgba(112,68,32,0.38)")
-      : (pressed ? "rgba(41,79,95,0.48)" : "rgba(23,49,66,0.42)");
+    // Source-based wooden button treatment, using the same layout and hitzones.
+    ctx.fillStyle = !enabled ? "rgba(21,29,36,0.76)"
+      : opts.accent ? (pressed ? "rgba(92,53,27,0.93)" : "rgba(92,60,35,0.90)")
+      : (pressed ? "rgba(46,46,42,0.93)" : "rgba(25,40,47,0.87)");
     ctx.fillRect(x, y, w, h);
+    const edge = !enabled ? "#655647" : opts.accent ? "#f3cb7e" : "#bba078";
+    ctx.fillStyle = edge;
+    ctx.fillRect(x, y, w, 1);
+    ctx.fillRect(x, y, 1, h);
+    ctx.fillStyle = !enabled ? "#473f3a" : opts.accent ? "#9e6e39" : "#74553a";
+    ctx.fillRect(x, y + h - 1, w, 1);
+    ctx.fillRect(x + w - 1, y + 1, 1, h - 1);
+    ctx.fillStyle = !enabled ? "#384148" : "#d5b58b";
+    ctx.fillRect(x + 2, y + 2, 1, 1);
+    if (pressed) {
+      ctx.fillStyle = "rgba(255,214,146,0.25)";
+      ctx.fillRect(x + 2, y + 2, w - 4, 2);
+    }
   } else {
     px(ctx, x, y, w, h, enabled ? (sel ? "#7a4a1e" : "#4a3020") : "#1e2438");
-  }
-  const bc = enabled ? (water ? (opts.accent ? "#ffd98a" : "#9bc5d2") : (sel ? "#ffd98a" : "#b08a5a")) : "#3a4462";
-  ctx.fillStyle = bc;
-  ctx.fillRect(x, y, w, 1);
-  ctx.fillRect(x, y + h - 1, w, 1);
-  ctx.fillRect(x, y, 1, h);
-  ctx.fillRect(x + w - 1, y, 1, h);
-  if (water && pressed) {
-    ctx.fillStyle = "rgba(255,221,159,0.58)";
-    ctx.fillRect(x + 3, y + h - 3, w - 6, 1);
+    const edge = enabled ? (sel ? "#ffd98a" : "#b08a5a") : "#3a4462";
+    ctx.fillStyle = edge;
+    ctx.fillRect(x, y, w, 1);
+    ctx.fillRect(x, y + h - 1, w, 1);
+    ctx.fillRect(x, y, 1, h);
+    ctx.fillRect(x + w - 1, y, 1, h);
   }
   drawTextC(ctx, label, x + w / 2, y + Math.floor(h / 2) - 2, enabled ? "#ffe9c8" : "#5a6480");
   g.zones.push({ x, y, w, h, onDown: enabled ? opts.onDown : undefined, onUp: opts.onUp });
@@ -2028,43 +1985,13 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // Reflect animated world objects (not the solid ground or HUD).
   drawReflectiveRiver(ctx, g, reflection, rctx, darkA, camX);
 
-  // minimap - a wide strip reaching from beside the warmth bar to the right edge
-  if (inRun) {
-    const mx0 = 82, mw = W - 4 - mx0, my0 = 4, mh = 14;
-    ctx.fillStyle = "rgba(8,10,28,0.5)";
-    ctx.fillRect(mx0, my0, mw, mh);
-    const mm = (wx: number) => mx0 + (wx / WORLD_W) * mw;
-    // snow ground line
-    ctx.fillStyle = colors.ridge;
-    ctx.fillRect(mx0 + 1, my0 + 11, mw - 2, 1);
-    for (const tr of g.trees) {
-      const tx = Math.round(mm(tr.x));
-      ctx.fillStyle = colors.treeLight;
-      ctx.fillRect(tx, my0 + 4, 2, 5);
-      ctx.fillStyle = "#5a4232";
-      ctx.fillRect(tx, my0 + 9, 1, 2);
-    }
-    if (g.builtBench) {
-      ctx.fillStyle = "#a06a3a";
-      ctx.fillRect(Math.round(mm(BENCH_X)), my0 + 9, 2, 2);
-    }
-    if (g.builtPile) {
-      ctx.fillStyle = "#8a5a34";
-      ctx.fillRect(Math.round(mm(PILE_X)), my0 + 9, 2, 2);
-    }
-    const fx = Math.round(mm(CX));
-    ctx.fillStyle = "#ffb52e";
-    ctx.fillRect(fx - 1, my0 + 7, 3, 4);
-    ctx.fillStyle = g.fireLit ? (Math.sin(g.animT * 9) > 0 ? "#ffe9a0" : "#ff8c1a") : "#6a4a26";
-    ctx.fillRect(fx, my0 + 5, 1, 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(Math.round(mm(g.player.x)), my0 + 6, 2, 5);
-  }
+  // Same real world trees, camp sites and player location; newly framed.
+  if (inRun) drawCampMinimap(ctx, g, colors);
 
   // screen chrome
   if (!inRun) drawScreen(ctx, g, meta);
   if (inRun && !g.over) {
-    drawHUD(ctx, g, meta);
+    drawCampHUD(ctx, g, meta);
     if (!g.menu) { drawGuideShortcut(ctx, g); drawMovementFeedback(ctx, g); drawRunChrome(ctx, g); drawSideArrows(ctx, g); }
   }
   if (g.menu) drawMenu(ctx, g, meta);
@@ -2073,5 +2000,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome };
 export { W, H } from "./config";

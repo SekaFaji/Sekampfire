@@ -92,9 +92,9 @@ export function drawGrooty(ctx: any, g: any) {
 export function drawGuideShortcut(ctx: any, g: any) {
   if (g.menu || g.ui !== "run") return;
   const x=8,y=45,w=17,h=16;
-  ctx.fillStyle="rgba(10,21,32,0.70)";
+  ctx.fillStyle="rgba(35,54,48,0.90)";
   ctx.fillRect(x,y,w,h);
-  ctx.fillStyle="#9c845e";
+  ctx.fillStyle="#b69a71";
   ctx.fillRect(x,y,w,1);
   ctx.fillRect(x,y,1,h);
   ctx.fillRect(x+w-1,y,1,h);

@@ -62,11 +62,11 @@ export function drawStatusMessages(ctx: any, g: any): void {
   const fadeIn = (MESSAGE_DURATION - current.life) / 0.16;
   const fadeOut = current.life / 0.55;
   ctx.globalAlpha = Math.max(0, Math.min(1, fadeIn, fadeOut));
-  ctx.fillStyle = "rgba(10,18,29,0.79)";
+  ctx.fillStyle = "rgba(22,31,41,0.88)";
   ctx.fillRect(x,y,width,height);
-  ctx.fillStyle = "#cba66f";
+  ctx.fillStyle = "#b88f57";
   ctx.fillRect(x,y,2,height);
-  ctx.fillStyle = "rgba(215,196,146,0.28)";
+  ctx.fillStyle = "rgba(222,187,131,0.42)";
   ctx.fillRect(x+2,y,width-2,1);
   lines.forEach((line,i)=>drawTextC(ctx,line,W/2,y+4+i*8,"#f4e2bd"));
   ctx.globalAlpha = 1;

@@ -13,6 +13,7 @@ const meta: any = { ash: 0, up: {}, best: 0, totalAsh: 0 };
 const camp = () => {
   const g = createEngine();
   g.ui = "run"; g.builtBench = true; g.builtPile = true;
+  g.fenceLeft = true; g.fenceRight = true;
   g.player.wood = 30; g.stored = 64; g.fuel = 80; g.fireLit = true;
   return g;
 };

@@ -21,6 +21,9 @@ import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount,
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap } from "./hud";
+import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
+  campEstablished, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
+  expandCamp, drawCampGround, drawCampFence } from "./campBoundary";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -110,6 +113,14 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.guideChops = Math.floor(finiteRange(data.guideChops,0,100000,g.night>0?1:0));
   g.guideStokes = Math.floor(finiteRange(data.guideStokes,0,100000,g.night>0?1:0));
   g.guideStoredTen = data.guideStoredTen===true || g.stored>=10;
+  // Missing fields indicate a pre-#31 checkpoint. Completed structures or
+  // past tutorial levels are grandfathered, avoiding an impossible build gate.
+  const legacyFence = g.stage > 0 || g.builtBench || g.builtPile || g.guideLevel > 0;
+  g.fenceLeft = data.fenceLeft === undefined ? legacyFence : data.fenceLeft === true;
+  g.fenceRight = data.fenceRight === undefined ? legacyFence : data.fenceRight === true;
+  g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
+  if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
+  clearClaimedTrees(g);
   if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
     g.dog = {
       x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:156,
@@ -149,6 +160,7 @@ function createEngine(): any {
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
+    fenceLeft: false, fenceRight: false, campExpansion: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
@@ -184,7 +196,8 @@ function spawnTrees(g: any, count: number) {
   for (let n = 0; n < count; n++) {
     for (let attempt = 0; attempt < 60; attempt++) {
       const x = 16 + Math.random() * (WORLD_W - 32);
-      if (x > CX - 100 && x < (g.museumBuilt ? MUSEUM_X+20 : CX+56)) continue;
+      if (isCampTreeExcluded(g, x)) continue;
+      if (g.museumBuilt && Math.abs(x - MUSEUM_X) < 25) continue;
       if (g.trees.some((t: any) => Math.abs(t.x - x) < 16)) continue;
       const y = 136 + Math.random() * 18; // Keep pickups clear of foreground water.
       const tier = treeTierFor(x);
@@ -205,7 +218,7 @@ function startRunEngine(g: any, meta: any) {
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
-  toast(g, "Grooty the talking tree can guide you beside the camp.");
+  toast(g, "Grooty can show you how to claim your camp with two log posts.");
 }
 
 function startRun(g: any, meta: any) {
@@ -237,6 +250,7 @@ function setupTitleScene(g: any) {
   g.weather = "clear";
   g.fireLit = true; g.everLit = true; g.fuel = 70; g.stage = 2;
   g.builtBench = true; g.builtPile = true;
+  g.fenceLeft = true; g.fenceRight = true; g.campExpansion = 1;
   g.stored = 6;
   g.player.x = CX + 26; g.player.dir = -1;
   g.eventCd = 2;
@@ -1837,6 +1851,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // world space
   ctx.save();
   ctx.translate(-Math.round(camX), 0);
+  // Cleared camp and palisade sit behind Grooty, structures and player.
+  drawCampGround(ctx, g, colors);
+  drawCampFence(ctx, g);
   for (const s of g.sparkles) {
     if (s.x < camX - 4 || s.x > camX + W + 4) continue;
     px(ctx, s.x, s.y, 1, 1, colors.name === "winter" ? s.c : colors.speckle);

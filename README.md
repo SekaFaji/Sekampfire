@@ -10,6 +10,15 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 - Tapping it opens a short **COMING SOON** explanation for a possible future standalone survival mode. It does not start gameplay, unlock content, spend Ash or modify saves.
 - The existing campaign, its finite Long Night finale, the win/bank choice and optional **Continue Surviving** are unchanged. Endless Night is a separate mode proposal whose rules are still being designed.
 
+## Patch #29: Real-game HUD refinement
+
+- The gameplay minimap is now a **thin, full-width wooden-framed strip**, still driven by the actual world, trees, player, camp structures and fire.
+- **Three compact resource panels** sit directly below the map: warmth/fuel, wood/Run Ash/storage, and day/weather/season with Menu.
+- The existing **single top-center message** and Grooty `?` shortcut keep their previous interaction positions while picking up warmer colors to match the HUD.
+- **Build / ACT / Torch controls** get a restrained wood-and-charcoal pixel-art finish; their mobile touch hitboxes stay exactly the same.
+- Drawn with Sekampfire's existing 320x180 canvas renderer and pixel font. No generated scenery, replacement game sprites, gameplay balance changes or save migration.
+- Automated geometry checks cover the minimap and control positions; final Android visual approval is still needed.
+
 ## Patch #27: Grooty and cleaner gameplay messages
 
 - **Cleaner screen:** the 203×25 always-visible tutorial objective banner is gone. The small `?` button below the resource HUD opens the same guide, and talking to Grooty in the camp still shows every tutorial task.

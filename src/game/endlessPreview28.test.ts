@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createEngine, drawScreen, titleActions, handleKey } from "./game";
-import { drawEndlessNightPreview } from "./menuScreens";
+import { drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
+import { drawText } from "./font";
 import { LONG_NIGHT_LEN, STAGES } from "./config";
 
 function canvas() {
@@ -35,6 +36,34 @@ describe("Patch #28 locked Endless Night preview", () => {
     expect(g.menu).toBe("endlessNightInfo");
     expect(g.ui).toBe("title");
     expect(JSON.stringify(m)).toBe(before);
+  });
+  it("renders the locked title button once, keeping the lock separate from the full label", () => {
+    const recorder = () => {
+      const marks: Array<{x:number;y:number;w:number;h:number;color:string}> = [];
+      let color="";
+      const ctx:any = {
+        set fillStyle(value:string){color=value;},
+        get fillStyle(){return color;},
+        fillRect(x:number,y:number,w:number,h:number){marks.push({x,y,w,h,color});}
+      };
+      return {ctx,marks};
+    };
+    const g=createEngine();g.zones=[];
+    const v=recorder();
+    drawLockedEndlessButton(v.ctx,g,()=>{g.menu="endlessNightInfo";});
+    const label=v.marks.filter(m=>m.color==="#c6ccd2");
+    const lock=v.marks.filter(m=>m.color==="#8393a5");
+    const reference=recorder();
+    drawText(reference.ctx,"ENDLESS NIGHT",254,92,"#c6ccd2");
+    // Identical glyph pixels: no second label or overpainted letters.
+    expect(label).toEqual(reference.marks);
+    expect(Math.min(...label.map(m=>m.x))).toBeGreaterThanOrEqual(254);
+    expect(Math.max(...label.map(m=>m.x))).toBeLessThan(309);
+    expect(Math.max(...lock.map(m=>m.x+m.w))).toBeLessThan(254);
+    expect(g.zones).toHaveLength(1);
+    expect(g.zones[0]).toMatchObject({x:236,y:85,w:74,h:18});
+    g.zones[0].onDown();
+    expect(g.menu).toBe("endlessNightInfo");
   });
   it("explains the unavailable mode and closes via its Back button or X", () => {
     const g=createEngine();g.ui="title";g.menu="endlessNightInfo";g.zones=[];

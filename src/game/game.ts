@@ -1,6 +1,6 @@
 import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, STAGES, CRAFTS, UPGRADES, WEATHER_TEXT } from "./config";
 import { createInputHandlers } from "./input";
-import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview } from "./menuScreens";
+import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier } from "./rules";
 import { AUDIO } from "./audio";
@@ -1548,17 +1548,10 @@ function drawScreen(ctx: any, g: any, meta: any) {
     }
     // This is intentionally a locked PREVIEW, not an unlockable or playable
     // mode. Keep it separate from the normal, finite Long Night finale.
-    uiButton(ctx, g, 236, 85, 74, 18, "ENDLESS NIGHT", {
-      onDown: () => { g.menu = "endlessNightInfo"; g.keys.act = false; }
+    drawLockedEndlessButton(ctx, g, () => {
+      g.menu = "endlessNightInfo";
+      g.keys.act = false;
     });
-    // Subdued locked look, while remaining tappable for the explanation.
-    ctx.fillStyle = "rgba(19,25,37,0.68)";
-    ctx.fillRect(237, 86, 72, 16);
-    drawTextC(ctx, "ENDLESS NIGHT", 275, 92, "#b6bec7");
-    px(ctx, 240, 90, 6, 7, "#8a97a9");
-    px(ctx, 241, 88, 4, 3, "#8a97a9");
-    px(ctx, 242, 89, 2, 2, "#1f2834");
-    px(ctx, 242, 93, 2, 2, "#253342");
 
     // Separate help plaque remains directly underneath.
     uiButton(ctx, g, 236, 107, 74, 18, "HOW TO PLAY", {

@@ -43,6 +43,32 @@ export function drawIllustratedGuide(ctx: any, g: any, close: () => void) {
   action(ctx, g, 234, 150, 57, page === TUTORIAL_PAGES.length - 1 ? "DONE" : "NEXT",
     () => { if (page + 1 === TUTORIAL_PAGES.length) close(); else g.helpPage = page + 1; });
 }
+/** Locked title action with a single pixel-font draw.
+ * The 6px padlock and 51px label have separate, nonoverlapping space within
+ * the original 74x18 touch target. It only opens the Coming Soon explanation. */
+export function drawLockedEndlessButton(ctx: any, g: any, onDown: () => void) {
+  const x = 236, y = 85, w = 74, h = 18;
+  ctx.fillStyle = "#17202b";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#ad9067";
+  ctx.fillRect(x, y, w, 1);
+  ctx.fillRect(x, y + h - 1, w, 1);
+  ctx.fillRect(x, y, 1, h);
+  ctx.fillRect(x + w - 1, y, 1, h);
+  ctx.fillStyle = "#28313b";
+  ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+  // Padlock: shackle, body and keyhole, deliberately left of the label.
+  ctx.fillStyle = "#8393a5";
+  ctx.fillRect(x + 6, y + 3, 4, 5);
+  ctx.fillRect(x + 5, y + 6, 6, 7);
+  ctx.fillStyle = "#28313b";
+  ctx.fillRect(x + 7, y + 5, 2, 2);
+  ctx.fillStyle = "#b5bec7";
+  ctx.fillRect(x + 7, y + 9, 2, 2);
+  drawText(ctx, "ENDLESS NIGHT", x + 18, y + 7, "#c6ccd2");
+  g.zones.push({ x, y, w, h, onDown });
+}
+
 /** The 3-tab Shop keeps its title, Ash and close action on a separate
  * header row; tabs never overlap the close hitbox at y=13..29.
  */

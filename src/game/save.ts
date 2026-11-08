@@ -46,7 +46,8 @@ function captureRunSnapshot(g: any): any {
   const keys = ["time","night","isNight","weather","aurora","nightSkyEvent","fuel","fireLit","everLit",
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
     "ashEarned","won","victoryPending","guideLevel","guideChops","guideStokes","guideStoredTen","depth","builtBench","builtPile","benchLogs","pileLogs",
-    "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades"];
+    "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
+    "fenceLeft","fenceRight","campExpansion"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
   // Keep the existing v1 checkpoint key/version. Persist only validated tier

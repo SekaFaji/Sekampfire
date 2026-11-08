@@ -11,7 +11,8 @@ export const LOG_COLLECTION = [
 ] as const;
 export type MuseumLogId = typeof LOG_COLLECTION[number]["id"];
 export const MUSEUM_COST = 20;
-export const MUSEUM_X = CX+88;
+// Later side building in the first eastward expansion, away from central fire.
+export const MUSEUM_X = CX+168;
 
 export function cleanLogCollection(value: any): Record<MuseumLogId, boolean> {
   const input = value && typeof value === "object" && !Array.isArray(value) ? value : {};

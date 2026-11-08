@@ -31,11 +31,15 @@ function canvas(){
 describe("Patch #26 run-scoped tutorial",()=>{
   it("has five ordered levels teaching actual existing interactions",()=>{
     expect(GUIDE_LEVELS.map(level=>level.title)).toEqual([
-      "FIRST FLAME","LOG STORAGE","TOOLS OF THE TRADE","A WARMER HOME","THE HOMESTEAD"
+      "FIRST CAMP","LOG STORAGE","TOOLS OF THE TRADE","A WARMER HOME","THE HOMESTEAD"
     ]);
     const g=running();
     expect(guideProgress(g).next?.label).toBe("CHOP ONE TREE");
     g.guideChops=1;
+    expect(guideProgress(g).next?.label).toBe("BUILD THE LEFT FENCE POST");
+    g.fenceLeft=true;
+    expect(guideProgress(g).next?.label).toBe("BUILD THE RIGHT FENCE POST");
+    g.fenceRight=true;
     expect(guideProgress(g).next?.label).toBe("LIGHT THE CAMPFIRE");
     g.everLit=true;
     expect(guideProgress(g).next?.label).toBe("FEED ONE LOG TO THE FIRE");
@@ -48,6 +52,7 @@ describe("Patch #26 run-scoped tutorial",()=>{
   });
   it("does not lose the ten-log objective after wood is spent upgrading the storage",()=>{
     const g=running();g.guideLevel=1;g.builtPile=true;g.stored=10;
+    g.fenceLeft=true;g.fenceRight=true;g.campExpansion=1;
     update(g,meta(),0.02,callbacks());
     expect(g.guideStoredTen).toBe(true);
     g.stored=0;g.campUpgrades.pile=1;
@@ -70,6 +75,7 @@ describe("Patch #26 run-scoped tutorial",()=>{
   it("requires finished teaching levels before the last cabin, not only enough wood",()=>{
     const g=running(),m=meta();
     g.stage=5;g.builtBench=true;g.builtPile=true;
+    g.fenceLeft=true;g.fenceRight=true;
     g.campUpgrades={hearth:1,bench:1,pile:1};g.player.wood=5;g.stored=70;
     expect(buildRows(g,m)[0].right).toBe("FINISH LV1-4");
     expect(buildRows(g,m)[0].enabled).toBe(false);

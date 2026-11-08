@@ -13,7 +13,8 @@ afterEach(()=>vi.unstubAllGlobals());
 const meta=()=>({ash:48,totalAsh:60,best:3,runs:1,up:{},petEquipped:null,
   museumBuilt:false,collection:cleanLogCollection(null)});
 const game=()=>{const g=createEngine();g.ui="run";g.menu="build";g.buildTab=0;
-  g.player.wood=5;g.stored=40;g.trees=[];g.pickups=[];return g;};
+  g.player.wood=5;g.stored=40;g.trees=[];g.pickups=[];
+  g.fenceLeft=true;g.fenceRight=true;g.campExpansion=1;return g;};
 function canvas(){
   const marks:Array<{x:number,y:number,w:number,h:number,color:string}>=[];
   let color="";const ctx:any={set fillStyle(v:string){color=v;},get fillStyle(){return color;},

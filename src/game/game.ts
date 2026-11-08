@@ -21,6 +21,9 @@ import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount,
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap } from "./hud";
+import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
+  campEstablished, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
+  expandCamp, drawCampGround, drawCampFence } from "./campBoundary";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -110,6 +113,14 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.guideChops = Math.floor(finiteRange(data.guideChops,0,100000,g.night>0?1:0));
   g.guideStokes = Math.floor(finiteRange(data.guideStokes,0,100000,g.night>0?1:0));
   g.guideStoredTen = data.guideStoredTen===true || g.stored>=10;
+  // Missing fields indicate a pre-#31 checkpoint. Completed structures or
+  // past tutorial levels are grandfathered, avoiding an impossible build gate.
+  const legacyFence = g.stage > 0 || g.builtBench || g.builtPile || g.guideLevel > 0;
+  g.fenceLeft = data.fenceLeft === undefined ? legacyFence : data.fenceLeft === true;
+  g.fenceRight = data.fenceRight === undefined ? legacyFence : data.fenceRight === true;
+  g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
+  if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
+  clearClaimedTrees(g);
   if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
     g.dog = {
       x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:156,
@@ -149,6 +160,7 @@ function createEngine(): any {
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
+    fenceLeft: false, fenceRight: false, campExpansion: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
@@ -184,7 +196,8 @@ function spawnTrees(g: any, count: number) {
   for (let n = 0; n < count; n++) {
     for (let attempt = 0; attempt < 60; attempt++) {
       const x = 16 + Math.random() * (WORLD_W - 32);
-      if (x > CX - 100 && x < (g.museumBuilt ? MUSEUM_X+20 : CX+56)) continue;
+      if (isCampTreeExcluded(g, x)) continue;
+      if (g.museumBuilt && Math.abs(x - MUSEUM_X) < 25) continue;
       if (g.trees.some((t: any) => Math.abs(t.x - x) < 16)) continue;
       const y = 136 + Math.random() * 18; // Keep pickups clear of foreground water.
       const tier = treeTierFor(x);
@@ -205,7 +218,7 @@ function startRunEngine(g: any, meta: any) {
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
-  toast(g, "Grooty the talking tree can guide you beside the camp.");
+  toast(g, "Grooty can show you how to claim your camp with two log posts.");
 }
 
 function startRun(g: any, meta: any) {
@@ -237,6 +250,7 @@ function setupTitleScene(g: any) {
   g.weather = "clear";
   g.fireLit = true; g.everLit = true; g.fuel = 70; g.stage = 2;
   g.builtBench = true; g.builtPile = true;
+  g.fenceLeft = true; g.fenceRight = true; g.campExpansion = 1;
   g.stored = 6;
   g.player.x = CX + 26; g.player.dir = -1;
   g.eventCd = 2;
@@ -416,6 +430,10 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearPile = Math.abs(p.x - PILE_X) < 22;
   const nearMuseum = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
   const nearGrooty = Math.abs(p.x - GROOTY_X) < 17;
+  const leftPost = !g.fenceLeft && Math.abs(p.x - WEST_POST_X) < 13;
+  const rightPost = !g.fenceRight && Math.abs(p.x - EAST_POST_X) < 13;
+  const nearExpansion = campEstablished(g) && g.campExpansion < 1 &&
+    Math.abs(p.x - EXPANSION_MARKER_X) < 14;
   const tree = nearestTree(g, p);
   if (g.stokeCd > 0) g.stokeCd -= dt;
 
@@ -423,13 +441,32 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.pressE) {
     g.pressE = false;
     if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
-      if (nearMuseum) {
+      if (leftPost || rightPost) {
+        g.keys.act = false;
+        const result = placeFencePost(g, leftPost ? "left" : "right");
+        cb.toast(result);
+        if (campEstablished(g)) {
+          AUDIO.effect("build");
+          g.shake = Math.max(g.shake, 0.08);
+        }
+      } else if (nearExpansion) {
+        g.keys.act = false;
+        const result = expandCamp(g);
+        cb.toast(result);
+        if (g.campExpansion >= 1) {
+          AUDIO.effect("build");
+          g.shake = Math.max(g.shake, 0.10);
+        }
+      } else if (nearMuseum) {
         g.menu = "museum";
         g.menuSel = 0;
         g.keys.act = false;
       } else if (nearGrooty) {
         g.menu = "guide";
         g.keys.act = false;
+      } else if (!campEstablished(g) && (nearBench || nearPile)) {
+        g.keys.act = false;
+        cb.toast("BUILD THE LEFT AND RIGHT CAMP POSTS FIRST.");
       } else if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
@@ -684,8 +721,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
+  else if (leftPost || rightPost) g.actionLabel = p.wood > 0 ? "POST 1 LOG" : "GET LOG";
+  else if (nearExpansion) g.actionLabel = p.wood + g.stored >= EXPANSION_COST ? "EXPAND" : "5 LOGS";
   else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearGrooty) g.actionLabel = "TALK";
+  else if (!campEstablished(g) && (nearBench || nearPile)) g.actionLabel = "BUILD POSTS";
   else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
   else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
@@ -944,17 +984,19 @@ function pauseRows(g: any, meta: any) {
 
 function stationUpgradeRow(g: any, id: "hearth" | "bench" | "pile") {
   const info = CAMP_STATIONS[id], level = stationLevel(g, id);
-  const available = stationAvailable(g, id);
+  const fenced = campEstablished(g);
+  const available = fenced && stationAvailable(g, id);
   const maxed = level >= 2, cost = stationCost(g, id);
   const total = g.player.wood + g.stored;
   const confirming = g.buildConfirm === id && available && !maxed && total >= cost;
   return {
     label: info.label + " LV" + level + (maxed ? " MAX" : " -> LV" + (level + 1)),
-    right: maxed ? "MAX" : !available ? "BUILD FIRST" : confirming ? "CONFIRM?" : cost + " WOOD",
-    desc: maxed ? "FULLY UPGRADED" : !available ? "BUILD THIS STATION FIRST"
+    right: maxed ? "MAX" : !fenced ? "BUILD FENCE" : !available ? "BUILD FIRST" : confirming ? "CONFIRM?" : cost + " WOOD",
+    desc: maxed ? "FULLY UPGRADED" : !fenced ? "BUILD BOTH CAMP POSTS FIRST" : !available ? "BUILD THIS STATION FIRST"
       : confirming ? "TAP AGAIN TO UPGRADE" : info.benefits[level],
     h: 15, enabled: available && !maxed && total >= cost,
     onDown: () => {
+      if (!fenced) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
       if (!available) { g.buildConfirm = null; toast(g, "BUILD THE " + info.label + " FIRST."); return; }
       if (maxed) { g.buildConfirm = null; toast(g, info.label + " IS MAX LEVEL."); return; }
       if (g.player.wood + g.stored < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
@@ -1072,6 +1114,7 @@ function activateSel(g: any, meta: any) {
 }
 
 function doBuildAction(g: any, meta: any) {
+  if (!campEstablished(g)) { toast(g,"BUILD BOTH CAMP POSTS FIRST."); return; }
   if (g.stage >= 6) { g.menu = null; return; }
   if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH GROOTYS FIRST FOUR LESSONS BEFORE THE CABIN."); return; }
   if (g.stage === 5 && !canCompleteCabin(g)) { toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
@@ -1162,13 +1205,15 @@ function buildRows(g: any, meta: any) {
     const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
     const needsStations = g.stage === 5 && !canCompleteCabin(g);
     const needsGuide = g.stage === 5 && g.guideLevel < 4;
+    const needsFence = !campEstablished(g);
     rows.push({
       label: STAGES[g.stage].name.toUpperCase(),
-      right: needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
-      desc: needsGuide ? "COMPLETE GROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
+      right: needsFence ? "BUILD FENCE" : needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
+      desc: needsFence ? "PLACE ONE LOG AT EACH CAMP BOUNDARY" : needsGuide ? "COMPLETE GROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
         g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
-      h: 15, enabled: !needsGuide && !needsStations && total() >= cost,
+      h: 15, enabled: !needsFence && !needsGuide && !needsStations && total() >= cost,
       onDown: () => {
+        if (needsFence) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
         if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH GROOTYS FIRST FOUR LESSONS."); return; }
         if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
         if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
@@ -1178,18 +1223,30 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
+  if (campEstablished(g) && g.campExpansion < 1) {
+    rows.push({
+      label: "EASTERN CAMP EXPANSION",
+      right: EXPANSION_COST + " WOOD",
+      desc: "PLACE FIVE LOGS AT THE EAST FENCE MARKER",
+      h: 15, enabled: total() >= EXPANSION_COST,
+      onDown: () => toast(g,"WALK TO THE EAST FENCE MARKER AND PRESS ACT."),
+    });
+  }
   // One-time permanent structure: once purchased it appears in every later
   // run and the unique log collection lives in persistent meta, not run wood.
+  const museumLocked = !meta.museumBuilt && g.campExpansion < 1;
   rows.push({
     label:meta.museumBuilt ? "VISIT LOG MUSEUM" : "BUILD LOG MUSEUM",
     right:meta.museumBuilt ? museumCount(meta)+"/4 FOUND"
-      : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
+      : museumLocked ? "EXPAND CAMP" : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
     desc:meta.museumBuilt ? "PERMANENT COLLECTION - TAP TO VIEW" :
+      museumLocked ? "CLAIM EASTERN LAND BEFORE BUILDING HERE" :
       g.buildConfirm==="museum" ? "TAP AGAIN TO BUILD PERMANENT MUSEUM"
       : "KEEP SPECIAL LOGS THROUGH ALL RUNS",
-    h:15,enabled:!!meta.museumBuilt || total()>=MUSEUM_COST,
+    h:15,enabled:!!meta.museumBuilt || (!museumLocked && total()>=MUSEUM_COST),
     onDown:()=>{
       if(meta.museumBuilt){g.buildConfirm=null;g.menu="museum";return;}
+      if(museumLocked){g.buildConfirm=null;toast(g,"EXPAND CAMP EAST TO UNLOCK THE MUSEUM SITE.");return;}
       if(total()<MUSEUM_COST){g.buildConfirm=null;toast(g,"NOT ENOUGH WOOD.");return;}
       if(g.buildConfirm!=="museum"){g.buildConfirm="museum";return;}
       g.buildConfirm=null;
@@ -1837,6 +1894,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // world space
   ctx.save();
   ctx.translate(-Math.round(camX), 0);
+  // Cleared camp and palisade sit behind Grooty, structures and player.
+  drawCampGround(ctx, g, colors);
+  drawCampFence(ctx, g);
   for (const s of g.sparkles) {
     if (s.x < camX - 4 || s.x > camX + W + 4) continue;
     px(ctx, s.x, s.y, 1, 1, colors.name === "winter" ? s.c : colors.speckle);
@@ -1885,8 +1945,16 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
     const nearMuseum2 = g.museumBuilt && Math.abs(p.x - MUSEUM_X) < 19;
     const nearGrooty2 = Math.abs(p.x - GROOTY_X) < 17;
+    const leftFence2 = !g.fenceLeft && Math.abs(p.x - WEST_POST_X) < 13;
+    const rightFence2 = !g.fenceRight && Math.abs(p.x - EAST_POST_X) < 13;
+    const expansion2 = campEstablished(g) && g.campExpansion < 1 &&
+      Math.abs(p.x - EXPANSION_MARKER_X) < 14;
     const tr = nearestTree(g, p);
-    if (nearGrooty2) {
+    if (leftFence2 || rightFence2) {
+      drawTextO(ctx, "1 LOG", p.x - 10, 112 - bob, "#ffe9a0", "#060a18");
+    } else if (expansion2) {
+      drawTextO(ctx, "5 LOGS", p.x - 12, 112 - bob, "#ffe9a0", "#060a18");
+    } else if (nearGrooty2) {
       drawTextO(ctx,"GROOTY",GROOTY_X-10,103-bob,"#ffe9a0","#060a18");
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");

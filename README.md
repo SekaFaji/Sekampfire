@@ -1,5 +1,17 @@
 # Sekampfire
 
+## Patch #31: Claim and expand your camp
+
+- **First Camp:** Grooty teaches you to chop a tree, place one real log at the western boundary post and one at the eastern post. When both are built, a handcrafted wooden palisade appears behind the camp.
+- **Building gate:** Structure construction and station improvements become available after the two posts are built. Lighting the starter campfire remains possible while claiming land.
+- **Eastern expansion:** in tutorial Level 2, spend five actual logs at the eastern expansion marker to extend the palisade and clear more territory. Trees stop respawning inside claimed land, and existing trees within newly claimed ground become ordinary wood pickups.
+- **Camp organization:** Grooty, workbench, fire and storage remain near the center; the permanently collectible Log Museum is moved into the eastern expansion and unlocked for purchase there. Already-owned Museums remain owned and visitable.
+- **Run-local:** fences and expansions reset each new run. Version-one run checkpoints keep progress, and previously upgraded/crafted camps from older saves are grandfathered into the first fence without losing buildings.
+- **Visual:** original procedural pixel fencing, pointed varied planks, timber crossbeams, posts and subtle cleared ground. All drawn behind existing camp objects, player and wildlife. No collision changes or imported game graphics.
+- Real-device Android appearance and tutorial pacing still need playtesting.
+
+
+
 A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gather wood, keep the fire burning, build a camp and survive the Long Night.
 
 **Play:** https://sekafaji.github.io/Sekampfire/

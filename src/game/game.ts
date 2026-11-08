@@ -984,17 +984,19 @@ function pauseRows(g: any, meta: any) {
 
 function stationUpgradeRow(g: any, id: "hearth" | "bench" | "pile") {
   const info = CAMP_STATIONS[id], level = stationLevel(g, id);
-  const available = stationAvailable(g, id);
+  const fenced = campEstablished(g);
+  const available = fenced && stationAvailable(g, id);
   const maxed = level >= 2, cost = stationCost(g, id);
   const total = g.player.wood + g.stored;
   const confirming = g.buildConfirm === id && available && !maxed && total >= cost;
   return {
     label: info.label + " LV" + level + (maxed ? " MAX" : " -> LV" + (level + 1)),
-    right: maxed ? "MAX" : !available ? "BUILD FIRST" : confirming ? "CONFIRM?" : cost + " WOOD",
-    desc: maxed ? "FULLY UPGRADED" : !available ? "BUILD THIS STATION FIRST"
+    right: maxed ? "MAX" : !fenced ? "BUILD FENCE" : !available ? "BUILD FIRST" : confirming ? "CONFIRM?" : cost + " WOOD",
+    desc: maxed ? "FULLY UPGRADED" : !fenced ? "BUILD BOTH CAMP POSTS FIRST" : !available ? "BUILD THIS STATION FIRST"
       : confirming ? "TAP AGAIN TO UPGRADE" : info.benefits[level],
     h: 15, enabled: available && !maxed && total >= cost,
     onDown: () => {
+      if (!fenced) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
       if (!available) { g.buildConfirm = null; toast(g, "BUILD THE " + info.label + " FIRST."); return; }
       if (maxed) { g.buildConfirm = null; toast(g, info.label + " IS MAX LEVEL."); return; }
       if (g.player.wood + g.stored < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
@@ -1203,13 +1205,15 @@ function buildRows(g: any, meta: any) {
     const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
     const needsStations = g.stage === 5 && !canCompleteCabin(g);
     const needsGuide = g.stage === 5 && g.guideLevel < 4;
+    const needsFence = !campEstablished(g);
     rows.push({
       label: STAGES[g.stage].name.toUpperCase(),
-      right: needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
-      desc: needsGuide ? "COMPLETE GROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
+      right: needsFence ? "BUILD FENCE" : needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
+      desc: needsFence ? "PLACE ONE LOG AT EACH CAMP BOUNDARY" : needsGuide ? "COMPLETE GROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
         g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
-      h: 15, enabled: !needsGuide && !needsStations && total() >= cost,
+      h: 15, enabled: !needsFence && !needsGuide && !needsStations && total() >= cost,
       onDown: () => {
+        if (needsFence) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
         if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH GROOTYS FIRST FOUR LESSONS."); return; }
         if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
         if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
@@ -1219,18 +1223,30 @@ function buildRows(g: any, meta: any) {
       },
     });
   }
+  if (campEstablished(g) && g.campExpansion < 1) {
+    rows.push({
+      label: "EASTERN CAMP EXPANSION",
+      right: EXPANSION_COST + " WOOD",
+      desc: "PLACE FIVE LOGS AT THE EAST FENCE MARKER",
+      h: 15, enabled: total() >= EXPANSION_COST,
+      onDown: () => toast(g,"WALK TO THE EAST FENCE MARKER AND PRESS ACT."),
+    });
+  }
   // One-time permanent structure: once purchased it appears in every later
   // run and the unique log collection lives in persistent meta, not run wood.
+  const museumLocked = !meta.museumBuilt && g.campExpansion < 1;
   rows.push({
     label:meta.museumBuilt ? "VISIT LOG MUSEUM" : "BUILD LOG MUSEUM",
     right:meta.museumBuilt ? museumCount(meta)+"/4 FOUND"
-      : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
+      : museumLocked ? "EXPAND CAMP" : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
     desc:meta.museumBuilt ? "PERMANENT COLLECTION - TAP TO VIEW" :
+      museumLocked ? "CLAIM EASTERN LAND BEFORE BUILDING HERE" :
       g.buildConfirm==="museum" ? "TAP AGAIN TO BUILD PERMANENT MUSEUM"
       : "KEEP SPECIAL LOGS THROUGH ALL RUNS",
-    h:15,enabled:!!meta.museumBuilt || total()>=MUSEUM_COST,
+    h:15,enabled:!!meta.museumBuilt || (!museumLocked && total()>=MUSEUM_COST),
     onDown:()=>{
       if(meta.museumBuilt){g.buildConfirm=null;g.menu="museum";return;}
+      if(museumLocked){g.buildConfirm=null;toast(g,"EXPAND CAMP EAST TO UNLOCK THE MUSEUM SITE.");return;}
       if(total()<MUSEUM_COST){g.buildConfirm=null;toast(g,"NOT ENOUGH WOOD.");return;}
       if(g.buildConfirm!=="museum"){g.buildConfirm="museum";return;}
       g.buildConfirm=null;

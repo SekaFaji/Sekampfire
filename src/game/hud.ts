@@ -117,8 +117,11 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
     drawText(ctx, weather, 225 + textW(day) + 6, 21, "#c4d1d3");
   }
   drawText(ctx, visualSeason(g).toUpperCase() + " " + seasonDay(g) + "/7", 225, 32, "#dfc69d");
-  if (g.endlessMode) drawText(ctx, "ENDLESS " + g.endlessN, 119, 39, "#b7d4ed");
-  if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
-    drawText(ctx, "THE LONG NIGHT", 129, 39, "#8fd0ff");
+  // Special-run labels stay to the right of the 210px maximum status message,
+  // never on top of the wooden panel borders or the central notification.
+  if (g.endlessMode) {
+    drawText(ctx, "E" + Math.floor(g.endlessN || 0), 274, 46, "#b7d4ed");
+  } else if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
+    drawText(ctx, "LONG NIGHT", 274, 46, "#8fd0ff");
   }
 }

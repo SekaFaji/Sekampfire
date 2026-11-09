@@ -89,7 +89,8 @@ describe("real log collection discoveries",()=>{
     const toasts:string[]=[];
     update(g,m,0.04,{end:()=>{},toast:(v:string)=>toasts.push(v)});
     expect(g.falling).toHaveLength(0);
-    expect(g.pickups.some((p:any)=>p.x===990&&p.w===3)).toBe(true);
+    // The wood still drops, but it is relocated off the new east fence post.
+    expect(g.pickups.some((p:any)=>p.x>1030&&p.w===3)).toBe(true);
     expect(m.collection.ordinary).toBe(true);
     expect(loadMeta().collection.ordinary).toBe(true);
     expect(toasts.some(x=>x.includes("MUSEUM DISCOVERY"))).toBe(true);

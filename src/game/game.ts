@@ -23,7 +23,7 @@ import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./stat
 import { drawCampHUD, drawCampMinimap } from "./hud";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
   campEstablished, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
-  expandCamp, drawCampGround, drawCampFence } from "./campBoundary";
+  expandCamp, keepFencePostsClear, drawCampGround, drawCampFence } from "./campBoundary";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -121,6 +121,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
   if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
   clearClaimedTrees(g);
+  keepFencePostsClear(g);
   if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
     g.dog = {
       x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:156,
@@ -592,6 +593,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (ft.t >= 0.55) {
       const w = ft.wood;
       g.pickups.push({ x: ft.x, y: ft.y, w });
+      keepFencePostsClear(g);
       g.guideChops++;
       const found = discoverLog(meta);
       if (found) {
@@ -2079,5 +2081,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

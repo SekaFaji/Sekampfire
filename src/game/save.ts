@@ -21,12 +21,13 @@ function loadMeta(): any {
           best: safeCount(m.best), runs: safeCount(m.runs),
           wonEver: !!m.wonEver, up,
           petEquipped: m.petEquipped === null ? null : up.dog ? "dog" : null,
-          museumBuilt: m.museumBuilt === true, collection: cleanLogCollection(m.collection) };
+          museumBuilt: m.museumBuilt === true, collection: cleanLogCollection(m.collection),
+          guideFx: m.guideFx !== false };
       }
     }
   } catch (e) { /* Corrupted local saves should never prevent the game starting. */ }
   return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null,
-    museumBuilt:false, collection:cleanLogCollection(null) };
+    museumBuilt:false, collection:cleanLogCollection(null), guideFx:true };
 }
 
 
@@ -47,7 +48,7 @@ function captureRunSnapshot(g: any): any {
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
     "ashEarned","won","victoryPending","guideLevel","guideChops","guideStokes","guideStoredTen","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
-    "fenceLeft","fenceRight","campExpansion"];
+    "fenceLeft","fenceRight","campExpansion","heatSoak"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
   // Keep the existing v1 checkpoint key/version. Persist only validated tier

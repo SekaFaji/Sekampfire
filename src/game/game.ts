@@ -389,6 +389,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
       if (g.aurora) w += " The AURORA lights up the sky!";
       if (g.nightSkyEvent === "parade") w += " A SHOOTING STAR PARADE begins!";
       cb.toast(w);
+      if (g.night === 1) cb.toast("GROOTY: HIGH COLD DRAINS WARMTH FASTER. RETURN TO THE FIRE!");
     }
   }
   if (g.time >= total) {

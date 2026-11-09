@@ -100,7 +100,7 @@ describe("Patch #36 - environmental Cold exposure",()=>{
     expect(coldWarmthDrain(g,m)).toBe(high);
     g.weather="blizzard";
     expect(coldWarmthDrain(g,m)).toBe(high);
-    m.up.blood=2;
+    (m.up as any).blood=2;
     expect(coldWarmthDrain(g,m)).toBeCloseTo(high*0.7);
     g.player.torchT=10;
     expect(coldWarmthDrain(g,m)).toBeCloseTo(high*0.7*0.5);

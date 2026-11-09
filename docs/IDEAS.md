@@ -191,6 +191,14 @@ A dedicated completion screen must make Ash and permanent progression easy to un
 
 **Still to design and implement:** standalone snow weather and its visual/audio presentation beyond winter particle snowfall; level-based rain/snow progression after the campaign restructure; more crafted clothing/insulation items; future inventory and Pine Logs conversion. Actual Cold values and first-night pacing need real-device testing.
 
+### Patch #37 implemented (2026-11-09)
+
+The central HUD panel is now a dedicated **living landscape thermometer** with handcrafted glass, wood, brass, tick marks, an animated liquid reservoir and a numeric outside-temperature °C reading. **No Ash, Wood or personal Cold bar** appears in this middle panel. The left panel is back to Warmth and Fuel; the right continues Day/Weather/Season/Menu. Current Run Ash is already in Pause and end-of-run UI, and inventory resources remain accessible through Build/Craft until the future item system is complete.
+
+Ambient Celsius responds to actual seasons, time of day and weather transitions. It is **not** the personal Cold exposure value, and changing clothing or standing by a campfire does not alter it. Current hidden Cold/wetness physics from #36 remain unchanged. Animated liquid settles smoothly; no save-format changes.
+
+**Future:** replace Build/Torch water buttons with two assignable quick slots, and move Build into menus/contextual ACT when the real Pine Logs/multi-resource inventory design is ready. Press-and-hold equipment picking, empty slot visuals, persistence and Torch item semantics are still to finalize.
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

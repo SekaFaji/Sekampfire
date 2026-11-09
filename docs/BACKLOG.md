@@ -3,6 +3,9 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #36 source: compact 3-row WARMTH/FUEL/COLD panel, rain dampness, smoother single-source Cold-driven warmth loss, existing boots insulation, progressive fireplace warming compatibility, gentle first night, Grooty explanation, optional Cold/dampness v1 save fields, deterministic tests. Real Android balance and UI QA pending.
+- [ ] Future weather phase: separate snow weather event (beyond existing winter particles), level-controlled storm scheduling, later protective clothing and inventory; not part of #36.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #33: 8s gradually accelerating fire warmth, saved heat soak, Grooty firefly/arrow wayfinding across world, minimap, BUILD/Craft tabs and rows; persistent guide visibility toggle; reorder storage before eastern expansion. Real phone visual testing, readability and balance still pending.
 ## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #32 source: strict modal hit-zone isolation and inside/outside/X/back behavior, no title/game click-through, translucent wooden top HUD, wider tree-canopy spawn exclusion and wood pickups relocated off posts without losing resources. Regression tests included; Android visual QA pending.

@@ -160,7 +160,7 @@ describe("Patch #36 - environmental Cold exposure",()=>{
     expect(loadRunSnapshot()).toBeNull(); // titleActions uses in-memory resumeData, no automatic banking
   });
   it("keeps real Cold survival pressure while restoring the spacious two-bar HUD",()=>{
-    const g=runner(),m=meta();g.cold=80;g.ui="run";
+    const g=runner(),m=meta();g.cold=80;g.ui="run";g.fireLit=true;g.fuel=49;
     const {ctx,rects}=drawCanvas();
     drawCampHUD(ctx,g,m);
     expect(rects).toContainEqual(expect.objectContaining({x:3,y:17,w:109,h:23}));

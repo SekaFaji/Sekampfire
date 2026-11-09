@@ -3,6 +3,9 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #37: bespoke animated brass/glass pixel-art outside-temperature instrument replacing wood/Ash stats in the middle HUD, spacious Warmth/Fuel on left, ambient season/day/weather °C independent of personal Cold; run-save compatible, source pixel-geometry tests. Android visual review pending.
+- [ ] Next UI idea: proper multi-resource inventory then two assignable quick slots replacing persistent Build/Torch buttons, with long-press picker and safe contextual menu access. Not part of #37.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #36 source: compact 3-row WARMTH/FUEL/COLD panel, rain dampness, smoother single-source Cold-driven warmth loss, existing boots insulation, progressive fireplace warming compatibility, gentle first night, Grooty explanation, optional Cold/dampness v1 save fields, deterministic tests. Real Android balance and UI QA pending.
 - [ ] Future weather phase: separate snow weather event (beyond existing winter particles), level-controlled storm scheduling, later protective clothing and inventory; not part of #36.
 ## Priority 0 - user-approved unfinished features / fixes

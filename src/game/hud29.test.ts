@@ -59,7 +59,7 @@ describe("Patch #29 native-resolution real-game HUD",()=>{
     expect(v.rects.length).toBeGreaterThan(130);
     expect(JSON.stringify({player:g.player,stored:g.stored,fuel:g.fuel,night:g.night,ash:g.ashEarned,meta:m})).toBe(before);
   });
-  it("preserves original Build, ACT, Torch and Menu hit zones",()=>{
+  it("preserves ACT/Menu while replacing Build/Torch with two configurable sockets",()=>{
     const g=game(),v=canvas();
     g.zones=[];drawRunChrome(v.ctx,g);
     const target=(x:number,y:number,w:number,h:number)=>g.zones.find((z:any)=>z.x===x&&z.y===y&&z.w===w&&z.h===h);
@@ -67,12 +67,14 @@ describe("Patch #29 native-resolution real-game HUD",()=>{
     expect(target(77,158,47,18)).toBeDefined();
     expect(target(196,158,48,18)).toBeDefined();
     expect(target(284,21,32,16)).toBeDefined();
+    expect(target(77,158,47,18)!.quickSlot).toBe(0);
+    expect(target(196,158,47,18)!.quickSlot).toBe(1);
     target(133,151,54,26)!.onDown();
     expect(g.pressE).toBe(true);
     target(133,151,54,26)!.onUp();
     expect(g.keys.act).toBe(false);
-    target(77,158,47,18)!.onDown();
-    expect(g.menu).toBe("build");
+    expect(target(77,158,47,18)!.onDown).toBeUndefined();
+    // BUILD now opens from the Pause menu, never by hitting a slot.
   });
   it("wooden frame stays within all 320x180 logical coordinates",()=>{
     const v=canvas();

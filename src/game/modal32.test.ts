@@ -14,6 +14,8 @@ function canvas() {
     set fillStyle(v:string){color=v;},
     fillRect(x:number,y:number,w:number,h:number){rects.push({x,y,w,h,color});},
     save:vi.fn(),restore:vi.fn(),translate:vi.fn(),scale:vi.fn(),
+    beginPath:vi.fn(),rect:vi.fn(),clip:vi.fn(),moveTo:vi.fn(),
+    lineTo:vi.fn(),arc:vi.fn(),closePath:vi.fn(),fill:vi.fn(),stroke:vi.fn(),
     createRadialGradient:()=>({addColorStop:vi.fn()})
   };
   return {ctx,rects};

@@ -22,6 +22,7 @@ import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount,
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap } from "./hud";
+import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { ambientTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
 import { guideTarget, drawWorldFireflies, drawOffscreenGuide, drawScreenFireflies } from "./guidance";
@@ -115,6 +116,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
   g.cold = n("cold", 0, 100, coldTarget(g));
+  g.quickSlots = normalizeQuickSlots(data.quickSlots);
   // The instrument is display-only. Its reading is derived from the
   // restored world weather/season, not from player insulation or Cold.
   g.thermometerTemp = ambientTemperature(g);
@@ -168,6 +170,7 @@ function createEngine(): any {
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, heatSoak: 0, cold: 14, dampness: 0, camX: CX - W / 2, shake: 0,
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
+    quickSlots: [null, null], quickSlotIndex:0, quickSlotFrom:"run", buildFromPause:false,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
@@ -758,6 +761,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
+  tickQuickSlotHolds(g,dt);
   g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
   // Pixel-art instrument settles slowly as weather/day/night/season changes.
   // It is not added to the save format because real weather is authoritative.
@@ -963,6 +967,25 @@ function closeMenu(g: any) {
   g.craftConfirm = null;
   g.buildConfirm = null;
   g.endRunConfirm = false;
+  if (g.menu === "quickslot") {
+    g.menu = g.quickSlotFrom === "toolbar" ? "toolbar" : null;
+    g.menuSel = 0;
+    g.keys.act = false;
+    return;
+  }
+  if (g.menu === "toolbar") {
+    g.menu = "pause";
+    g.menuSel = 0;
+    g.keys.act = false;
+    return;
+  }
+  if (g.menu === "build" && g.buildFromPause) {
+    g.buildFromPause = false;
+    g.menu = "pause";
+    g.menuSel = 0;
+    g.keys.act = false;
+    return;
+  }
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
     g.menu = "settings";
     g.menuSel = 0;
@@ -999,6 +1022,46 @@ function pauseRows(g: any, meta: any) {
         g.endRunConfirm = false;
         if (g.cb && g.cb.end) g.cb.end("retired", { nights: g.night, ash: Math.floor(g.ashEarned) });
       },
+    },
+    {
+      label: "BUILD", right: "", desc: "CAMP STRUCTURES AND UPGRADES", h:15, enabled:true,
+      onDown: () => { g.menu="build";g.buildFromPause=true;g.buildTab=0;g.menuSel=0;g.keys.act=false; },
+    },
+    {
+      label: "TOOLBAR", right: "", desc: "SET UP TWO QUICK ACCESS SLOTS", h:15, enabled:true,
+      onDown: () => { g.menu="toolbar";g.menuSel=0;g.keys.act=false; },
+    },
+  ];
+}
+
+/** Two real slots, with no imaginary inventory items until items exist. */
+function toolbarRows(g:any):any[] {
+  return [0,1].map(index => ({
+    label: "SLOT " + (index+1),
+    right: normalizeQuickSlots(g.quickSlots)[index]==="ember" ? "EMBER" : "EMPTY",
+    desc: "SELECT THIS SLOT TO ASSIGN AN ITEM",
+    h:15, enabled:true,
+    onDown:()=>openQuickSlotPicker(g,index,"toolbar"),
+  }));
+}
+function quickSlotRows(g:any):any[] {
+  const index=g.quickSlotIndex===1?1:0;
+  const learned=!!(g.everLit||g.fireLit);
+  return [
+    {
+      label:"FIRE EMBER",right:learned?"ASSIGN":"LOCKED",
+      desc:learned?"TAKE AN EMBER FROM THE CAMPFIRE":"LIGHT THE CAMPFIRE TO LEARN THIS ACTION",
+      h:15,enabled:learned,
+      onDown:()=>{
+        if(assignQuickSlot(g,index,"ember")) closeMenu(g);
+        else toast(g,"LIGHT THE CAMPFIRE FIRST.");
+      },
+    },
+    {
+      label:"CLEAR SLOT",right:"EMPTY",
+      desc:"LEAVE THIS QUICK SLOT UNASSIGNED",
+      h:15,enabled:true,
+      onDown:()=>{assignQuickSlot(g,index,null);closeMenu(g);},
     },
   ];
 }
@@ -1460,6 +1523,10 @@ function drawMenu(ctx: any, g: any, meta: any) {
       "!", resetRows(g, meta));
   } else if (g.menu === "pause") {
     drawListMenu(ctx, g, "PAUSED", "RUN ASH " + Math.floor(g.ashEarned), pauseRows(g, meta));
+  } else if (g.menu === "toolbar") {
+    drawListMenu(ctx, g, "TOOLBAR", "HOLD SLOTS TO EQUIP", toolbarRows(g));
+  } else if (g.menu === "quickslot") {
+    drawListMenu(ctx, g, "EQUIP SLOT " + (g.quickSlotIndex===1?2:1), "", quickSlotRows(g));
   } else if (g.menu === "museum") {
     drawMuseumPage(ctx, g, meta, () => closeMenu(g));
   } else if (g.menu === "guide") {
@@ -1510,14 +1577,10 @@ function drawRunChrome(ctx: any, g: any) {
     onDown: () => { g.pressE = true; g.keys.act = true; },
     onUp: () => { g.keys.act = false; g.chopBlocked = false; },
   });
-  uiButton(ctx, g, 77, H - 22, 47, 18, "BUILD", {
-    water: true, onDown: () => { g.menu = "build"; g.buildTab=0; g.menuSel = 0; g.keys.act = false; },
-  });
-  const t = g.player.torchT;
-  const tLbl = t > 0 ? "TORCH " + Math.ceil(t) : "TORCH";
-  uiButton(ctx, g, 196, H - 22, 48, 18, tLbl, {
-    water: true, enabled: t <= 0 && g.fireLit, onDown: () => { g.pressT = true; },
-  });
+  // Two configurable equipment sockets replace permanent BUILD / TORCH
+  // chrome. Hold a socket to assign; tap for its real, existing action.
+  drawQuickSlot(ctx,g,0,77,H-22);
+  drawQuickSlot(ctx,g,1,196,H-22);
   // Located immediately below the minimap, away from the world and river controls.
   uiButton(ctx, g, 284, 21, 32, 16, "MENU", {
     onDown: () => { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; },
@@ -1712,7 +1775,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
 }
 
 // Gameplay and menus inject their handlers into this input adapter.
-const { handleKey, handlePointer } = createInputHandlers({
+const { handleKey, handlePointer, tickQuickSlotHolds } = createInputHandlers({
   audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu
 });
 
@@ -2117,5 +2180,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

@@ -2,6 +2,16 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #38: Longer thermometer, living settlement minimap and toolbar foundation
+
+- **Thermometer polish:** extend the original brass/glass thermometer's scale, liquid tube, graduations, glint range and end cap to occupy almost all 105 pixels of the existing central panel. Air temperature, Warmth and Cold gameplay remain unchanged.
+- **Rich, real-world minimap:** show the camera footprint, Grooty, both individual fence posts, completed and extended palisade, future expansion marker, unfinished workbench/storage sites, constructed workbench/storage, shelter stages, permanent Museum, forest and campfire. All indicators use actual run coordinates and state; no new map buttons or additional HUD height.
+- **Two quick slots** replace the permanent BUILD and TORCH water-side buttons while keeping ACT and movement arrows unchanged. Both start empty; **hold a socket for half a second** to open its assignment menu, **tap** to use its assigned action. New one-pixel equipment socket art sits over the river.
+- The only supported active action so far is the **existing Fire Ember**, learned once the campfire has been lit. It still uses the real campfire fuel and duration rules. It is *not* presented as a manufactured inventory torch or an invented extra resource; further active tools will be added with the proper inventory patch.
+- **Build has moved to MENU > BUILD**, with the existing B keyboard shortcut preserved. MENU > TOOLBAR gives an accessible way to configure both slots without a long hold. Outside clicks/X/Back navigate between the new submenus safely.
+- Run snapshots persist a validated two-slot array in the unchanged version-one format; older runs start with empty slots. Long presses do not trigger the corresponding quick-slot action, and moving a finger off the socket cancels the press.
+- Grooty's fireflies now show the actual MENU button and the BUILD row when an upgrade or structure is needed. The separate inventory, Pine Logs naming and extra usable items remain planned.
+
 ## Patch #37: Handcrafted living thermometer HUD
 
 - **Real-looking ambient air thermometer:** the center wooden HUD panel is now a dedicated original 320x180 pixel-art instrument: carved "AIR TEMP" label, brass tube and bolts, glass glints, bulb reservoir, engraved tick marks and a Celsius reading with a custom degree glyph.

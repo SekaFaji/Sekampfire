@@ -3,6 +3,9 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #38: wider, polished thermometer; state-driven settlement minimap with fences, expansion, actual building sites and completed stations; two run-saved configurable quick slots replacing BUILD/TORCH, long-press assignment for existing Fire Ember, Build via pause menu, re-targeted Grooty guidance. Device visual QA pending.
+- [ ] Next: real multi-resource inventory, Pine Logs/Pine Trees, collectible/craftable Ember Torch item and additional assignable active tools. Only existing Fire Ember action is assignable in #38.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #37: bespoke animated brass/glass pixel-art outside-temperature instrument replacing wood/Ash stats in the middle HUD, spacious Warmth/Fuel on left, ambient season/day/weather °C independent of personal Cold; run-save compatible, source pixel-geometry tests. Android visual review pending.
 - [ ] Next UI idea: proper multi-resource inventory then two assignable quick slots replacing persistent Build/Torch buttons, with long-press picker and safe contextual menu access. Not part of #37.
 ## Priority 0 - user-approved unfinished features / fixes

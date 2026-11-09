@@ -10,7 +10,7 @@ export type FireflyTarget = {
   x: number;
   y: number;
   goal: string;
-  menu?: "build" | "bench";
+  menu?: "build" | "bench" | "pause";
   tab?: number;
   row?: number;
 };
@@ -24,7 +24,7 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   if (!next) return null;
   const goal = next.id;
   const world = (x:number,y=114):FireflyTarget => ({space:"world",x,y,goal});
-  const ui = (menu: "build"|"bench",tab:number,row:number):FireflyTarget =>
+  const ui = (menu: "build"|"bench"|"pause",tab:number,row:number):FireflyTarget =>
     ({space:"menu",x:0,y:0,menu,tab,row,goal});
   const resources = (treesOnly=false):FireflyTarget|null => {
     const p = g.player;
@@ -45,7 +45,8 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   const missingWood = (cost:number) => stock < cost;
   const build = (tab:number,row:number):FireflyTarget => {
     if (g.menu==="build") return ui("build",tab,row);
-    return {space:"screen",x:100,y:149,goal}; // existing BUILD control
+    if (g.menu==="pause") return ui("pause",0,3); // BUILD row in pause menu
+    return {space:"screen",x:300,y:29,goal}; // menu button replaces BUILD chrome
   };
   const craft = ():FireflyTarget => {
     if (g.menu==="bench") return ui("bench",0,0);
@@ -106,6 +107,10 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
 export function guideMenuPosition(g:any,target:FireflyTarget):{x:number;y:number}|null {
   if (target.space!=="menu" || g.menu!==target.menu || !g.menuRect) return null;
   const r=g.menuRect;
+  if(target.menu==="pause") {
+    // Plain pause list has no tab bar, unlike BUILD and WORKBENCH.
+    return {x:r.x+11,y:r.y+16+(target.row||0)*15+3};
+  }
   const currentTab=target.menu==="build"?g.buildTab:g.craftTab;
   if (currentTab!==target.tab) {
     return {x:r.x+7+(target.tab||0)*129+62, y:r.y+10};

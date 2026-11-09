@@ -199,6 +199,14 @@ Ambient Celsius responds to actual seasons, time of day and weather transitions.
 
 **Future:** replace Build/Torch water buttons with two assignable quick slots, and move Build into menus/contextual ACT when the real Pine Logs/multi-resource inventory design is ready. Press-and-hold equipment picking, empty slot visuals, persistence and Torch item semantics are still to finalize.
 
+### Patch #38 groundwork (2026-11-09)
+
+- **Thermometer:** broadened brass tube and live liquid to occupy the center plaque with more engraved ticks, without changing its ambient Celsius formula.
+- **Minimap:** map the real world including independently built fence posts, claimed palisade and eastern expansion, active/future building sites, finished workshop and storage, structures, Grooty, Museum and viewport footprint. Keep the tiny strip and landscape visible.
+- **Toolbar:** replace permanent BUILD and TORCH with two empty native-pixel sockets. Hold for half a second to pick a supported active item; short tap uses it. A Menu > Toolbar alternative supports devices with difficult long presses. Build moves to Menu > Build, with Grooty's fireflies updated.
+- **Now supported:** the legacy **Fire Ember** action, unlocked through lighting the campfire. It still draws real fire fuel and creates a timed ember light. This is an interim gameplay action, **not** a new inventory item or a promise that other tools already exist. Slot assignment persists only within the active run; no permanent inventory item ownership is invented.
+- **Next design:** introduce explicit Pine Logs stacks and tree types, crafted active tools (including an actual Torch item), durable inventory/equipment categories, more toolbar candidates, equipped gear slots and save migration. Review intended slot persistence across runs after the item ownership model is established.
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

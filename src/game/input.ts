@@ -1,4 +1,5 @@
 import { W } from "./config";
+import { tickQuickSlotHolds, useQuickSlot } from "./quickSlots";
 
 /** In-canvas keyboard and pointer controls; callbacks are injected to avoid
  * a cycle between the input adapter and the gameplay/menus module.
@@ -38,7 +39,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     if (k === "e" || k === " ") { g.keys.act = false; g.chopBlocked = false; }
     return;
   }
-  const isList = ["bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause"].includes(g.menu);
+  const isList = ["bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause", "toolbar", "quickslot"].includes(g.menu);
   if (k === "arrowup" || k === "w") {
     if (isList) moveSel(g, meta, -1);
     else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + titleActions(g, meta).length - 1) % titleActions(g, meta).length;
@@ -63,6 +64,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   }
   if (k === "h" && g.ui === "title" && !g.menu) { g.menu = "help"; g.helpPage = 0; }
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
+  if ((k==="1"||k==="2") && g.ui==="run" && !g.menu) useQuickSlot(g,k==="1"?0:1);
   // B is a gameplay Build shortcut, never a way to accidentally dismiss
   // an open dialog or switch from one menu into another.
   if (k === "b" && g.ui === "run" && !g.menu) {
@@ -119,8 +121,13 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
     for (let i = g.zones.length - 1; i >= 0; i--) {
       const z = g.zones[i];
       if (mx >= z.x && mx < z.x + z.w && my >= z.y && my < z.y + z.h) {
-        g.pointers[id] = { zone: z };
-        if (z.onDown) z.onDown();
+        if (z.quickSlot === 0 || z.quickSlot === 1) {
+          g.pointers[id] = { quickSlot:z.quickSlot, held:0, longHeld:false, cancelled:false,
+            startX:mx, startY:my };
+        } else {
+          g.pointers[id] = { zone:z };
+          if (z.onDown) z.onDown();
+        }
         return;
       }
     }
@@ -130,7 +137,9 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
     }
   } else if (type === "move") {
     const pt = g.pointers[id];
-    if (pt && pt.side) {
+    if(pt && pt.quickSlot !== undefined) {
+      if(Math.abs(mx-pt.startX)>12 || Math.abs(my-pt.startY)>12) pt.cancelled=true;
+    } else if(pt && pt.side) {
       pt.dir = mx < W / 2 ? "left" : "right";
       syncTouchMovement(g);
     }
@@ -138,6 +147,10 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
     const pt = g.pointers[id];
     if (pt) {
       if (pt.zone && pt.zone.onUp) pt.zone.onUp();
+      // A held slot opens its picker without also using the item on release.
+      if (pt.quickSlot !== undefined && !pt.longHeld && !pt.cancelled && !g.menu) {
+        useQuickSlot(g,pt.quickSlot);
+      }
       delete g.pointers[id];
       if (pt.side) syncTouchMovement(g);
     }
@@ -145,5 +158,5 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
 }
 
 
-  return { handleKey, handlePointer };
+  return { handleKey, handlePointer, tickQuickSlotHolds };
 }

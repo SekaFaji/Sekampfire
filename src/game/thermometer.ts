@@ -88,43 +88,47 @@ export function drawLivingThermometer(ctx: any, g: any): void {
   // Delicate metallic mounting bolts and a raised nameplate groove.
   ctx.fillStyle = "#7f674c";
   ctx.fillRect(118, 27, 1, 2);
-  ctx.fillRect(213, 27, 2, 1);
+  ctx.fillRect(215, 27, 2, 1);
   ctx.fillStyle = "#d1ad71";
   ctx.fillRect(118, 27, 1, 1);
-  ctx.fillRect(214, 27, 1, 1);
+  ctx.fillRect(216, 27, 1, 1);
 
-  // Graded tick marks above the tube - every fourth is slightly longer.
-  for (let i = 0; i <= 12; i++) {
+  // A lengthened glass instrument now fills the entire center plaque.
+  // Thick brass top rail and fine graduations carry the eye to the right cap.
+  for (let i = 0; i <= 20; i++) {
     const x = 129 + i * 4;
-    const major = i % 3 === 0;
-    ctx.fillStyle = major ? "#aa916d" : "#796c5d";
-    ctx.fillRect(x, major ? 26 : 27, 1, major ? 2 : 1);
+    const major = i % 5 === 0;
+    ctx.fillStyle = major ? "#d1b387" : "#8e785b";
+    ctx.fillRect(x, major ? 25 : 26, 1, major ? 3 : 2);
   }
-  // Zero-degree reference mark, useful for recognizing freezing air.
-  ctx.fillStyle = "#d6dbcf";
-  ctx.fillRect(155, 26, 1, 2);
+  // Zero-degree reference uses the actual -30..+35 proportion.
+  const zeroX = 129 + Math.round(80 * (0 - AIR_TEMP_MIN) / (AIR_TEMP_MAX - AIR_TEMP_MIN));
+  ctx.fillStyle = "#e7eadb";
+  ctx.fillRect(zeroX, 25, 1, 3);
+  ctx.fillStyle = "#617881";
+  ctx.fillRect(zeroX, 28, 1, 1);
 
   // Instrument drop shadow and brass tube casing.
   ctx.fillStyle = "rgba(4,10,18,0.45)";
-  ctx.fillRect(123, 37, 64, 1);
+  ctx.fillRect(121, 37, 94, 1);
   ctx.fillStyle = "#41362d";
-  ctx.fillRect(126, 28, 62, 9);
+  ctx.fillRect(126, 28, 88, 9);
   ctx.fillStyle = "#b68d54";
-  ctx.fillRect(127, 28, 60, 1);
+  ctx.fillRect(127, 28, 86, 1);
   ctx.fillStyle = "#73583c";
-  ctx.fillRect(127, 36, 60, 1);
+  ctx.fillRect(127, 36, 86, 1);
   ctx.fillStyle = "#d4ad70";
-  ctx.fillRect(128, 29, 58, 1);
+  ctx.fillRect(128, 29, 84, 1);
   ctx.fillStyle = "#253e4a";
-  ctx.fillRect(128, 30, 57, 5);
+  ctx.fillRect(128, 30, 84, 5);
   ctx.fillStyle = "rgba(113,169,181,0.20)";
-  ctx.fillRect(129, 30, 55, 1);
+  ctx.fillRect(129, 30, 82, 1);
   ctx.fillStyle = "#192a36";
-  ctx.fillRect(128, 34, 56, 1);
+  ctx.fillRect(128, 34, 83, 1);
 
   // Animated liquid extends from a real bulb at the start of the glass.
   const ratio = (temperature - AIR_TEMP_MIN) / (AIR_TEMP_MAX - AIR_TEMP_MIN);
-  const length = Math.max(1, Math.min(56, Math.round(56 * ratio)));
+  const length = Math.max(1, Math.min(82, Math.round(82 * ratio)));
   ctx.fillStyle = liquid;
   ctx.fillRect(128, 32, length, 2);
   ctx.fillStyle = liquidHighlight;
@@ -132,10 +136,18 @@ export function drawLivingThermometer(ctx: any, g: any): void {
   const tipX = 128 + length - 1;
   ctx.fillStyle = lerpHex(liquid, "#fff7dd", 0.65);
   ctx.fillRect(tipX, 31, 1, 2);
-  if (length < 56) {
+  if (length < 82) {
     ctx.fillStyle = "#263744";
-    ctx.fillRect(128 + length, 32, 56 - length, 1);
+    ctx.fillRect(128 + length, 32, 82 - length, 1);
   }
+  // Warm reflective light beneath the glass gives the bulb and the long tube
+  // a consistent sense of depth, without becoming a UI progress bar.
+  ctx.fillStyle = "rgba(243,226,187,0.13)";
+  ctx.fillRect(135, 35, 69, 1);
+  ctx.fillStyle = "#a78656";
+  ctx.fillRect(211, 29, 2, 7);
+  ctx.fillStyle = "#dac08d";
+  ctx.fillRect(212, 30, 1, 3);
 
   // Bulb / rounded glass reservoir, foregrounded over tube's left end.
   ctx.fillStyle = "#382d29";
@@ -158,7 +170,7 @@ export function drawLivingThermometer(ctx: any, g: any): void {
   ctx.fillRect(123, 27, 4, 1);
 
   // Glass sheen travels gently, only across empty/safe glass coordinates.
-  const glint = 135 + Math.round(((Math.sin(t * 0.9) + 1) / 2) * 40);
+  const glint = 135 + Math.round(((Math.sin(t * 0.9) + 1) / 2) * 69);
   ctx.fillStyle = "rgba(229,248,250,0.46)";
   ctx.fillRect(glint, 30, 2, 1);
   ctx.fillStyle = "rgba(248,245,222,0.18)";
@@ -167,15 +179,15 @@ export function drawLivingThermometer(ctx: any, g: any): void {
   if (cold) {
     // Just three crystalline ice flecks, not an opaque snow overlay.
     ctx.fillStyle = "#a7d6e2";
-    ctx.fillRect(191, 32, 2, 1);
-    ctx.fillRect(190, 34, 1, 1);
-    ctx.fillRect(193, 30, 1, 2);
+    ctx.fillRect(205, 32, 2, 1);
+    ctx.fillRect(204, 34, 1, 1);
+    ctx.fillRect(207, 30, 1, 2);
   } else if (warm) {
     // A restrained honey-coloured lamp gleam inside the brass fixture.
     const alpha = 0.23 + (Math.sin(t * 1.5) + 1) * 0.08;
     ctx.fillStyle = `rgba(248,186,96,${alpha.toFixed(3)})`;
-    ctx.fillRect(189, 32, 3, 3);
+    ctx.fillRect(205, 32, 3, 3);
     ctx.fillStyle = "#c38d54";
-    ctx.fillRect(191, 30, 1, 1);
+    ctx.fillRect(207, 30, 1, 1);
   }
 }

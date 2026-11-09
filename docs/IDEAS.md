@@ -1,0 +1,175 @@
+# Sekampfire - Ideas and Design Decisions
+
+Last updated: 2026-11-09
+
+> **Planning document, not a feature-completion report.** This file records brainstorms, proposed gameplay and decisions to avoid losing them between patches. The live implementation is documented in the source, README and [BACKLOG.md](BACKLOG.md). Do not treat anything here as already shipped unless explicitly marked **Current**. Confirm remaining rules before implementing them.
+
+## How to use this file
+
+- **Agreed direction**: the desired product direction expressed in discussion, not necessarily a finalized implementation specification.
+- **To decide**: mechanics, requirements, balancing, layout or rewards that still need to be brainstormed or tested.
+- **Current**: verified in the repository on November 9, 2026.
+- For each future patch, update its related section, record the decision and move any completed work to the implementation backlog. Keep unrelated code unchanged.
+- Do not silently replace a proposed rule with a different one. Existing saves, permanent purchases and collections must be protected.
+
+## 1. Campaign structure: levels, milestones and missions
+
+**Agreed direction**
+
+- A **level** is one substantial, complete survival run with a definite ending and an Ash reward, not a tiny lesson or a single build task. Early levels need enough activities to feel like meaningful adventures.
+- A **milestone** is a larger stage of progress within the same level, and does **not** finish or reset the current camp.
+- A **mission** is one clear step within a milestone. Grooty explains the milestone and his fireflies highlight the current actionable mission, including relevant world objects, menus, tabs or buttons.
+- Completing the level ends the run, banks earned Ash, and can unlock the next campaign level. The precise end-screen choices, failure/retirement rewards and replay rules still need design.
+- A new level begins a new run with an initially reset camp. Future **permanent Ash upgrades** can prebuild/preserve specific parts, allowing later runs to begin further developed.
+- Do not repeat long introductory explanations after the player has learned a mechanic. Keep goals understandable when playing the level again.
+- **Endless Night** stays a distinct locked **Coming Soon** mode on the main menu. Do not turn the finite campaign Long Night into endless survival by default.
+
+**Current**
+
+- The live game still has **five tutorial objectives groups called levels inside a single run**, followed by the existing finite Long Night and its Bank/Continue choice. This is **not** the proposed multi-level campaign.
+- Grooty's current small glowing fireflies already guide a single unfinished objective. They should be adapted to missions rather than removed.
+
+### Proposed Level 1: The First Settlement
+
+The previously proposed first three smaller levels are **one full Level 1**, containing these three milestones:
+
+| Milestone | Purpose | Mission ideas (sequence and exact thresholds not final) |
+| --- | --- | --- |
+| **1. Establish and Explore** | Learn the world while building a safe base | Talk to Grooty; chop a pine tree; collect pine logs; place one log at each boundary post; light and maintain the campfire; **survive the first night while exploring** rather than remaining at the fire |
+| **2. Log Storage** | Learn carrying, construction and resource handling | Find the storage site; bring required pine logs; build Log Storage; deposit logs; learn how storage helps future camp work |
+| **3. The Workbench** | Learn crafting and equipment preparation | Find the workbench site; deliver materials and build it; open its crafting menu; select and confirm a useful first equipment recipe such as the Timber Pack |
+
+**Important Milestone 1 rule:** "Survive your first night" alone is **not** sufficient. The player should have an exploration goal or a reason to venture away from the camp. Grooty's fireflies must not point permanently to the campfire throughout that mission.
+
+**Ideas for a meaningful exploration mission** (not approved exact rules): visit a nearby landmark, walk beyond the first fence, locate a particular pine grove or discover a point of interest, then make it back to safety while still surviving the night. Make the objective measurable without demanding risky nighttime exploration that would unfairly kill a new player. The fireflies should guide the route or next relevant location, not always the fire.
+
+**To decide for Level 1**
+
+- The exact numbered mission sequence for all three milestones.
+- Which exploration landmark/action counts and whether it occurs during the night or during preparation for the first night.
+- How to ensure Level 1 lasts long enough without artificial waiting, repetitive chopping or tutorial fatigue.
+- Whether camp expansion belongs late in Level 1, in Level 2, or remains optional. Earlier designs put it in the storage tutorial; revisit its pacing.
+- The final Level 1 completion condition, including whether it requires another night after the workbench and whether milestones can complete out of order.
+- How to handle tasks already satisfied by Ash-preserved structures on repeat runs.
+- The precise Ash base reward, bonus breakdown and defeat/retirement outcomes.
+
+### Proposed Level 1 completion: explain Ash clearly
+
+**Agreed direction**
+
+A dedicated completion screen must make Ash and permanent progression easy to understand. Explain all of the following in plain, brief language:
+
+1. **You completed Level 1.** The current run ends and the next campaign level becomes available.
+2. **You earned Ash.** Show where each part of the reward came from and distinguish **Run Ash** from **Banked Ash**.
+3. **What Ash is for:** purchase upgrades that improve future runs, including permanent camp starting improvements.
+4. **How to earn Ash:** show only the **actual implemented** earning rules, not hypothetical bonuses. The Ash formula and rewards may be rebalanced later.
+5. **Your camp resets for the next run.** Permanent Ash purchases and collections survive that reset.
+
+**To decide:** Reward amounts, whether useful wood burned earns Ash, how night-survival rewards scale, whether a first-clear bonus exists, the exact wording/buttons, and how to avoid double-banking a completed run.
+
+## 2. Level 2: Discover Ash farming and permanent advantages
+
+**Agreed direction**
+
+- Level 2 should teach the player how to deliberately earn Ash, spend it and understand why permanent upgrades matter.
+- A new run begins with the camp reset, except for the permanent Ash upgrades already bought.
+- The **Ash Shop must be accessible from the in-game/pause menu**, not just the title screen, without allowing clicks through open menus.
+- New Ash Shop improvements should include:
+  - **Permanent starting Log Storage**: begin future runs with Log Storage already built and at least the intended Level 1 upgrade.
+  - **Permanent starting Workbench**: begin with a built, Level 1 workshop.
+  - **Permanent starting fence**: begin with the initial camp boundary established.
+  - **Permanent pre-lit campfire**: begin with the fire lit.
+
+**Current:** There is already an **Old Flint** Ash upgrade that starts new runs with the fire lit and starter fuel. Do not add a duplicate upgrade without deciding whether to reuse, rename, extend or replace Old Flint while preserving its purchase key and ownership.
+
+**To decide**
+
+- Level 2's milestones and missions (including an Ash-earning challenge, a Shop introduction and weather preparation).
+- Whether purchases become available immediately after Level 1 or during Level 2, and whether shopping is available while a run is paused.
+- Exact upgrade names, Ash costs, required prior purchases and balancing.
+- Whether building preservation means a fixed purchased starting level or preserving the actual earned building level; earlier direction favored **preserving actual earned levels**, but fixed Level 1 starting upgrades are also proposed here and must be reconciled before coding.
+- The fence upgrade's effect on the five-log expansion.
+- How missions recognize carried-over buildings, so players do not get stuck being asked to construct an already-built station.
+- When Ash is banked and spendable during a run versus after completion, to prevent confusion or exploits.
+
+## 3. Weather, cold and survivability
+
+**Agreed direction**
+
+- Introduce a clear **Cold meter** distinct from the player's **Warmth meter**. The colder the environmental conditions, the faster warmth drains.
+- Rain and snow should become meaningful gameplay events, not merely visual effects.
+- Higher cold pressure should give players a practical reason to craft clothing and spend more time planning outdoor trips.
+- Workbench-crafted equipment should help retain heat, protect against weather and enable longer exploration away from the campfire.
+- Keep the progressive fire-warming mechanic: heat absorption ramps up while near a lit fire, instead of giving instant full recovery.
+
+**Current:** Rain, winter snow, wind, cold snaps and blizzards already exist visually/in the weather system, and several weather types affect warmth loss and fire consumption. The game already has one Warmth meter, Warm Boots, Warm Blood, Everwarm Scarf and gradual fire warming. **A separate Cold meter and fuller equipment-vs-weather system are not implemented.**
+
+**To decide**
+
+- Definition of Cold meter: outside temperature, exposure severity or an accumulating personal cold state. It must not simply duplicate Warmth numerically.
+- Clear relationship between weather, seasons, distance from fire, shelter, clothing, cold pressure and warmth loss.
+- How rain/wetness affects cold, fuel, clothing and shelter, without overwhelming beginners.
+- Whether snow is introduced as an early later-level challenge, and exact difficulty pacing.
+- Equipment slots, crafting recipes, protective stats, repair/durability (if any) and upgrade progression.
+- UI fit for warmth, fuel, cold, wood/inventory and weather at the native 320 x 180 pixel resolution.
+
+## 4. Inventory, resources and contextual actions
+
+**Agreed direction**
+
+- Replace the current assumption of one generic wood resource with a **proper inventory system**, designed to support more resources later.
+- Start by naming the main starting resource **Pine Logs**, gathered from **Pine Trees**.
+- Maintain potential for more tree species and material types. Do not assume all forest trees are pine if later biomes need variety.
+- Reconsider the **Torch** and **Build** buttons beside the main **Chop/ACT** control. The player prefers a less cluttered action interface.
+- Favor an obvious, contextual primary interaction and intentional menu/inventory access over many permanent buttons.
+
+**Current:** Gameplay currently uses generic wood counts in player/storage, wood drops, and costs. The workbench has Tools/Supplies tabs, and BUILD / ACT / TORCH controls are exposed during runs. Some tree artwork has multiple visual variants, so a data migration and naming audit are required.
+
+**To decide**
+
+- How inventory opens and where it sits on mobile; grid vs slots vs compact horizontal bar.
+- Item stack rules, weight/capacity, categories (logs, materials, tools, clothing, collectibles), and storage relationship.
+- Whether Pine Logs replace the internal wood ID or only the player-facing label initially. Avoid breaking existing saves, current recipes, the Good Dog log carrying and Museum discoveries.
+- Pine-tree identity in visuals, world spawns and possible future species-specific wood drops.
+- Primary ACT behavior near trees, fire, Grooty, stations and loot; contextual action labels and optional quick actions.
+- Where BUILD and Torch access should move, and whether a backpack/inventory button replaces any existing control.
+- How Grooty's fireflies should direct players into inventory and crafting menus without creating another persistent objective banner.
+
+## 5. Camp, collections and longer-term content
+
+**Agreed direction / retained ideas**
+
+- Camp begins as wilderness. Build the two posts to claim the first palisade boundary, clear the ground, and keep large trees away from the claimed area.
+- Expand the camp later to make room for more distant structures.
+- Place early functional stations close to the main campfire. The permanent Log Museum sits farther into the expanded camp, not on the main menu.
+- Museum collection persists across runs and is not ordinary fuel. Pets, including the log-carrying dog, remain separate from inventory.
+- Future Ash upgrades could preserve **actual built/upgraded structures** and perhaps fence expansion.
+- Grooty remains the friendly stationary tree guide; fireflies should lead players to the next **mission**, including exploration and menu steps.
+- Keep compact, translucent gameplay HUD and menus that do not capture input from the screen beneath them.
+
+**To decide:** More land expansions, later resources, additional collection logs, pet upgrades, long-run challenges, later campaign levels and the finite Long Night's placement in a full campaign.
+
+## 6. Next planning/implementation sequence (suggested, not authorized patches)
+
+1. **Mission design pass:** specify the exact missions, target locations, prerequisites, clear completion conditions and pacing of Level 1's three milestones. Ensure the first night includes exploration.
+2. **Campaign architecture:** distinguish selected Level, current Milestone and current Mission in run state; define end-of-level banking/unlocks and backwards-compatible saves. Reuse existing Grooty guidance.
+3. **Level 1 experience and end screen:** polish progression, reward breakdown and the Ash explainer. Keep levels substantial, not tiny tutorial runs.
+4. **Level 2 + permanent Ash Shop:** define Ash farming missions, in-game Shop access and how preserved structures/fence/fire spawn.
+5. **Weather and cold system:** add measurable cold/exposure and equipment protection with tests for seasonal difficulty and the warming curve.
+6. **Inventory and action UI:** introduce Pine Logs/Pine Trees, extensible item records and a more intentional interaction layout using save-safe migrations.
+
+Do not launch implementation simply because an item is listed in this ideas file. Review the relevant proposed rules with the player first.
+
+## 7. Decision log
+
+| Date | Decision / note | Status |
+| --- | --- | --- |
+| 2026-11-09 | Distinguish full-run **levels**, within-run **milestones**, and precise **missions**. | Agreed direction; not implemented |
+| 2026-11-09 | Make former tutorial groups 1-3 one substantial first level, with **Explore/First Camp**, **Log Storage**, **Workbench** milestones. | Agreed direction; mission details to design |
+| 2026-11-09 | First-night milestone must involve exploration, not only idling beside the fire. | Agreed direction; measurable exploration condition undecided |
+| 2026-11-09 | On Level 1 completion, end the run and clearly teach earned Ash, earning sources and permanent Shop uses. | Agreed direction; reward formula undecided |
+| 2026-11-09 | Level 2 introduces Ash farming and Ash Shop preservation of Level 1 storage/workbench, fence and pre-lit fire. | Proposed upgrade set, exact mechanics/costs undecided |
+| 2026-11-09 | Rain and snow should influence a visible Cold meter and crafted equipment protection. | Agreed direction; mechanics undecided |
+| 2026-11-09 | Create real inventory, begin naming basic wood Pine Logs and starting trees Pine Trees. | Agreed direction; item/save design undecided |
+| 2026-11-09 | Reconsider persistent Torch and Build buttons beside the primary ACT control. | UI direction; new layout undecided |
+| 2026-11-09 | Save brainstorming in GitHub instead of losing decisions between chats. | Documented in this file |

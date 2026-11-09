@@ -18,7 +18,7 @@ export const GUIDE_LEVELS: Level[] = [
     { id: "feed-fire", label: "FEED ONE LOG TO THE FIRE", hint: "BRING WOOD TO THE LIT FIRE AND PRESS ACT.", met: g => (g.guideStokes || 0) >= 1 },
     { id: "survive-night", label: "SURVIVE YOUR FIRST NIGHT", hint: "STAY WARM UNTIL THE SUN RISES.", met: g => g.night >= 1 && !g.isNight },
   ] },
-  { title: "LOG STORAGE", greeting: "FIVE LOGS CAN CLAIM MORE LAND TO THE EAST.", goals: [
+  { title: "LOG STORAGE", greeting: "FIRST, MAKE A SAFE PLACE FOR OUR WOOD.", goals: [
     { id: "build-storage", label: "BUILD LOG STORAGE", hint: "CARRY 15 LOGS TO THE PILE SITE AND USE ACT.", met: g => !!g.builtPile },
     { id: "store-ten", label: "STORE 10 LOGS", hint: "TAKE LOGS TO THE FINISHED PILE AND PRESS ACT.", met: g => !!g.guideStoredTen || g.stored >= 10 },
     { id: "expand", label: "EXPAND YOUR CAMP FOR 5 LOGS", hint: "FIND THE EAST FENCE MARKER AND PRESS ACT.", met: g => campEstablished(g) && g.campExpansion >= 1 },

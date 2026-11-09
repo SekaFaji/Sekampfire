@@ -91,12 +91,19 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
 
   const warmth = clamp(Number(g.player.warmth) || 0, 0, 100);
   const fuel = g.fireLit ? clamp(Number(g.fuel) || 0, 0, 100) : 0;
-  drawText(ctx, "WARMTH", 7, 21, "#eee1c7");
-  meter(ctx, warmth, 39, 21, "#bc554a", "#ef8a6b");
-  drawText(ctx, String(Math.round(warmth)), 95, 21, warmth < 25 ? "#ffae8d" : "#e8d5ac");
-  drawText(ctx, "FUEL", 7, 32, "#eee1c7");
-  meter(ctx, fuel, 39, 32, "#c77732", "#ffc267");
-  drawText(ctx, String(Math.round(fuel)), 95, 32, fuel < 25 ? "#ffab7e" : "#e8d5ac");
+  const cold = clamp(Number.isFinite(g.cold) ? g.cold : 14, 0, 100);
+  // Three distinct survival readings fit the SAME 109x23 panel. 3x5 pixel
+  // text and 5px meters have a 2px gap, with no new scene-blocking HUD row.
+  drawText(ctx, "WARMTH", 7, 20, "#eee1c7");
+  meter(ctx, warmth, 39, 20, "#bc554a", "#ef8a6b");
+  drawText(ctx, String(Math.round(warmth)), 95, 20, warmth < 25 ? "#ffae8d" : "#e8d5ac");
+  drawText(ctx, "FUEL", 7, 27, "#eee1c7");
+  meter(ctx, fuel, 39, 27, "#c77732", "#ffc267");
+  drawText(ctx, String(Math.round(fuel)), 95, 27, fuel < 25 ? "#ffab7e" : "#e8d5ac");
+  // Blue exposure is dangerous when HIGH, unlike the orange Warmth reserve.
+  drawText(ctx, "COLD", 7, 34, "#c3dcef");
+  meter(ctx, cold, 39, 34, "#507f9d", "#9ccfe3");
+  drawText(ctx, String(Math.round(cold)), 95, 34, cold >= 70 ? "#b1e7ff" : "#d4e6e9");
 
   const wood = Math.floor(clamp(Number(g.player.wood) || 0, 0, carryCap(g, meta)));
   const cap = carryCap(g, meta);

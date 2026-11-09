@@ -2,6 +2,15 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #37: Handcrafted living thermometer HUD
+
+- **Real-looking ambient air thermometer:** the center wooden HUD panel is now a dedicated original 320x180 pixel-art instrument: carved "AIR TEMP" label, brass tube and bolts, glass glints, bulb reservoir, engraved tick marks and a Celsius reading with a custom degree glyph.
+- **Beautiful but restrained motion:** colored liquid smoothly settles as the real world changes between seasons, day/night and weather; small glass glints and subtle frosty/honey accents bring the instrument to life.
+- **Outside temperature isn't your personal Cold meter.** Gear, fire and Ash upgrades don't change displayed °C, while the hidden environmental Cold pressure still controls actual warmth drain. No weather, survival rate or save-version changes were made.
+- **Clean HUD:** the left panel again shows only spacious Warmth and Fuel meters. Removed WOOD and RUN ASH from the center panel entirely. Wood remains available via Build/Craft interactions while the real inventory is planned. Run Ash remains visible in the Pause menu and end-of-run screens.
+- **No new image assets, overlays or UI hit zones.** Pixel details stay inside the existing 105x23 central panel with translucent wood framing.
+- Thermometer animation state is temporary and recalculated on loading existing runs; old version-one saves remain compatible. Real Android appearance still needs screenshot review.
+
 ## Patch #36: Cold exposure, rain dampness and Warm Boots
 
 - **Cold is exposure pressure, not another health pool.** The top-left translucent HUD now shows WARMTH / FUEL / COLD in its original 109x23 panel, without covering any additional world scenery.

@@ -1,7 +1,7 @@
 import { W, WORLD_W, CX, BENCH_X, PILE_X, WEATHER_TEXT } from "./config";
 import { drawText, textW } from "./font";
 import { clamp } from "./math";
-import { carryCap, pileCap } from "./rules";
+import { drawLivingThermometer, THERMOMETER_RECT } from "./thermometer";
 import { visualSeason, seasonDay } from "./palette";
 
 // Translucent slate retains contrast while letting the real game sky,
@@ -86,37 +86,22 @@ function meter(ctx: any, value: number, x: number, y: number, low: string, high:
  * The panel geometry leaves y=43 onward for notifications and guide access. */
 export function drawCampHUD(ctx: any, g: any, meta: any) {
   drawHudFrame(ctx, 3, 17, 109, 23);
-  drawHudFrame(ctx, 114, 17, 105, 23);
+  drawHudFrame(ctx, THERMOMETER_RECT.x, THERMOMETER_RECT.y, THERMOMETER_RECT.w, THERMOMETER_RECT.h);
   drawHudFrame(ctx, 221, 17, 97, 23);
 
   const warmth = clamp(Number(g.player.warmth) || 0, 0, 100);
   const fuel = g.fireLit ? clamp(Number(g.fuel) || 0, 0, 100) : 0;
-  const cold = clamp(Number.isFinite(g.cold) ? g.cold : 14, 0, 100);
-  // Three distinct survival readings fit the SAME 109x23 panel. 3x5 pixel
-  // text and 5px meters have a 2px gap, with no new scene-blocking HUD row.
-  drawText(ctx, "WARMTH", 7, 20, "#eee1c7");
-  meter(ctx, warmth, 39, 20, "#bc554a", "#ef8a6b");
-  drawText(ctx, String(Math.round(warmth)), 95, 20, warmth < 25 ? "#ffae8d" : "#e8d5ac");
-  drawText(ctx, "FUEL", 7, 27, "#eee1c7");
-  meter(ctx, fuel, 39, 27, "#c77732", "#ffc267");
-  drawText(ctx, String(Math.round(fuel)), 95, 27, fuel < 25 ? "#ffab7e" : "#e8d5ac");
-  // Blue exposure is dangerous when HIGH, unlike the orange Warmth reserve.
-  drawText(ctx, "COLD", 7, 34, "#c3dcef");
-  meter(ctx, cold, 39, 34, "#507f9d", "#9ccfe3");
-  drawText(ctx, String(Math.round(cold)), 95, 34, cold >= 70 ? "#b1e7ff" : "#d4e6e9");
+  // Return to two spacious, instantly readable survival meters.
+  drawText(ctx, "WARMTH", 7, 21, "#eee1c7");
+  meter(ctx, warmth, 39, 21, "#bc554a", "#ef8a6b");
+  drawText(ctx, String(Math.round(warmth)), 95, 21, warmth < 25 ? "#ffae8d" : "#e8d5ac");
+  drawText(ctx, "FUEL", 7, 32, "#eee1c7");
+  meter(ctx, fuel, 39, 32, "#c77732", "#ffc267");
+  drawText(ctx, String(Math.round(fuel)), 95, 32, fuel < 25 ? "#ffab7e" : "#e8d5ac");
 
-  const wood = Math.floor(clamp(Number(g.player.wood) || 0, 0, carryCap(g, meta)));
-  const cap = carryCap(g, meta);
-  drawText(ctx, "WOOD " + wood + "/" + cap, 119, 21, wood >= cap ? "#f3ca80" : "#f1e1c3");
-  if (g.builtPile) {
-    const storage = "PILE " + g.stored + "/" + pileCap(g);
-    const storageX = 214 - textW(storage);
-    // Leave at least 3 pixels between carried wood and pile counts.
-    if (storageX >= 119 + textW("WOOD " + wood + "/" + cap) + 3) {
-      drawText(ctx, storage, storageX, 21, "#c6c9b9");
-    }
-  }
-  drawText(ctx, "RUN ASH " + Math.floor(g.ashEarned), 119, 31, "#d8bcf2");
+  // A dedicated instrument replaces the old wood/Ash text block. The
+  // hidden Cold pressure continues to control survival behind the scenes.
+  drawLivingThermometer(ctx, g);
 
   const day = (g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1));
   const weather = WEATHER_TEXT[g.weather] || "";

@@ -15,6 +15,7 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/cold.ts` - pure exposure target, rain dampness, clothing/shelter modifiers and frame-rate-independent Cold interpolation; sole source of weather-related ambient warmth drain.
 - `src/game/warmth.ts` - pure, frame-rate-independent heat absorption and gradual loss of the retained warming bonus away from a lit fire.
 - `src/game/guidance.ts` - pure guide-target selection from objective IDs plus original pixel-light markers for world/minimap/menu without hit zones.
+- `src/game/thermometer.ts` - deterministic ambient season/time/weather Celsius model, smooth nonpersisted display settling and original 105x23 brass/glass pixel instrument renderer. Does not influence Cold/warmth gameplay.
 - `src/game/hud.ts` - native 320x180 wooden resource panels and a minimap from real tree/player coordinates; render-only
 - `src/game/campProgress.ts` — run-scoped station upgrades, costs, progression requirements and safe wood debit
 - `src/game/nightSky.ts` — independently tested aurora and meteor parade rendering/probabilities

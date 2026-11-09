@@ -11,6 +11,8 @@ export const EXPANSION_MARKER_X = CX + 102;
 export const EAST_EXPANDED_X = CX + 202;
 export const EXPANSION_COST = 5;
 export const MUSEUM_CLAIM_X = CX + 168;
+const TREE_CANOPY_CLEARANCE = 27;
+const POST_PICKUP_CLEARANCE = 18;
 
 export function campEstablished(g: any): boolean {
   return g.fenceLeft === true && g.fenceRight === true;
@@ -21,8 +23,29 @@ export function campClaimBounds(g: any): { west:number; east:number } {
 /** Trees cannot grow inside claimed land, and starting sites stay clear even
  * before posts are built so players don't lose access to either marker. */
 export function isCampTreeExcluded(g: any, x: number): boolean {
-  if (x >= WEST_POST_X - 5 && x <= EAST_POST_X + 5) return true;
-  return g.campExpansion >= 1 && x <= EAST_EXPANDED_X + 5 && x >= EAST_POST_X;
+  // Tree canopies are wider than their center coordinates. Keep trunks far
+  // enough from the palisade AND the not-yet-built eastern expansion marker.
+  if (x >= WEST_POST_X - TREE_CANOPY_CLEARANCE &&
+      x <= EXPANSION_MARKER_X + TREE_CANOPY_CLEARANCE) return true;
+  return g.campExpansion >= 1 &&
+    x >= EAST_POST_X && x <= EAST_EXPANDED_X + TREE_CANOPY_CLEARANCE;
+}
+
+/** Preserve every dropped log, but keep pickups away from a post or a
+ * construction marker. Otherwise they visually read as logs on the marker.
+ * The wood remains collectible just beyond the eastern treeline. */
+export function keepFencePostsClear(g: any): void {
+  if (!Array.isArray(g.pickups)) return;
+  const posts = [WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X,
+    ...(g.campExpansion >= 1 ? [EAST_EXPANDED_X] : [])];
+  let moved = 0;
+  for (const p of g.pickups) {
+    if (!Number.isFinite(p.x)) continue;
+    if (posts.some(x => Math.abs(p.x - x) < POST_PICKUP_CLEARANCE)) {
+      p.x = campClaimBounds(g).east + 48 + moved * 9;
+      moved++;
+    }
+  }
 }
 /** Give existing trees in newly claimed territory back as ordinary ground
  * pickups, never silently delete a resource or generate a Museum drop. */
@@ -37,9 +60,15 @@ export function clearClaimedTrees(g: any): number {
     g.player.chopTree = null;
     g.player.chopT = 0;
   }
-  for (const t of removed) {
-    g.pickups.push({x:t.x, y:t.y, w:Math.max(1,Math.min(3,Math.floor(t.tier||0)+1))});
+  for (const [i,t] of removed.entries()) {
+    // These are rewards for cleared land, not logs to build another post.
+    // Put them outside the fence so the newly claimed interior stays neat.
+    g.pickups.push({
+      x:east+48+i*9, y:Math.min(151,t.y),
+      w:Math.max(1,Math.min(3,Math.floor(t.tier||0)+1))
+    });
   }
+  keepFencePostsClear(g);
   return removed.length;
 }
 
@@ -51,6 +80,7 @@ export function placeFencePost(g: any, side: "left" | "right"): string {
   if (g.player.wood < 1) return "BRING ONE LOG TO THIS BOUNDARY POST.";
   g.player.wood--;
   g[key] = true;
+  keepFencePostsClear(g);
   if (campEstablished(g)) {
     clearClaimedTrees(g);
     return "CAMP ESTABLISHED! YOU CAN NOW BUILD STRUCTURES.";
@@ -68,6 +98,7 @@ export function expandCamp(g: any): string {
   g.stored -= EXPANSION_COST - fromCarried;
   g.campExpansion = 1;
   const cleared = clearClaimedTrees(g);
+  keepFencePostsClear(g);
   return "EASTERN CAMP EXPANDED! " + (cleared ? cleared + " TREES CLEARED." : "NEW GROUND CLAIMED.");
 }
 

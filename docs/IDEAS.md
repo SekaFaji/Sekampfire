@@ -185,6 +185,12 @@ A dedicated completion screen must make Ash and permanent progression easy to un
 
 **Still open:** whether Cold represents instantaneous weather severity or slower personal exposure, whether first rain occurs in Level 1 or Level 2, exact drain/insulation curves, extra resources required for clothing, and how each campaign level chooses season and weather.
 
+### Patch #36 implementation note (2026-11-09)
+
+**Implemented in source for review:** the original HUD panel now contains a small Cold bar alongside Warmth and Fuel; Cold tracks real environment exposure. Weather and winter exposure replace the previous direct cold-snap/blizzard warmth penalties to avoid duplicate damage. Rain adds hidden dampness that increases Cold until the player dries near the fire or under an existing Lean-to. Existing Warm Boots reduce Cold (without changing their ownership key), and Old Flint / Warm Blood / torch / fireplace progression remains intact. New Cold and dampness are optional backwards-compatible v1 run-save fields.
+
+**Still to design and implement:** standalone snow weather and its visual/audio presentation beyond winter particle snowfall; level-based rain/snow progression after the campaign restructure; more crafted clothing/insulation items; future inventory and Pine Logs conversion. Actual Cold values and first-night pacing need real-device testing.
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

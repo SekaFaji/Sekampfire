@@ -126,7 +126,8 @@ describe("Patch #31 establish a real camp",()=>{
   g.fenceLeft=true;g.fenceRight=true;g.everLit=true;g.guideStokes=1;g.night=1;
   update(g,meta(),0.02,callbacks());
   expect(g.guideLevel).toBe(1);
-  expect(guideProgress(g).next?.label).toContain("EXPAND YOUR CAMP");
+  // Patch #33 teaches building storage first, before expanding the fence.
+  expect(guideProgress(g).next?.label).toContain("BUILD LOG STORAGE");
  });
  it("saves fence progress in existing version-one run snapshots, with old runs grandfathered",()=>{
   const g=camp();g.fenceLeft=true;g.fenceRight=true;g.campExpansion=1;

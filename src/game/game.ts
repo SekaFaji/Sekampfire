@@ -21,6 +21,8 @@ import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount,
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap } from "./hud";
+import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
+import { guideTarget, drawWorldFireflies, drawOffscreenGuide, drawScreenFireflies } from "./guidance";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
   campEstablished, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
   expandCamp, keepFencePostsClear, drawCampGround, drawCampFence } from "./campBoundary";
@@ -42,6 +44,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.player.dir = data.player.dir === -1 ? -1 : 1;
   g.player.wood = finiteRange(data.player.wood, 0, 26, 0);
   g.player.warmth = finiteRange(data.player.warmth, 1, 100, 100);
+  g.heatSoak = n("heatSoak", 0, HEAT_SOAK_SECONDS, 0);
   g.player.torchT = finiteRange(data.player.torchT, 0, 60, 0);
   g.time = n("time", 0, DAY_LEN + LONG_NIGHT_LEN - 0.01, 10);
   g.night = Math.floor(n("night", 0, 100000, 0));
@@ -154,7 +157,7 @@ function createEngine(): any {
     nightSkyEvent: "none", paradeTimer: 0,
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
-    dog: null, stored: 0, stokeCd: 0, camX: CX - W / 2, shake: 0,
+    dog: null, stored: 0, stokeCd: 0, heatSoak: 0, camX: CX - W / 2, shake: 0,
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
@@ -697,7 +700,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (g.stage >= 5 && Math.abs(p.x - CX) < 50) drain *= 0.6;
   let d = drain;
   const wr = 20 + f * 34;
-  if (g.fireLit && Math.abs(p.x - CX) < wr) d -= 6 * (g.stage >= 2 ? 1.25 : 1) + stationLevel(g, "hearth") * 0.7;
+  const byFire = g.fireLit && Math.abs(p.x - CX) < wr;
+  g.heatSoak = advanceHeatSoak(g.heatSoak, dt, byFire);
+  if (byFire) d -= fireWarmthRate(g);
   if (g.aurora && g.isNight) d -= 0.3;
   p.warmth = clamp(p.warmth - d * dt, 0, 100);
   if (p.warmth <= 0) {
@@ -1275,7 +1280,7 @@ function resetAllProgress(g: any, meta: any) {
   }
   Object.assign(meta, {
     ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null,
-    museumBuilt:false, collection:cleanLogCollection(null)
+    museumBuilt:false, collection:cleanLogCollection(null), guideFx:true
   });
   setupTitleScene(g);
   g.resumeData = null;
@@ -1295,6 +1300,12 @@ function settingsRows(g: any, meta: any) {
       label: "FULLSCREEN", right: g.fs ? "ON" : "OFF",
       desc: "TAP HERE OR PRESS F TO TOGGLE", h: 15, enabled: true,
       onDown: () => { if (g.fsToggle) g.fsToggle(); }
+    },
+    {
+      label: "GUIDING FIREFLIES", right: meta.guideFx === false ? "OFF" : "ON",
+      desc: "SHOW OR HIDE GROOTYS NEXT OBJECTIVE GLOW",
+      h: 15, enabled: true,
+      onDown: () => { meta.guideFx = meta.guideFx === false; saveMeta(meta); }
     },
     {
       label: "VISUAL FX", right: GRAPHICS.high ? "HIGH" : "LOW",
@@ -1810,6 +1821,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   const q = clamp(g.time / total, 0, 1);
   const camX = clamp(g.player.x - W / 2, 0, WORLD_W - W);
   g.camX = camX;
+  const guiding = guideTarget(g, meta);
   const x0 = CX - 42;
   const colors = visualPalette(g);
 
@@ -1990,6 +2002,9 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
       drawTextO(ctx, lbl, PILE_X - 7, 120 - bob, "#ffe9a0", "#060a18");
     } else if (tr) drawTextO(ctx, "CHOP", tr.x - 7, tr.y - 40 - bob, "#ffe9a0", "#060a18");
   }
+  // Fireflies are composited in world coordinates after real trees, buildings
+  // and prompts, so they never replace game sprites or block interactions.
+  drawWorldFireflies(ctx, g, guiding, camX);
   ctx.restore();
 
   // A few light wind streaks show motion through the environment.
@@ -2067,7 +2082,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   drawReflectiveRiver(ctx, g, reflection, rctx, darkA, camX);
 
   // Same real world trees, camp sites and player location; newly framed.
-  if (inRun) drawCampMinimap(ctx, g, colors);
+  if (inRun) {
+    drawCampMinimap(ctx, g, colors);
+    drawOffscreenGuide(ctx, g, guiding, camX);
+  }
 
   // screen chrome
   if (!inRun) drawScreen(ctx, g, meta);
@@ -2076,7 +2094,11 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     if (!g.menu) { drawGuideShortcut(ctx, g); drawMovementFeedback(ctx, g); drawRunChrome(ctx, g); drawSideArrows(ctx, g); }
   }
   if (g.menu) drawMenu(ctx, g, meta);
-  if (inRun) drawStatusMessages(ctx, g);
+  if (inRun) {
+    // This must render AFTER the actual menu, which computes its row bounds.
+    drawScreenFireflies(ctx, g, guiding);
+    drawStatusMessages(ctx, g);
+  }
 }
 
 // ============ App ============

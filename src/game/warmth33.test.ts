@@ -90,14 +90,14 @@ describe("Patch #33 progressive fire warmth",()=>{
     const g=createEngine(),m=meta();
     const row=settingsRows(g,m).find((r:any)=>r.label==="GUIDING FIREFLIES");
     expect(row).toBeDefined();
-    expect(row.right).toBe("ON");
-    row.onDown();
+    expect(row!.right).toBe("ON");
+    row!.onDown();
     expect(m.guideFx).toBe(false);
     expect(loadMeta().guideFx).toBe(false);
     expect(m.ash).toBe(4);
     const toggle=settingsRows(g,m).find((r:any)=>r.label==="GUIDING FIREFLIES");
-    expect(toggle.right).toBe("OFF");
-    toggle.onDown();
+    expect(toggle!.right).toBe("OFF");
+    toggle!.onDown();
     expect(loadMeta().guideFx).toBe(true);
   });
 });

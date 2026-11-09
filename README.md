@@ -2,6 +2,17 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #36: Cold exposure, rain dampness and Warm Boots
+
+- **Cold is exposure pressure, not another health pool.** The top-left translucent HUD now shows WARMTH / FUEL / COLD in its original 109x23 panel, without covering any additional world scenery.
+- A single environmental Cold calculation now drives ambient warmth loss. Clear daylight is mild, nights colder, rain/wind/cold snaps/blizzards raise pressure, and winter adds modest seasonal exposure. This **replaces** the previous direct storm damage bonuses to avoid stacking penalties twice.
+- **Rain gradually increases dampness** when outdoors; shelter under the existing Lean-to and standing near a lit fire help dry the player. Dampness contributes to Cold rather than introducing a third meter.
+- Existing craft **Warm Boots** now reduce Cold by 12 exposure points, retaining their original walking-speed advantage and saved item ID.
+- **First night is gentle** (clear or windy only) to leave room to learn travel and camp management. Grooty briefly explains the new Cold bar at first nightfall.
+- Warm Blood, torch protection, cabin insulation and eight-second gradual fire warming remain intact. Existing weather fuel consumption rules are unchanged.
+- Optional `cold` and `dampness` fields extend the existing version-one run checkpoint; older checkpoints derive safe starting exposure without losing progress.
+- Actual standalone snow weather, advanced clothing/inventory and the full Level/Milestone/Mission campaign remain separately planned rather than quietly added in this patch. Android visual readability and survival balancing still require human playtesting.
+
 ## Patch #33: Grooty's fireflies and progressive fire warmth
 
 - **Fire warmth absorbs over time:** staying near a lit fire gradually increases recovery from roughly +2 to +8.5 warmth/s over 8 seconds before cold drain; brief walks away smoothly lose the buildup, and the Log Bench / Fireplace upgrade bonuses still apply.

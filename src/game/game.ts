@@ -6,6 +6,7 @@ import { carryCap, pileCap, choppingToolTier } from "./rules";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
+import { coldTarget, advanceCold, coldWarmthDrain } from "./cold";
 import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
 import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
 import { shorelineWaveOffset, shorelineFoam, reflectionOffset, reflectionOpacity, waterGlint } from "./water";
@@ -52,6 +53,9 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.weather = WEATHER_IDS.includes(data.weather) ? data.weather : "clear";
   g.previousWeather = g.weather;
   g.weatherBlend = 1;
+  g.dampness = n("dampness", 0, 100, 0);
+  // Old v1 checkpoints never stored Cold. Derive the appropriate exposure
+  // from their real time/weather/equipment once the run state is restored.
   g.aurora = flag("aurora");
   g.nightSkyEvent = data.nightSkyEvent === "parade" ? "parade" : g.aurora ? "aurora" : "none";
   g.paradeTimer = 0;
@@ -109,6 +113,7 @@ function resumeRun(g: any, data: any, meta?: any) {
     }));
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
+  g.cold = n("cold", 0, 100, coldTarget(g));
   // New optional fields keep old version-one checkpoints compatible.
   const legacyGuideLevel = g.stage >= 5 ? 4 : g.stage >= 2 ? 3
     : g.builtBench && g.crafts.pack ? 2 : g.builtPile ? 1 : 0;
@@ -157,7 +162,7 @@ function createEngine(): any {
     nightSkyEvent: "none", paradeTimer: 0,
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
-    dog: null, stored: 0, stokeCd: 0, heatSoak: 0, camX: CX - W / 2, shake: 0,
+    dog: null, stored: 0, stokeCd: 0, heatSoak: 0, cold: 14, dampness: 0, camX: CX - W / 2, shake: 0,
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
@@ -261,6 +266,9 @@ function setupTitleScene(g: any) {
 }
 
 function pickWeather(g: any): string {
+  // The opening night teaches exploration, fire and camp boundaries. No
+  // random blizzard, cold snap or rain before the player knows protection.
+  if (g.night === 1) return Math.random() < 0.8 ? "clear" : "wind";
   if (g.night >= 4 && Math.random() < 0.12) return "blizzard";
   const r = Math.random();
   if (r < 0.42) return "clear";
@@ -381,6 +389,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
       if (g.aurora) w += " The AURORA lights up the sky!";
       if (g.nightSkyEvent === "parade") w += " A SHOOTING STAR PARADE begins!";
       cb.toast(w);
+      if (g.night === 1) cb.toast("GROOTY: HIGH COLD DRAINS WARMTH FASTER. RETURN TO THE FIRE!");
     }
   }
   if (g.time >= total) {
@@ -691,14 +700,10 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- meters ----
   const f = g.fireLit ? g.fuel / 100 : 0;
-  let drain = g.isNight ? 2.1 + g.depth * 0.15 : 0.85;
-  if (g.weather === "coldsnap") drain += g.isNight ? 0.7 : 0.3;
-  if (g.weather === "blizzard") drain += g.isNight ? 1.5 : 0.3;
-  drain *= 1 - 0.15 * (meta.up.blood || 0);
-  if (p.torchT > 0) drain *= 0.5;
-  if (g.stage >= 6 && Math.abs(p.x - CX) < 44) drain *= 0.35;
-  else if (g.stage >= 5 && Math.abs(p.x - CX) < 50) drain *= 0.6;
-  let d = drain;
+  // Weather drains warmth ONLY through Cold; do not stack the old
+  // cold-snap/blizzard bonuses over the new exposure pressure.
+  advanceCold(g, dt);
+  let d = coldWarmthDrain(g, meta);
   const wr = 20 + f * 34;
   const byFire = g.fireLit && Math.abs(p.x - CX) < wr;
   g.heatSoak = advanceHeatSoak(g.heatSoak, dt, byFire);

@@ -24,7 +24,7 @@ const STAGES = [
 // run-scoped crafts bought at the workbench with wood
 const CRAFTS = [
   { id: "pack", name: "Timber Pack", cost: 6, desc: "CARRY 8 MORE WOOD" },
-  { id: "boots", name: "Warm Boots", cost: 4, desc: "WALK FASTER THROUGH SNOW" },
+  { id: "boots", name: "Warm Boots", cost: 4, desc: "WALK FASTER, REDUCE COLD EXPOSURE" },
   { id: "maul", name: "Wood Axe", cost: 5, desc: "CHOP FASTER" },
   { id: "refl", name: "Fire Reflector", cost: 8, desc: "THE FIRE BURNS SLOWER" },
   { id: "kindling", name: "Kindling Bundle", cost: 9, benchTier: 1, desc: "EACH LOG STOKES MORE FUEL" },

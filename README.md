@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #33: Grooty's fireflies and progressive fire warmth
+
+- **Fire warmth absorbs over time:** staying near a lit fire gradually increases recovery from roughly +2 to +8.5 warmth/s over 8 seconds before cold drain; brief walks away smoothly lose the buildup, and the Log Bench / Fireplace upgrade bonuses still apply.
+- **Contextual firefly guide:** a tiny yellow-green firefly cluster and bobbing pixel arrow highlights only Grooty's next unfinished task, drawn from the current tree, camp post, fireplace, storage, workbench or interface state. Distant targets have a minimap marker.
+- **Menu guidance:** once resources are ready, the same marker can lead into BUILD, its proper tab and specific upgrade/structure row, or the workbench's Tools/Timber Pack recipe. All markers are decorative and introduce no new touch zones.
+- **Level 2 teaches storage before expansion** while preserving the existing five-level run-local structure. Grooty's dialogue remains the complete objective list: no extra HUD banner.
+- **Settings > Guiding Fireflies:** on by default, can be switched off. The preference persists under the original metadata key, and heat soak resumes from existing v1 run checkpoints without a save version change.
+- Original programmatic 320x180 pixels only, no external game art or change to Ash/balance beyond warmth.
+
 ## Patch #32: Modal controls, fence clarity and translucent HUD
 
 - **Strict modal input:** an open menu consumes all taps inside its own panel, and never sends them to buttons on the title screen or gameplay behind it. Only tapping outside the panel, its explicit X/Back control, or the keyboard Escape/Back closes it.

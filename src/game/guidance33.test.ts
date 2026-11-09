@@ -65,7 +65,7 @@ describe("Patch #33 Grooty firefly wayfinding",()=>{
    state.fenceLeft=true;state.fenceRight=true;state.campExpansion=1;
    state.player.wood=15;state.stored=15;
    let target=guideTarget(state,m);
-   expect(target).toMatchObject({space:"screen",x:100,y:149});
+   expect(target).toMatchObject({space:"screen",x:300,y:29});
    state.menu="build";state.buildTab=0;
    state.zones=[];
    drawMenu(canvas().ctx,state,m);

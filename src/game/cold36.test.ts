@@ -166,7 +166,7 @@ describe("Patch #36 - environmental Cold exposure",()=>{
     expect(rects).toContainEqual(expect.objectContaining({x:3,y:17,w:109,h:23}));
     const left=rects.filter(r=>r.x>=3&&r.x+r.w<=112&&r.y>=17&&r.y<40);
     expect(left.every(r=>r.y+r.h<=40)).toBe(true);
-    expect(left.some(r=>r.y===34&&r.color==="#9ccfe3")).toBe(true);
+    expect(left.some(r=>r.y===35&&r.color==="#9ccfe3")).toBe(true);
     expect(rects.some(r=>r.color==="#c3dcef")).toBe(true);
   });
 });

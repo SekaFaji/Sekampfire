@@ -22,6 +22,7 @@ import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount,
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap } from "./hud";
+import { ambientTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
 import { guideTarget, drawWorldFireflies, drawOffscreenGuide, drawScreenFireflies } from "./guidance";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
@@ -114,6 +115,9 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
   g.cold = n("cold", 0, 100, coldTarget(g));
+  // The instrument is display-only. Its reading is derived from the
+  // restored world weather/season, not from player insulation or Cold.
+  g.thermometerTemp = ambientTemperature(g);
   // New optional fields keep old version-one checkpoints compatible.
   const legacyGuideLevel = g.stage >= 5 ? 4 : g.stage >= 2 ? 3
     : g.builtBench && g.crafts.pack ? 2 : g.builtPile ? 1 : 0;
@@ -157,7 +161,7 @@ function toast(g: any, text: string) {
 // ============ engine ============
 function createEngine(): any {
   return {
-    animT: 0, time: 10, isNight: false, night: 0, weather: "clear", aurora: false,
+    animT: 0, time: 10, isNight: false, night: 0, thermometerTemp: 11, weather: "clear", aurora: false,
     weatherBlend: 1, previousWeather: "clear", scenerySeed: 777, resumeData: null,
     nightSkyEvent: "none", paradeTimer: 0,
     trees: [], falling: [], chips: [], pickups: [], mts: [], mts2: [], stars: [], sparkles: [], snow: [], sparks: [], smoke: [],
@@ -224,6 +228,7 @@ function startRunEngine(g: any, meta: any) {
   g.museumBuilt = !!meta.museumBuilt;
   genScenery(g, Math.floor(Math.random() * 1e9));
   spawnTrees(g, 26);
+  g.thermometerTemp = ambientTemperature(g);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
@@ -257,6 +262,7 @@ function setupTitleScene(g: any) {
   g.time = DAY_LEN - 3;
   g.isNight = false;
   g.weather = "clear";
+  g.thermometerTemp = ambientTemperature(g);
   g.fireLit = true; g.everLit = true; g.fuel = 70; g.stage = 2;
   g.builtBench = true; g.builtPile = true;
   g.fenceLeft = true; g.fenceRight = true; g.campExpansion = 1;
@@ -753,6 +759,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
   g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
+  // Pixel-art instrument settles slowly as weather/day/night/season changes.
+  // It is not added to the save format because real weather is authoritative.
+  g.thermometerTemp = settleThermometer(g.thermometerTemp, ambientTemperature(g), dt);
   updateShootingStarParade(g, dt);
   const ease = 1 - Math.exp(-Math.max(0, dt) * 13);
   g.moveFeedbackLeft += ((g.pleft || g.keys.left) ? 1 - g.moveFeedbackLeft : -g.moveFeedbackLeft) * ease;

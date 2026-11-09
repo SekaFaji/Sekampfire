@@ -12,6 +12,8 @@ Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival ga
 - `src/game/guide.ts` - pure run-local tutorial objectives, Grooty's permanent world sprite, dialogue and small question-mark shortcut
 - `src/game/statusMessages.ts` - bounded sequential status queue and centered, fade-out-safe message strip
 - `src/game/campBoundary.ts` - physical two-post and east-expansion actions, claimed-land tree exclusion and native-resolution procedural palisade/cleared-ground drawing. Checkpoint fields are run-local and older progress is grandfathered.
+- `src/game/warmth.ts` - pure, frame-rate-independent heat absorption and gradual loss of the retained warming bonus away from a lit fire.
+- `src/game/guidance.ts` - pure guide-target selection from objective IDs plus original pixel-light markers for world/minimap/menu without hit zones.
 - `src/game/hud.ts` - native 320x180 wooden resource panels and a minimap from real tree/player coordinates; render-only
 - `src/game/campProgress.ts` — run-scoped station upgrades, costs, progression requirements and safe wood debit
 - `src/game/nightSky.ts` — independently tested aurora and meteor parade rendering/probabilities

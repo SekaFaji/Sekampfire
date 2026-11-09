@@ -67,6 +67,9 @@ function captureRunSnapshot(g: any): any {
     t:t.t,dir:t.dir
   }));
   state.crafts = { ...g.crafts };
+  // Optional run-local quick slot assignments. Never trust arbitrary IDs,
+  // future item ownership or raw objects from saved checkpoints.
+  state.quickSlots = [0,1].map(i=>g.quickSlots?.[i]==="ember"?"ember":null);
   if (g.dog && Number.isFinite(g.dog.x)) {
     state.dog = {x:clamp(g.dog.x,10,1590),dir:g.dog.dir===-1?-1:1,
       wood:Math.max(0,Math.min(2,Math.floor(g.dog.wood||0)))};

@@ -23,7 +23,7 @@ import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./stat
 import { drawCampHUD, drawCampMinimap } from "./hud";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
   campEstablished, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
-  expandCamp, drawCampGround, drawCampFence } from "./campBoundary";
+  expandCamp, keepFencePostsClear, drawCampGround, drawCampFence } from "./campBoundary";
 
 function resumeRun(g: any, data: any, meta?: any) {
   if (!data) return;
@@ -121,6 +121,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
   if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
   clearClaimedTrees(g);
+  keepFencePostsClear(g);
   if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
     g.dog = {
       x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:156,
@@ -592,6 +593,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     if (ft.t >= 0.55) {
       const w = ft.wood;
       g.pickups.push({ x: ft.x, y: ft.y, w });
+      keepFencePostsClear(g);
       g.guideChops++;
       const found = discoverLog(meta);
       if (found) {
@@ -1142,6 +1144,7 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
   const pw = 272, ph = 32 + n * 15 + 12 + (tabs ? 18 : 0);
   const x0 = Math.round((W - pw) / 2);
   const y0 = Math.max(8, Math.round((H - ph) / 2) - 4);
+  g.menuRect = {x:x0,y:y0,w:pw,h:ph};
   panel(ctx, x0, y0, pw, ph);
   drawText(ctx, title, x0 + 6, y0 + 5, "#ffd98a");
   drawText(ctx, right, x0 + pw - 24 - textW(right), y0 + 5, "#cfc2f0");
@@ -1398,6 +1401,23 @@ function drawInfoMenu(ctx: any, g: any, title: string, lines: string[], hasPolic
 }
 
 function drawMenu(ctx: any, g: any, meta: any) {
+  // The background title/game HUD still draws underneath the popup. Record
+  // exactly where the active popup's hit zones begin; all earlier zones
+  // belong to the underlying screen and are deliberately non-interactive.
+  g.menuZonesStart = g.zones.length;
+  g.menuZonesFor = g.menu;
+  g.menuRect = null;
+  if (g.menu === "shop" || g.menu === "endlessNightInfo") {
+    g.menuRect = {x:24,y:8,w:272,h:164};
+  } else if (g.menu === "help") {
+    g.menuRect = {x:18,y:8,w:284,h:164};
+  } else if (g.menu === "museum") {
+    g.menuRect = {x:19,y:7,w:282,h:166};
+  } else if (g.menu === "guide") {
+    g.menuRect = {x:22,y:8,w:276,h:162};
+  } else if (g.menu === "privacy" || g.menu === "credits") {
+    g.menuRect = {x:23,y:10,w:274,h:160};
+  }
   ctx.fillStyle = "rgba(4,6,16,0.5)";
   ctx.fillRect(0, 0, W, H);
   if (g.menu === "bench") {
@@ -2061,5 +2081,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

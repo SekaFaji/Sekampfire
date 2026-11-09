@@ -113,9 +113,9 @@ describe("Patch #31 establish a real camp",()=>{
   expect(expandCamp(g)).toContain("1 TREES CLEARED");
   expect(g.trees).toHaveLength(1);
   expect(g.trees[0].id).toBe(4);
-  expect(g.pickups).toEqual([{x:CX+139,y:151,w:3}]);
+  expect(g.pickups).toEqual([{x:EAST_EXPANDED_X+48,y:151,w:3}]);
   expect(isCampTreeExcluded(g,CX+160)).toBe(true);
-  expect(isCampTreeExcluded(g,CX+214)).toBe(false);
+  expect(isCampTreeExcluded(g,CX+238)).toBe(false);
  });
  it("Grooty introduces the fence and expansion while preserving later teaching goals",()=>{
   const g=camp();

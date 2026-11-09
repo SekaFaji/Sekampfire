@@ -159,14 +159,16 @@ describe("Patch #36 - environmental Cold exposure",()=>{
     expect(m.ash).toBe(5);
     expect(loadRunSnapshot()).toBeNull(); // titleActions uses in-memory resumeData, no automatic banking
   });
-  it("draws all three readings inside the original 109x23 translucent HUD panel",()=>{
+  it("keeps real Cold survival pressure while restoring the spacious two-bar HUD",()=>{
     const g=runner(),m=meta();g.cold=80;g.ui="run";
     const {ctx,rects}=drawCanvas();
     drawCampHUD(ctx,g,m);
     expect(rects).toContainEqual(expect.objectContaining({x:3,y:17,w:109,h:23}));
     const left=rects.filter(r=>r.x>=3&&r.x+r.w<=112&&r.y>=17&&r.y<40);
     expect(left.every(r=>r.y+r.h<=40)).toBe(true);
-    expect(left.some(r=>r.y===35&&r.color==="#9ccfe3")).toBe(true);
-    expect(rects.some(r=>r.color==="#c3dcef")).toBe(true);
+    expect(left.some(r=>r.y===22&&r.color==="#bc554a")).toBe(true);
+    expect(left.some(r=>r.y===33&&r.color==="#c77732")).toBe(true);
+    expect(left.some(r=>r.color==="#9ccfe3")).toBe(false);
+    expect(coldWarmthDrain(g,m)).toBeGreaterThan(0);
   });
 });

@@ -132,8 +132,10 @@ export function drawLivingThermometer(ctx: any, g: any): void {
   const tipX = 128 + length - 1;
   ctx.fillStyle = lerpHex(liquid, "#fff7dd", 0.65);
   ctx.fillRect(tipX, 31, 1, 2);
-  ctx.fillStyle = "#263744";
-  ctx.fillRect(128 + length, 32, Math.max(0, 56 - length), 1);
+  if (length < 56) {
+    ctx.fillStyle = "#263744";
+    ctx.fillRect(128 + length, 32, 56 - length, 1);
+  }
 
   // Bulb / rounded glass reservoir, foregrounded over tube's left end.
   ctx.fillStyle = "#382d29";

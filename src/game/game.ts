@@ -170,7 +170,7 @@ function createEngine(): any {
     player: { x: CX + 26, y: PLAYER_Y, dir: -1, wood: 0, torchT: 0, chopT: 0, chopTime: 1, chopTree: null, moving: false, warmth: 100 },
     dog: null, stored: 0, stokeCd: 0, heatSoak: 0, cold: 14, dampness: 0, camX: CX - W / 2, shake: 0,
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
-    quickSlots: [null, null], quickSlotIndex:0, quickSlotFrom:"run",
+    quickSlots: [null, null], quickSlotIndex:0, quickSlotFrom:"run", buildFromPause:false,
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
@@ -979,6 +979,13 @@ function closeMenu(g: any) {
     g.keys.act = false;
     return;
   }
+  if (g.menu === "build" && g.buildFromPause) {
+    g.buildFromPause = false;
+    g.menu = "pause";
+    g.menuSel = 0;
+    g.keys.act = false;
+    return;
+  }
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
     g.menu = "settings";
     g.menuSel = 0;
@@ -1018,7 +1025,7 @@ function pauseRows(g: any, meta: any) {
     },
     {
       label: "BUILD", right: "", desc: "CAMP STRUCTURES AND UPGRADES", h:15, enabled:true,
-      onDown: () => { g.menu="build";g.buildTab=0;g.menuSel=0;g.keys.act=false; },
+      onDown: () => { g.menu="build";g.buildFromPause=true;g.buildTab=0;g.menuSel=0;g.keys.act=false; },
     },
     {
       label: "TOOLBAR", right: "", desc: "SET UP TWO QUICK ACCESS SLOTS", h:15, enabled:true,

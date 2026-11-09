@@ -26,10 +26,10 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   const world = (x:number,y=114):FireflyTarget => ({space:"world",x,y,goal});
   const ui = (menu: "build"|"bench",tab:number,row:number):FireflyTarget =>
     ({space:"menu",x:0,y:0,menu,tab,row,goal});
-  const resources = ():FireflyTarget|null => {
+  const resources = (treesOnly=false):FireflyTarget|null => {
     const p = g.player;
     const drops = (g.pickups||[]).filter((d:any)=>d.w>0 && Number.isFinite(d.x));
-    if (drops.length) {
+    if (!treesOnly && drops.length) {
       const nearest = drops.reduce((best:any,v:any)=>
         Math.abs(v.x-p.x)<Math.abs(best.x-p.x)?v:best);
       return world(nearest.x,Math.min(122,(nearest.y||151)-18));
@@ -60,7 +60,7 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   // This prevents false guides over Settings, Grooty or the Museum.
   const target = (():FireflyTarget|null => {
     switch(goal) {
-      case "chop": return resources();
+      case "chop": return resources(true);
       case "left-post": return wood<1?resources():world(WEST_POST_X);
       case "right-post": return wood<1?resources():world(EAST_POST_X);
       case "light-fire": return world(CX,116);

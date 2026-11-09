@@ -1,5 +1,13 @@
 # Sekampfire
 
+## Patch #32: Modal controls, fence clarity and translucent HUD
+
+- **Strict modal input:** an open menu consumes all taps inside its own panel, and never sends them to buttons on the title screen or gameplay behind it. Only tapping outside the panel, its explicit X/Back control, or the keyboard Escape/Back closes it.
+- **Independent mode help:** locked Endless Night continues to open its own Coming Soon explanation; the How to Play button cannot activate through this modal.
+- **Cleaner fence posts:** widened real-tree exclusions to account for canopy width. Wood drops near physical fence markers are moved just outside the fence without changing resource quantities; cleared expansion trees also drop ordinary collectible wood beyond newly claimed ground.
+- **More transparent top UI:** lighter translucent charcoal panels retain the pixel-font contrast and wooden framing while allowing more of the scenery to show.
+- No changes to Ash, tutorial levels, pet behavior or survival difficulty.
+
 ## Patch #31: Claim and expand your camp
 
 - **First Camp:** Grooty teaches you to chop a tree, place one real log at the western boundary post and one at the eastern post. When both are built, a handcrafted wooden palisade appears behind the camp.

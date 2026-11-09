@@ -4,10 +4,12 @@ import { clamp } from "./math";
 import { carryCap, pileCap } from "./rules";
 import { visualSeason, seasonDay } from "./palette";
 
-const WOOD_LIGHT = "#b5976d";
-const WOOD_MID = "#80603c";
-const WOOD_DARK = "#473425";
-const INK = "rgba(23,33,44,0.92)";
+// Translucent slate retains contrast while letting the real game sky,
+// weather and forest stay visible behind the resource panels.
+const WOOD_LIGHT = "rgba(206,174,119,0.82)";
+const WOOD_MID = "rgba(148,106,64,0.80)";
+const WOOD_DARK = "rgba(63,46,32,0.68)";
+const INK = "rgba(18,30,41,0.64)";
 
 /** One shared, native-resolution pixel frame for the in-game HUD.
  * UI only: doesn't introduce new sprites or replace the world renderer. */
@@ -34,7 +36,7 @@ export function drawCampMinimap(ctx: any, g: any, colors: any) {
   drawHudFrame(ctx, x, y, w, h);
   const left = x + 3, right = x + w - 4;
   const mm = (worldX: number) => Math.round(left + clamp(worldX, 0, WORLD_W) / WORLD_W * (right - left));
-  ctx.fillStyle = "rgba(110,122,121,0.30)";
+  ctx.fillStyle = "rgba(110,122,121,0.20)";
   ctx.fillRect(x + 3, y + 3, w - 6, 7);
   ctx.fillStyle = colors.ridge;
   ctx.fillRect(left, y + 10, right - left + 1, 1);
@@ -64,9 +66,9 @@ export function drawCampMinimap(ctx: any, g: any, colors: any) {
 
 function meter(ctx: any, value: number, x: number, y: number, low: string, high: string) {
   const v = clamp(Number.isFinite(value) ? value : 0, 0, 100);
-  ctx.fillStyle = "#3c4650";
+  ctx.fillStyle = "rgba(60,70,80,0.78)";
   ctx.fillRect(x, y, 52, 5);
-  ctx.fillStyle = "#131d27";
+  ctx.fillStyle = "rgba(19,29,39,0.72)";
   ctx.fillRect(x + 1, y + 1, 50, 3);
   const fill = Math.round(50 * v / 100);
   if (fill > 0) {

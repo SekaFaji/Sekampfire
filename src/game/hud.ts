@@ -1,5 +1,5 @@
 import { W, WORLD_W, CX, BENCH_X, PILE_X, WEATHER_TEXT } from "./config";
-import { drawText } from "./font";
+import { drawText, textW } from "./font";
 import { clamp } from "./math";
 import { drawLivingThermometer, THERMOMETER_RECT } from "./thermometer";
 import { visualSeason, seasonDay } from "./palette";

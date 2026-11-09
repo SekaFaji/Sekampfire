@@ -3,6 +3,8 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #33: 8s gradually accelerating fire warmth, saved heat soak, Grooty firefly/arrow wayfinding across world, minimap, BUILD/Craft tabs and rows; persistent guide visibility toggle; reorder storage before eastern expansion. Real phone visual testing, readability and balance still pending.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #32 source: strict modal hit-zone isolation and inside/outside/X/back behavior, no title/game click-through, translucent wooden top HUD, wider tree-canopy spawn exclusion and wood pickups relocated off posts without losing resources. Regression tests included; Android visual QA pending.
 ## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #31 source: two one-log claimed boundary posts, palisade behind camp, eastern five-log expansion, relocated Museum, claimed-ground no-respawn trees with existing trees converted into regular pickups, Grooty levels 1-2 integrated, v1 checkpoint-compatible old-run protection. Native device visual and pacing QA pending.

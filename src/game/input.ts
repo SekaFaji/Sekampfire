@@ -63,12 +63,12 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   }
   if (k === "h" && g.ui === "title" && !g.menu) { g.menu = "help"; g.helpPage = 0; }
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
-  if (k === "b") {
-    if (g.ui === "run") {
-      g.menu = g.menu ? null : "build";
-      g.menuSel = 0;
-      g.keys.act = false;
-    } else if (g.menu) g.menu = null;
+  // B is a gameplay Build shortcut, never a way to accidentally dismiss
+  // an open dialog or switch from one menu into another.
+  if (k === "b" && g.ui === "run" && !g.menu) {
+    g.menu = "build";
+    g.menuSel = 0;
+    g.keys.act = false;
   }
   if (k === "escape") {
     if (g.menu) closeMenu(g);
@@ -94,6 +94,28 @@ function syncTouchMovement(g: any) {
 }
 function handlePointer(g: any, type: string, id: number, mx: number, my: number) {
   if (type === "down") {
+    if (g.menu) {
+      // Only the CURRENT dialog's controls can receive pointer input. The
+      // title, gameplay HUD and menus underneath have already registered
+      // their own zones, but those must never remain clickable through a popup.
+      const currentMenu = g.menu;
+      if (g.menuZonesFor !== currentMenu) return; // Wait for next render.
+      const from = Number.isInteger(g.menuZonesStart) ? g.menuZonesStart : g.zones.length;
+      for (let i = g.zones.length - 1; i >= from; i--) {
+        const z = g.zones[i];
+        if (mx >= z.x && mx < z.x + z.w && my >= z.y && my < z.y + z.h) {
+          g.pointers[id] = { zone: z, menu: currentMenu };
+          if (z.onDown) z.onDown();
+          return;
+        }
+      }
+      const box = g.menuRect;
+      // Blank space INSIDE the panel isn't a close action.
+      // Blank space OUTSIDE the panel closes or returns to its parent.
+      if (box && (mx < box.x || my < box.y ||
+          mx >= box.x + box.w || my >= box.y + box.h)) closeMenu(g);
+      return;
+    }
     for (let i = g.zones.length - 1; i >= 0; i--) {
       const z = g.zones[i];
       if (mx >= z.x && mx < z.x + z.w && my >= z.y && my < z.y + z.h) {
@@ -102,7 +124,6 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
         return;
       }
     }
-    if (g.menu) { closeMenu(g); return; }
     if (g.ui === "run") {
       g.pointers[id] = { side: true, dir: mx < W / 2 ? "left" : "right" };
       syncTouchMovement(g);

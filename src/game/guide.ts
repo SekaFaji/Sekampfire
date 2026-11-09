@@ -7,35 +7,35 @@ import { visualSeason } from "./palette";
 
 /** Grooty is a fixed world NPC, never a harvestable tree or an inventory item. */
 export const GROOTY_X = CX - 92;
-type Objective = { label: string; hint: string; met: (g: any) => boolean };
+type Objective = { id: string; label: string; hint: string; met: (g: any) => boolean };
 type Level = { title: string; greeting: string; goals: Objective[] };
 export const GUIDE_LEVELS: Level[] = [
   { title: "FIRST CAMP", greeting: "WELCOME! LET US CLAIM A PLACE TO CALL HOME.", goals: [
-    { label: "CHOP ONE TREE", hint: "HOLD ACT NEAR A TREE. KEEP STILL!", met: g => (g.guideChops || 0) >= 1 },
-    { label: "BUILD THE LEFT FENCE POST", hint: "PLACE ONE LOG AT THE LEFT CAMP MARKER.", met: g => !!g.fenceLeft },
-    { label: "BUILD THE RIGHT FENCE POST", hint: "PLACE ONE LOG AT THE RIGHT CAMP MARKER.", met: g => !!g.fenceRight },
-    { label: "LIGHT THE CAMPFIRE", hint: "PRESS ACT BESIDE THE FIRE PIT.", met: g => !!g.everLit },
-    { label: "FEED ONE LOG TO THE FIRE", hint: "BRING WOOD TO THE LIT FIRE AND PRESS ACT.", met: g => (g.guideStokes || 0) >= 1 },
-    { label: "SURVIVE YOUR FIRST NIGHT", hint: "STAY WARM UNTIL THE SUN RISES.", met: g => g.night >= 1 && !g.isNight },
+    { id: "chop", label: "CHOP ONE TREE", hint: "HOLD ACT NEAR A TREE. KEEP STILL!", met: g => (g.guideChops || 0) >= 1 },
+    { id: "left-post", label: "BUILD THE LEFT FENCE POST", hint: "PLACE ONE LOG AT THE LEFT CAMP MARKER.", met: g => !!g.fenceLeft },
+    { id: "right-post", label: "BUILD THE RIGHT FENCE POST", hint: "PLACE ONE LOG AT THE RIGHT CAMP MARKER.", met: g => !!g.fenceRight },
+    { id: "light-fire", label: "LIGHT THE CAMPFIRE", hint: "PRESS ACT BESIDE THE FIRE PIT.", met: g => !!g.everLit },
+    { id: "feed-fire", label: "FEED ONE LOG TO THE FIRE", hint: "BRING WOOD TO THE LIT FIRE AND PRESS ACT.", met: g => (g.guideStokes || 0) >= 1 },
+    { id: "survive-night", label: "SURVIVE YOUR FIRST NIGHT", hint: "STAY WARM UNTIL THE SUN RISES.", met: g => g.night >= 1 && !g.isNight },
   ] },
   { title: "LOG STORAGE", greeting: "FIVE LOGS CAN CLAIM MORE LAND TO THE EAST.", goals: [
-    { label: "EXPAND YOUR CAMP FOR 5 LOGS", hint: "FIND THE EAST FENCE MARKER AND PRESS ACT.", met: g => campEstablished(g) && g.campExpansion >= 1 },
-    { label: "BUILD LOG STORAGE", hint: "CARRY 15 LOGS TO THE PILE SITE AND USE ACT.", met: g => !!g.builtPile },
-    { label: "STORE 10 LOGS", hint: "TAKE LOGS TO THE FINISHED PILE AND PRESS ACT.", met: g => !!g.guideStoredTen || g.stored >= 10 },
-    { label: "UPGRADE STORAGE TO LV1", hint: "OPEN BUILD, THEN UPGRADES.", met: g => stationLevel(g, "pile") >= 1 },
+    { id: "build-storage", label: "BUILD LOG STORAGE", hint: "CARRY 15 LOGS TO THE PILE SITE AND USE ACT.", met: g => !!g.builtPile },
+    { id: "store-ten", label: "STORE 10 LOGS", hint: "TAKE LOGS TO THE FINISHED PILE AND PRESS ACT.", met: g => !!g.guideStoredTen || g.stored >= 10 },
+    { id: "expand", label: "EXPAND YOUR CAMP FOR 5 LOGS", hint: "FIND THE EAST FENCE MARKER AND PRESS ACT.", met: g => campEstablished(g) && g.campExpansion >= 1 },
+    { id: "upgrade-storage", label: "UPGRADE STORAGE TO LV1", hint: "OPEN BUILD, THEN UPGRADES.", met: g => stationLevel(g, "pile") >= 1 },
   ] },
   { title: "TOOLS OF THE TRADE", greeting: "SMART CAMPERS BUILD SMARTER TOOLS.", goals: [
-    { label: "BUILD THE WORKBENCH", hint: "ADD 15 LOGS TO THE WORKBENCH SITE.", met: g => !!g.builtBench },
-    { label: "CRAFT THE TIMBER PACK", hint: "VISIT THE BENCH, THEN CRAFT > TOOLS.", met: g => !!g.crafts?.pack },
+    { id: "build-workbench", label: "BUILD THE WORKBENCH", hint: "ADD 15 LOGS TO THE WORKBENCH SITE.", met: g => !!g.builtBench },
+    { id: "craft-pack", label: "CRAFT THE TIMBER PACK", hint: "VISIT THE BENCH, THEN CRAFT > TOOLS.", met: g => !!g.crafts?.pack },
   ] },
   { title: "A WARMER HOME", greeting: "NOW LET US MAKE THIS CAMP COSY.", goals: [
-    { label: "BUILD WOOD RING AND LOG BENCH", hint: "OPEN BUILD > STRUCTURES.", met: g => g.stage >= 2 },
-    { label: "UPGRADE FIREPLACE TO LV1", hint: "OPEN BUILD > UPGRADES.", met: g => stationLevel(g, "hearth") >= 1 },
+    { id: "build-shelter", label: "BUILD WOOD RING AND LOG BENCH", hint: "OPEN BUILD > STRUCTURES.", met: g => g.stage >= 2 },
+    { id: "upgrade-fireplace", label: "UPGRADE FIREPLACE TO LV1", hint: "OPEN BUILD > UPGRADES.", met: g => stationLevel(g, "hearth") >= 1 },
   ] },
   { title: "THE HOMESTEAD", greeting: "A REAL HOME WILL WEATHER THE WINTER.", goals: [
-    { label: "BUILD THROUGH CABIN WALLS", hint: "KEEP BUILDING SHELTER UNDER STRUCTURES.", met: g => g.stage >= 5 },
-    { label: "ALL THREE STATIONS TO LV1", hint: "UPGRADE FIREPLACE, BENCH AND STORAGE.", met: g => ["hearth","bench","pile"].every(id => stationLevel(g, id as "hearth" | "bench" | "pile") >= 1) },
-    { label: "COMPLETE CABIN AND HEARTH", hint: "FINISH THE LAST STRUCTURE IN BUILD.", met: g => g.stage >= 6 },
+    { id: "build-cabin", label: "BUILD THROUGH CABIN WALLS", hint: "KEEP BUILDING SHELTER UNDER STRUCTURES.", met: g => g.stage >= 5 },
+    { id: "upgrade-all", label: "ALL THREE STATIONS TO LV1", hint: "UPGRADE FIREPLACE, BENCH AND STORAGE.", met: g => ["hearth","bench","pile"].every(id => stationLevel(g, id as "hearth" | "bench" | "pile") >= 1) },
+    { id: "finish-cabin", label: "COMPLETE CABIN AND HEARTH", hint: "FINISH THE LAST STRUCTURE IN BUILD.", met: g => g.stage >= 6 },
   ] },
 ];
 

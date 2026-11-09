@@ -65,7 +65,7 @@ describe("Patch #29 native-resolution real-game HUD",()=>{
     const target=(x:number,y:number,w:number,h:number)=>g.zones.find((z:any)=>z.x===x&&z.y===y&&z.w===w&&z.h===h);
     expect(target(133,151,54,26)).toBeDefined();
     expect(target(77,158,47,18)).toBeDefined();
-    expect(target(196,158,48,18)).toBeDefined();
+    expect(target(196,158,47,18)).toBeDefined();
     expect(target(284,21,32,16)).toBeDefined();
     expect(target(77,158,47,18)!.quickSlot).toBe(0);
     expect(target(196,158,47,18)!.quickSlot).toBe(1);

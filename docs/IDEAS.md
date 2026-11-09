@@ -53,6 +53,39 @@ The previously proposed first three smaller levels are **one full Level 1**, con
 - How to handle tasks already satisfied by Ash-preserved structures on repeat runs.
 - The precise Ash base reward, bonus breakdown and defeat/retirement outcomes.
 
+### Level 1 mission design - working draft, awaiting player approval
+
+This is a **candidate sequence for discussion**, not an approved spec or an implemented feature. The user wants Level 1 to contain three substantial milestones (not three short levels), including first-night exploration rather than standing at the fire.
+
+**Milestone 1 - Establish and Explore**
+1. Talk to Grooty and chop a Pine Tree; collect enough Pine Logs for two boundary posts plus firewood.
+2. Place one log at each of the two original physical camp posts. The palisade connects.
+3. Light the campfire and add a log so players learn warmth, fuel and the need to return to safety.
+4. **At night**, follow guiding fireflies to a short-range, identifiable nearby landmark or pine grove **outside the fence**. The exact site and distance are not final; it must be safely reachable on the first night. The marker must point away from the campfire while scouting is active.
+5. Return safely and reach dawn alive. If the player misses the excursion, allow a later night's attempt without resetting this run or forcing an unwinnable level.
+
+**Milestone 2 - Log Storage**
+1. Locate the storage construction site.
+2. Deliver the required Pine Logs in backpack-sized trips (currently the site costs 15 wood; name/stack conversion not yet implemented).
+3. Complete construction and see a distinct milestone animation.
+4. Put a meaningful amount of Pine Logs into finished storage to learn its use (5 vs 10 is still to be balanced).
+
+**Milestone 3 - The Workbench**
+1. Locate the workshop site and deliver its construction resources (currently 15 wood).
+2. Finish the Workbench.
+3. Open Tools/Crafting and craft the first useful item, likely the existing Timber Pack.
+4. Candidate finale: use the improved camp and experience a **second dawn** or a brief final outdoor preparation challenge, then end the full level and explain Ash. Do not make players wait idly once objectives are met; tune the pacing after device playtests.
+
+**Guidance rules**
+- Only one **mission** is active at a time within Grooty's current milestone, but already-completed tasks are recognized retroactively where sensible.
+- For first-night exploration, point to the actual nearby landmark at night, then point back toward home. Avoid the old 'SURVIVE NIGHT' marker hovering above the fire for the whole night.
+- Fireflies use existing world, minimap and menu navigation behaviors; no persistent text-heavy HUD.
+- Preserve current game progress while changing internal guide terminology; never silently destroy old checkpoints.
+
+**Pacing to test, not a requirement:** aim for a first full level longer than a few minutes, initially around two meaningful night cycles. Balance the real amount of wood gathering, movement and crafting rather than artificially adding idle waiting.
+
+**Ash completion:** show the actual itemized earning sources, earned vs banked Ash, the purpose of Ash, the reset rule, and a clear route to the Ash Shop. Final formula, baseline reward and completion UX are still to decide.
+
 ### Proposed Level 1 completion: explain Ash clearly
 
 **Agreed direction**
@@ -112,6 +145,45 @@ A dedicated completion screen must make Ash and permanent progression easy to un
 - Whether snow is introduced as an early later-level challenge, and exact difficulty pacing.
 - Equipment slots, crafting recipes, protective stats, repair/durability (if any) and upgrade progression.
 - UI fit for warmth, fuel, cold, wood/inventory and weather at the native 320 x 180 pixel resolution.
+
+### Cold and weather model - working draft, awaiting player approval
+
+**Goal:** make environmental **Cold** a legible threat while preserving the existing **Warmth** health/recovery meter. A high Cold level means warmth drains faster; enough crafted protection lets the player spend longer in the wild. Do not implement an unrelated second health bar.
+
+**Suggested Cold meter semantics**
+- Cold (0-100) is the player's **current exposure pressure**, not another reserve that permanently drains to zero. It follows the environment over a few seconds.
+- Inputs: time of day, level-specific weather, seasonal climate, rain-related dampness, nearby fire/shelter, and protective equipment.
+- Warmth (0-100) remains the player's actual survival reserve; its drain depends on Cold. An 8-second heat-soak ramp when near a lit fire stays in place.
+- Avoid double-counting weather: replace or refactor the existing `game.ts` direct weather drain bonuses rather than adding the new Cold multiplier on top of them.
+- Sample reading only: mild daylight = low Cold, clear night = medium, heavy rain/snow = high, blizzard = severe. Exact thresholds and numerical multiplier must be tested.
+
+**Weather proposal**
+- **Clear / Wind:** early-level learning, with coldest conditions at night.
+- **Rain:** gradually raises Cold via dampness. A campfire or cover can reduce/slow the effect; the existing Lean-to should protect against rain, retaining its role in fire management.
+- **Snow:** a genuine intermediate event distinct from the currently implemented visual winter particles and from blizzard. It makes outdoor trips colder; winter/snowy-level selection needs a rule compatible with the current seven-days-per-season visuals.
+- **Blizzard:** severe late-game event, not a random unavoidable first-night death. Shorter visibility and high Cold, but avoid punitive stacking with old cold drain.
+- Explicitly stage the first rain lesson in Level 2 or later (or choose gentle rain late in Level 1 only if playtesting supports it). Reserve true snow and blizzards for later levels.
+
+**Equipment proposal**
+- Existing **Warm Boots** gain a small protective Cold/insulation effect in addition to their existing movement bonus. Keep the existing craft ownership/save key.
+- Add later clothing options as the inventory/resource system expands: more effective insulation, weather resistance and/or improved time outdoors. Don't make every tool, backpack or weapon mechanically identical to clothing; those items may serve travel and gathering instead.
+- The future Ash Shop and the existing Warm Blood upgrade can reduce cold damage, but permanent boosts must not trivialize the opening levels.
+- Consider a lightweight persistent rain dampness effect within Cold rather than adding a third meter for Wetness.
+- Rain protection, heat retention and insulating warmth should be separate readable attributes where they improve player choices.
+
+**HUD proposal**
+- Warmth stays prominent. Add a small Cold meter with intuitive colors and a short tooltip/guide explanation ('HIGH COLD = WARMTH DROPS FASTER').
+- Keep the already-compact 320 x 180 HUD, translucent enough to see scenery. Avoid extra large overlay panels and test day/night pixel contrast.
+- Include a brief first-cold cue from Grooty, then let the visual indicators and equipment benefits teach the mechanic.
+
+**Validation and rollout proposal**
+1. Prototype a pure, frame-rate-independent `Cold` exposure calculation, exposed as a read-only bar first.
+2. Integrate it into warmth loss exactly once while preserving saved runs and existing fire recovery, with rain/coldsnap tests.
+3. Add rain dampness and snow weather with environmental visuals and clear, fair level-specific timing.
+4. Add wearable insulation/recipe stats with migration tests, only when actual resources and inventory support them.
+5. Playtest Level 1 night scouting with no coat, Level 2 rain with Warm Boots, and late blizzard with higher-grade equipment.
+
+**Still open:** whether Cold represents instantaneous weather severity or slower personal exposure, whether first rain occurs in Level 1 or Level 2, exact drain/insulation curves, extra resources required for clothing, and how each campaign level chooses season and weather.
 
 ## 4. Inventory, resources and contextual actions
 
@@ -173,3 +245,5 @@ Do not launch implementation simply because an item is listed in this ideas file
 | 2026-11-09 | Create real inventory, begin naming basic wood Pine Logs and starting trees Pine Trees. | Agreed direction; item/save design undecided |
 | 2026-11-09 | Reconsider persistent Torch and Build buttons beside the primary ACT control. | UI direction; new layout undecided |
 | 2026-11-09 | Save brainstorming in GitHub instead of losing decisions between chats. | Documented in this file |
+| 2026-11-09 | Drafted a candidate mission-by-mission Level 1 with an actual nighttime scouting/return objective and a larger Workbench finale. | New brainstorm; sequence/thresholds not yet approved |
+| 2026-11-09 | Drafted a Cold exposure-pressure model that drives warmth drain, with rain dampness, later snow, and workbench-crafted clothing protection. | New brainstorm; numbers/level introduction not yet approved |

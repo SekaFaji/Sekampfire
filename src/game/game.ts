@@ -18,7 +18,7 @@ import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
 import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
-import { activePet, updateDogCompanion } from "./companion";
+import { updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { trackNightScout, drawScoutGrove } from "./campaign43";

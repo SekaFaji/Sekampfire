@@ -24,13 +24,18 @@ export function museumCount(meta: any): number {
   return LOG_COLLECTION.filter(log=>coll[log.id]).length;
 }
 
-/** The first felled log is Common; later trees can reveal unusual wood.
+/** The first felled log is Common; only AFTER Museum construction can
+ * later trees reveal unusual collectible wood.
  * Odds are provisional to be rebalanced after actual playtests.
  * Does not alter normal wood drops, Ash or inventory.
  */
 export function discoverLog(meta: any, random: () => number = Math.random): MuseumLogId | null {
   if (!meta.collection || typeof meta.collection !== "object") meta.collection=cleanLogCollection(null);
   if (!meta.collection.ordinary) { meta.collection.ordinary=true;return "ordinary"; }
+  // Ordinary wood can be recognized early. Uncommon, Rare and Legendary
+  // discoveries require the REAL permanent Museum to be constructed first.
+  // Older collections remain intact: this never revokes saved discoveries.
+  if(meta.museumBuilt!==true)return null;
   if (random()>=0.08) return null;
   const chance=random();
   const id: MuseumLogId = chance<0.82?"twisted":chance<0.98?"hand":"eight";

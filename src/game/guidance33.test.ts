@@ -6,6 +6,7 @@ import {WEST_POST_X,EAST_POST_X,EXPANSION_MARKER_X} from "./campBoundary";
 import {CX,BENCH_X,PILE_X} from "./config";
 function g(){
  const g=createEngine();g.ui="run";g.time=12;g.player.x=CX;
+ g.guideTalked=true;
  g.trees=[{x:600,y:149,id:1},{x:1250,y:151,id:2}];g.pickups=[];
  return g;
 }

@@ -108,7 +108,7 @@ describe("Patch #32 clean fence and translucent resource HUD",()=>{
   });
   it("translucent HUD keeps existing frame positions and visible readable fill",()=>{
     const v=canvas();drawHudFrame(v.ctx,3,17,109,23);
-    expect(v.rects.some(x=>x.color==="rgba(18,30,41,0.64)"&&x.w===105&&x.h===19)).toBe(true);
+    expect(v.rects.some(x=>x.color==="rgba(18,30,41,0.39)"&&x.w===105&&x.h===19)).toBe(true);
     const g=createEngine();g.ui="run";g.player.wood=2;g.ashEarned=6;
     const overlay=canvas();drawCampHUD(overlay.ctx,g,meta());
     expect(overlay.rects.some(x=>x.x===3&&x.y===17&&x.w===103&&x.h===23)).toBe(true);

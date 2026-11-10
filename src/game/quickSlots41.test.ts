@@ -1,5 +1,5 @@
 import {beforeEach,afterEach,describe,it,expect,vi} from "vitest";
-import {createEngine,drawRunChrome,handlePointer,handleKey,drawMenu,benchRows,shopRows,quickSlotRows,titleActions,advanceGuide,buildRows} from "./game";
+import {createEngine,drawRunChrome,handlePointer,benchRows,shopRows,titleActions,buildRows} from "./game";
 import {drawInventoryMenu} from "./inventoryMenu";
 import {inventoryEquipment} from "./inventory";
 import {drawDog} from "./renderSprites";
@@ -8,7 +8,7 @@ import {drawShopTabs} from "./menuScreens";
 import {activePet,updateDogCompanion} from "./companion";
 import {QUICK_SLOT_SIZE,QUICK_SLOT_HIT_SIZE,normalizeQuickSlots,assignQuickSlot,useQuickSlot,tickQuickSlotHolds} from "./quickSlots";
 import {captureRunSnapshot} from "./save";
-import {GUIDE_LEVELS,guideProgress,drawGuideDialog} from "./guide";
+import {GUIDE_LEVELS,guideProgress,drawGuideDialog,advanceGuide} from "./guide";
 
 let store:Map<string,string>;
 beforeEach(()=>{
@@ -144,7 +144,7 @@ describe("Patch #41: small square toolbar and craftable Ember Torch",()=>{
 });
 describe("Patch #41: Bingsu the Dogo Argentino",()=>{
  it("retains paid dog ownership and exact price with a named personal companion",()=>{
-  const g=run(),m=meta();g.shopTab=1;m.up.dog=0;
+  const g=run(),m:any=meta();g.shopTab=1;m.up.dog=0;
   const item=shopRows(g,m)[0];
   expect(item.label).toBe("BINGSU");
   expect(item.right).toBe("40 ASH");
@@ -157,7 +157,7 @@ describe("Patch #41: Bingsu the Dogo Argentino",()=>{
   expect(BINGSU.breed).toBe("DOGO ARGENTINO");
  });
  it("shows original detailed pet portrait, name, and truthful two-log ability",()=>{
-  const v=ctx(),m=meta();m.up.dog=1;
+  const v=ctx(),m:any=meta();m.up.dog=1;
   drawBingsuShopProfile(v.canvas,m);
   expect(v.rects.some(r=>r.color==="#f3f2ec")).toBe(true);
   expect(v.rects.some(r=>r.color==="#a95745")).toBe(true);
@@ -177,7 +177,7 @@ describe("Patch #41: Bingsu the Dogo Argentino",()=>{
   expect(v.rects.every(r=>r.w>0&&r.h>0)).toBe(true);
  });
  it("keeps fetching exactly two real existing pickups and never creates logs for free",()=>{
-  const g=run(),m=meta();m.up.dog=1;m.petEquipped="dog";
+  const g=run(),m:any=meta();m.up.dog=1;m.petEquipped="dog";
   g.player.x=800;g.pickups=[{x:817,y:151,w:2}];
   const total=()=>g.player.wood+g.stored+(g.dog?.wood||0)+g.pickups.reduce((n:number,p:any)=>n+p.w,0);
   const initial=total();

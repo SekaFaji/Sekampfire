@@ -1225,10 +1225,9 @@ function benchRows(g: any, meta: any) {
       },
     };
   });
-  // Convenient alternate place to improve the workbench itself.
-  recipes.push(stationUpgradeRow(g, "bench"));
-  // Tools keep the starting essentials discoverable. Supplies contain
-  // firekeeping gear and the workbench's own upgrade.
+  // Station upgrades happen ONLY by selecting UPGRADE on the physical
+  // Workbench popup, not inside the crafting recipe list.
+  // Tools keep the starting essentials discoverable.
   return g.craftTab === 1 ? recipes.slice(3) : recipes.slice(0,3);
 }
 
@@ -1673,7 +1672,7 @@ function drawMenu(ctx: any, g: any, meta: any) {
   }
 }
 
-// bottom bar: smaller main button flanked by BUILD and TORCH
+// bottom bar: central ACT flanked by two small square equipment sockets
 function drawRunChrome(ctx: any, g: any) {
   const act = g.actionLabel || "-";
   // Gameplay controls float over the river; movement arrows remain untouched.

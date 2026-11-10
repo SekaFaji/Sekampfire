@@ -81,6 +81,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   // Unmarked v1 checkpoints remain on their original five-group Long Night
   // journey; only new P44 campaign runs enter the new completion flow.
   g.campaignLevel = data.campaignLevel === 1 ? 1 : 0;
+  g.campaignRunId = typeof data.campaignRunId === "string" && data.campaignRunId.length < 100
+    ? data.campaignRunId : null;
   g.victoryPending = flag("victoryPending");
   g.depth = n("depth", 0, 10000, 0);
   g.builtBench = flag("builtBench");
@@ -194,7 +196,8 @@ function createEngine(): any {
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
-    ashEarned: 0, ashLedger: {}, campaignLevel: 0, levelCompletePending: false,
+    ashEarned: 0, ashLedger: {}, campaignLevel: 0, campaignRunId: null,
+    levelCompletePending: false,
     depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
     guideTalked: false, scoutVisited: false, scoutReturned: false,
@@ -257,6 +260,7 @@ function startRunEngine(g: any, meta: any) {
   g.museumBuilt = !!meta.museumBuilt;
   g.campaignLevel = 1; // fresh campaigns; old saved runs remain legacy
   genScenery(g, Math.floor(Math.random() * 1e9));
+  g.campaignRunId = "lv1-" + g.scenerySeed + "-" + Date.now();
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
@@ -1484,7 +1488,8 @@ function resetAllProgress(g: any, meta: any) {
   }
   Object.assign(meta, {
     ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped: null,
-    museumBuilt:false, collection:cleanLogCollection(null), guideFx:true
+    museumBuilt:false, collection:cleanLogCollection(null), guideFx:true,
+    maxCampaignLevel:1, lastBankedRunId:null
   });
   setupTitleScene(g);
   g.resumeData = null;

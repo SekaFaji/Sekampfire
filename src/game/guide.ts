@@ -12,6 +12,7 @@ type Objective = { id: string; label: string; hint: string; met: (g: any) => boo
 type Level = { title: string; greeting: string; goals: Objective[] };
 export const GUIDE_LEVELS: Level[] = [
   { title: "FIRST CAMP", greeting: "WELCOME! LET US CLAIM A PLACE TO CALL HOME.", goals: [
+    { id: "talk-grooty", label: "TALK TO GROOTY AT CAMP", hint: "FIND THE FRIENDLY TREE WEST OF THE FIRE. PRESS ACT.", met: g => g.guideTalked === true },
     { id: "chop", label: "CHOP ONE PINE TREE", hint: "HOLD ACT NEAR A PINE TREE. KEEP STILL!", met: g => (g.guideChops || 0) >= 1 },
     { id: "left-post", label: "BUILD THE LEFT FENCE POST", hint: "PLACE ONE LOG AT THE LEFT CAMP MARKER.", met: g => !!g.fenceLeft },
     { id: "right-post", label: "BUILD THE RIGHT FENCE POST", hint: "PLACE ONE LOG AT THE RIGHT CAMP MARKER.", met: g => !!g.fenceRight },

@@ -3,6 +3,10 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #41: two compact square native-pixel toolbar slots with touch-friendly zones, craftable reusable Ember Torch assigned directly from Equipment or picker, compatible older Ember save keys, Bingsu the Dogo Argentino shop profile and white in-world sprite, Grooty's 5 current tutorial groups reworded as numbered missions. Device QA pending.
+- [ ] Next #42: remove BUILD from pause (and direct remote B shortcut), place first construction at actual physical worksite, open new building plans through completed Workbench and implement each built structure's local ACCESS/UPGRADE popup with confirmation. Retarget Grooty's fireflies to physical sites/popups.
+- [ ] Future: expand Bingsu's companion traits and potential defense mechanics only after gameplay risks and balancing are designed; he currently fetches real logs and stays near his person.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #40: MMO-style native backpack/equipment window, interactive 5x4 slot grid and item inspector, original icons, HUD/keyboard/Pause inventory access, canonical Pine Logs stack, legacy wood adapter, separate slot-count and weight capacities, crafted gear and version-one run migration. Android visual QA pending.
 - [ ] #41: smaller square quick slots, actual inventory assignment and crafted Torch; retain existing Ember until real item ownership is established.
 - [ ] #42: Build only from physical camp sites and Workbench, station-local ACCESS/UPGRADE popups, confirmation and updated Grooty wayfinding.

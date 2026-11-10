@@ -2,7 +2,7 @@
 
 ## Patch #47: small Ash Shop button, temperature, Museum gate, fence torches and sky-visible UI
 
-- **One-line Ash button:** The upper-right Ash plaque is now a smaller single-line button directly below MENU, aligned with its right edge. Tapping opens the existing real Shop tabs (Upgrades/Pets/Coming Soon), where only **banked Ash** can be spent. Earned Run Ash remains unbanked until End Run or Level completion. It briefly highlights when tapped.
+- **One-line Ash button:** The upper-right Ash plaque is now a smaller single-line button directly below MENU, aligned with its right edge. Tapping opens the existing real Shop tabs (Upgrades/Pets/Coming Soon), where only **banked Ash** can be spent. Earned Run Ash remains unbanked until End Run or Level completion. It briefly highlights when tapped. Compact numbers are truncated rather than rounded upward, and smaller balances are shown in full when they fit.
 - **Cleaner pause menu:** The redundant Toolbar entry is removed. The two functional quick slots remain visible in the river HUD; holding a slot or assigning a crafted Ember Torch from Inventory remains supported.
 - **Cold matters:** The **actual local air temperature** now increases warmth loss below +8°C, reaching a capped 1.72x ambient factor during deep freezes. This complements the existing weather-dependent Cold exposure, while campfire heating, Warm Blood, torches, boots and shelter still work.
 - **Museum discovery lock:** The first **Ordinary Log** can be recognized before construction, but **Twisted/Hand/Figure-8 collectible logs cannot be discovered until the permanent Log Museum has been built**. Old already-earned Museum collectibles stay owned.

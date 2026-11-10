@@ -77,6 +77,12 @@ export function drawLockedEndlessButton(ctx: any, g: any, onDown: () => void) {
 export const SHOP_CARD51 = {x:30,y:52,w:82,h:30,colGap:6,rowGap:3,cols:3} as const;
 export const SHOP_DETAILS51 = {x:30,y:119,w:260,h:45} as const;
 export const SHOP_BUY51 = {x:210,y:142,w:78,h:18} as const;
+/** Native 320x180 layout: the painted bust has 7px horizontal and 3px
+ * vertical breathing room inside the original 100x68 bordered pet card. */
+export const BINGSU_PET_FIT57 = {
+  card:{x:31,y:50,w:100,h:68},
+  art:{x:38,y:53,w:86,h:62}
+} as const;
 export const SHOP_PAGE_SIZE53 = SHOP_CARD51.cols*2;
 export const SHOP_PAGE_CONTROLS53 = {
   previous:{x:165,y:121,w:13,h:13},
@@ -222,13 +228,16 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     // Bingsu has one personal featured card with her authentic Dogo portrait.
     if(rows.length){
       const chosen=(g.menuSel||0)===0;
-      // Same approved Bingsu painting, framed more widely at 94x68 to show
-      // her neck and shoulders. Separate text and real BUY button unchanged.
-      // Tabs end at y49, card ends at y118; details begin at y119.
-      shopBox51(ctx,31,50,100,68,"rgba(26,45,52,0.64)",
-        chosen?"#eac487":"#61798b");
-      drawBingsuPortrait(ctx,35,50);
-      g.zones.push({x:31,y:50,w:100,h:68,onDown:()=>{
+      // The approved artwork previously drew flush against and over the
+      // frame edge. Keep a visible border and even matting all around it.
+      // Nearest-neighbor fit preserves the complete 94x68 image, not a crop.
+      const card=BINGSU_PET_FIT57.card,art=BINGSU_PET_FIT57.art;
+      shopBox51(ctx,card.x,card.y,card.w,card.h,
+        "rgba(26,45,52,0.64)",chosen?"#eac487":"#61798b");
+      ctx.fillStyle="#455150";
+      ctx.fillRect(card.x+2,card.y+2,card.w-4,card.h-4);
+      drawBingsuPortrait(ctx,art.x,art.y,art.w,art.h);
+      g.zones.push({...card,onDown:()=>{
         g.menuSel=0;g.upConfirm=null;
       }});
       drawText(ctx,"BINGSU",137,56,"#f9e8c7");

@@ -1,5 +1,16 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #52 implemented (2026-11-10)
+
+**One actual Pine Log for every manual ignition:** Old code allowed a free first fire with a `firestarter` flag, then required three logs and 28 fixed fuel for relighting. This now costs one Pine Log every time, drawn from the actual player backpack first or stored logs if there is no carried Pine. The first run's starter tinder is a separate +20 fuel bonus to the rolled 5-20 fuel of that consumed log, yielding 25-40 fuel for the first manual fire. Once burned, starter tinder expires permanently for the current run. The purchased Old Flint Ash perk still provides its actual pre-lit 40-fuel fire and starting wood, unchanged.
+
+**Pine fuel is a roll, not a per-item attribute:** An inclusive, uniform integer 5-20 fuel is rolled when and only when each Pine Log is consumed at the fire. A single stack still contains identical Pine Logs, so picking up, storing, giving logs to Bingsu and checkpointing remain reliable. The new `WOOD_SPECIES52` registry stores each species' ID, matching current inventory item, tree name, mass and burn range; other species will only be added once real trees, item stacks and storage support them. No extra quality rolls or phantom logs can slip into save migration.
+
+**Retain real improvements:** Kindling Bundle grants +5 to a rolled log (not fixed 21), weather and Hearth tiers still modify burn *rate* separately, Fire Reflector still reduces fuel consumption and the full cap stays 100. A normal feed of one log advances Grooty's FEED task, while ignition alone does not. Players see their real gain rather than a promise of the unbounded roll when near cap.
+
+**Balance guardrails:** A newly lit fire with its real starter tinder gets 25-40 fuel, close to the historical first fire's 34. Later one-log relights add 5-20 fuel (average 12.5); one-log stokes likewise average 12.5 without Kindling. The first few nights, blizzard fuel drain and reduced fuel economy should be evaluated in actual play before adjusting burn-rate multipliers or increasing early-game Ash. This patch makes no automatic balance change to saved fuel, Ash, weather, or missions.
+
+
 ## Patch #51 implemented (2026-11-10)
 
 **Permanent Ash Shop should feel like collectibles, not Settings.** Six upgrade cards now occupy two rows with original miniature pixel art, clear selection outlines, owned level and next Ash price. The separate bottom details inspector tells the player what the selected upgrade actually does, while its clearly differentiated BUY button is the ONLY purchase control on the new UI. Buying uses a live re-check of banked Ash, cap and genuine config price; selecting or browsing never spends. The Pet tab remains a larger portrait card for Bingsu and the third tab is explicitly inert.

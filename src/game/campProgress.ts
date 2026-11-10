@@ -39,8 +39,10 @@ export function canCompleteCabin(g: any): boolean {
 export function stationFuelFactor(g: any): number {
   return [1, 0.88, 0.74][stationLevel(g, "hearth")];
 }
-export function stationStokeGain(g: any): number {
-  return g.crafts?.kindling ? 21 : 16;
+/** Kindling improves the actual rolled value of EACH burnt wood log,
+ * rather than replacing its species-specific fuel range with a fixed gain. */
+export function stationKindlingBonus(g: any): number {
+  return g.crafts?.kindling ? 5 : 0;
 }
 export function stationTorchBonus(g: any): number {
   return g.crafts?.lantern ? 20 : 0;

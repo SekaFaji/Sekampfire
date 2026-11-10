@@ -3,6 +3,7 @@ import { createInputHandlers } from "./input";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
+import { useOneFireLog52 } from "./firewood52";
 import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
@@ -17,7 +18,7 @@ import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot,
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
-import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationStokeGain, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
+import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
@@ -772,7 +773,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     g.fuel -= burn * dt;
     if (g.fuel <= 0) {
       g.fuel = 0; g.fireLit = false;
-      cb.toast("The fire dies to embers. Relight it with 3 wood.");
+      cb.toast("THE FIRE DIES. ONE PINE LOG CAN RELIGHT IT.");
     }
   }
 
@@ -1028,29 +1029,30 @@ function openStation(g:any,id:"hearth"|"bench"|"pile"):boolean {
   return true;
 }
 
-/** ACCESS from a real fireplace. The previous fire light/stoke rules, real
- * pine-log and storage costs, tutorial count, and sounds are unchanged. */
+/** ACCESS from the real Fireplace. The first ignition, every subsequent
+ * relight and each ordinary feeding consume exactly ONE legitimate Pine Log.
+ * A real firestarter is tinder (+20 only on first ignition), not free fuel.
+ * Every Pine Log rolls 5-20 fuel at use; Kindling Bundle adds +5 per log.
+ * The pre-lit Old Flint Ash upgrade remains untouched. */
 function accessHearth(g:any):void {
-  const p=g.player;
-  if(!g.fireLit){
-    if(g.firestarter>0){
-      g.firestarter--;g.fireLit=true;g.everLit=true;g.fuel=34;
-      AUDIO.effect("light");toast(g,"The fire catches. Warm at last.");
-    }else if(p.wood+g.stored>=3){
-      const fromStore=Math.max(0,3-p.wood);
-      p.wood-=3-fromStore;g.stored-=fromStore;
-      g.fireLit=true;g.everLit=true;g.fuel=28;
-      AUDIO.effect("light");toast(g,"You rebuild the fire from kindling. (3 pine logs)");
-    }else toast(g,"NEED 3 PINE LOGS TO RELIGHT THE FIRE.");
-  }else if(g.fuel>=99) {
+  const result=useOneFireLog52(g);
+  if(result.kind==="no_log"){
+    toast(g,g.fireLit?"BRING ONE PINE LOG TO STOKE THE FIRE."
+      :"NEED ONE PINE LOG TO LIGHT THE FIRE.");
+    return;
+  }
+  if(result.kind==="full"){
     toast(g,"THE CAMPFIRE IS ALREADY WELL FED.");
-  }else if(p.wood>0){
-    p.wood--;g.guideStokes++;
-    g.fuel=Math.min(100,g.fuel+stationStokeGain(g));
-  }else if(g.stored>0){
-    g.stored--;g.guideStokes++;
-    g.fuel=Math.min(100,g.fuel+stationStokeGain(g));
-  }else toast(g,"BRING PINE LOGS TO STOKE THE FIRE.");
+    return;
+  }
+  if(result.kind==="lit"){
+    AUDIO.effect("light");
+    const tinder=result.starterBonus>0?" (STARTER TINDER +20)":"";
+    toast(g,"1 PINE LOG LIT THE FIRE. +"+result.added+" FUEL"+tinder+".");
+  }else {
+    const extra=result.kindlingBonus>0?" (+5 KINDLING)":"";
+    toast(g,"PINE LOG BURNED FOR +"+result.added+" FUEL"+extra+".");
+  }
 }
 function accessStorage(g:any,meta:any,direction?:"store"|"take"):void {
   const p=g.player,capacity=pileCap(g);

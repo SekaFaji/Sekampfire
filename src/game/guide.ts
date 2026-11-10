@@ -16,7 +16,7 @@ export const GUIDE_LEVELS: Level[] = [
     { id: "chop", label: "CHOP ONE PINE TREE", hint: "HOLD ACT NEAR A PINE TREE. KEEP STILL!", met: g => (g.guideChops || 0) >= 1 },
     { id: "left-post", label: "BUILD THE LEFT FENCE POST", hint: "PLACE ONE LOG AT THE LEFT CAMP MARKER.", met: g => !!g.fenceLeft },
     { id: "right-post", label: "BUILD THE RIGHT FENCE POST", hint: "PLACE ONE LOG AT THE RIGHT CAMP MARKER.", met: g => !!g.fenceRight },
-    { id: "light-fire", label: "LIGHT THE CAMPFIRE", hint: "PRESS ACT BESIDE THE FIRE PIT.", met: g => !!g.everLit },
+    { id: "light-fire", label: "LIGHT THE CAMPFIRE", hint: "BRING 1 PINE LOG. SELECT FIRE, THEN LIGHT.", met: g => !!g.everLit },
     { id: "feed-fire", label: "FEED ONE LOG TO THE FIRE", hint: "BRING WOOD TO THE LIT FIRE AND PRESS ACT.", met: g => (g.guideStokes || 0) >= 1 },
     { id: "scout-grove", label: "SCOUT THE PINE GROVE AT NIGHT", hint: "AT NIGHT, FOLLOW THE FIREFLIES EAST OF THE FENCE.", met: g => g.scoutVisited === true },
     { id: "return-home", label: "RETURN TO THE CAMPFIRE", hint: "FOLLOW THE FIREFLIES HOME BEFORE DAWN.", met: g => g.scoutReturned === true },

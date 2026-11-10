@@ -60,7 +60,7 @@ describe("Patch #46: selected, floating camp buttons and stacked Ash",()=>{
   });
   it("first ACT only selects, second ACT lights and later ACT feeds the fire",()=>{
     const g=run(),m=meta();
-    g.firestarter=1;g.fireLit=false;g.fuel=0;
+    g.firestarter=1;g.fireLit=false;g.fuel=0;g.player.wood=1;
     press(g,m);
     expect(g.fireLit).toBe(false);
     expect(selectedStation(g)).toBe("hearth");

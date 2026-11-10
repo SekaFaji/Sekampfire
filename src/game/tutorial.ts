@@ -14,9 +14,9 @@ export const TUTORIAL_PAGES = [
     "MOVING CANCELS A CHOP."
   ], art: "walk" },
   { title: "LIGHT THE CAMPFIRE", lines: [
-    "PRESS ACT AT THE FIREPLACE.",
-    "CHOOSE ACCESS TO LIGHT OR STOKE.",
-    "KEEP PINE LOGS NEAR THE FIRE."
+    "ONE PINE LOG LIGHTS THE FIRE.",
+    "SELECT THE FIRE, THEN PRESS LIGHT.",
+    "EACH PINE LOG ADDS 5-20 FUEL."
   ], art: "fire" },
   { title: "CHOP AND COLLECT PINE LOGS", lines: [
     "FELL PINE TREES AND PICK UP LOGS.",

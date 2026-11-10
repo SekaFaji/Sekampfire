@@ -3,7 +3,7 @@ import { createEngine, benchRows, buildRows, stationRows, titleActions, closeMen
 import { pileCap } from "./rules";
 import {
   stationLevel, stationCost, purchaseStation, canCompleteCabin,
-  stationFuelFactor, stationCraftCost, stationTorchBonus, stationStokeGain,
+  stationFuelFactor, stationCraftCost, stationTorchBonus, stationKindlingBonus,
 } from "./campProgress";
 import { CRAFTS } from "./config";
 import { captureRunSnapshot } from "./save";
@@ -77,8 +77,8 @@ describe("real station upgrade progression", () => {
     expect(stationFuelFactor(g)).toBe(1);
     g.campUpgrades.hearth=1;expect(stationFuelFactor(g)).toBe(0.88);
     g.campUpgrades.hearth=2;expect(stationFuelFactor(g)).toBe(0.74);
-    expect(stationStokeGain(g)).toBe(16);
-    g.crafts.kindling=true;expect(stationStokeGain(g)).toBe(21);
+    expect(stationKindlingBonus(g)).toBe(0);
+    g.crafts.kindling=true;expect(stationKindlingBonus(g)).toBe(5);
     expect(stationTorchBonus(g)).toBe(0);
     g.crafts.lantern=true;expect(stationTorchBonus(g)).toBe(20);
   });

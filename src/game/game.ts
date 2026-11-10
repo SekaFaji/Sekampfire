@@ -27,6 +27,7 @@ import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
 import { drawStationPopup } from "./stationPopup";
+import { nearbyStation, drawStationBubbles, drawBackpackButton45, type NearbyStation, type StationAction } from "./proximity45";
 import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { localTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
@@ -544,9 +545,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
             : `Stacked ${add} logs on the site. ${g.benchLogs}/15.`);
         } else cb.toast("Bring 15 logs here to build the workbench.");
       } else if (nearBench) {
-        openStation(g,"bench");
+        performStationAction(g,meta,"bench","primary");
       } else if (nearPit) {
-        openStation(g,"hearth");
+        performStationAction(g,meta,"hearth","primary");
       } else if (nearPile && !g.builtPile) {
         g.keys.act = false;
         if (g.pileBuildT >= 0) {
@@ -562,7 +563,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
             : `Stacked ${add} logs on the site. ${g.pileLogs}/15.`);
         } else cb.toast("Bring 15 logs here to build the wood pile.");
       } else if (nearPile) {
-        openStation(g,"pile");
+        performStationAction(g,meta,"pile","primary");
       } else if (tree) {
         p.chopTree = tree;
         p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
@@ -1027,6 +1028,26 @@ function accessStorage(g:any,meta:any):void {
   }else toast(g,"THE LOG STORAGE IS EMPTY.");
 }
 
+/** The world-space station buttons and ACT use precisely the same
+ * authoritative station actions. No generic ACCESS/UPGRADE popup is opened. */
+function performStationAction(g:any,meta:any,id:NearbyStation,action:StationAction):boolean {
+  if(g.ui!=="run" || g.over || g.menu || nearbyStation(g)!==id) return false;
+  g.stationId=id;
+  const rowIndex=action==="primary"?0:action==="upgrade"?1:2;
+  const row=stationRows(g,meta)[rowIndex];
+  if(!row || row.enabled===false) {
+    if(action==="upgrade") toast(g, "THIS STATION IS FULLY UPGRADED.");
+    return false;
+  }
+  g.pressE=false;
+  g.keys.act=false;
+  row.onDown();
+  // Crafting and blueprints are genuine detailed menus; closing them returns
+  // to the world, never to the removed station confirmation popup.
+  if(g.menu==="bench" || g.menu==="build") g.stationFrom=false;
+  return true;
+}
+
 /** Uses existing authoritative purchaseStation / stationUpgradeRow, so
  * station costs and Ash rewards cannot diverge across UI surfaces. */
 function stationRows(g:any,meta:any):any[]{
@@ -1143,10 +1164,6 @@ function pauseRows(g: any, meta: any) {
     {
       label: "TOOLBAR", right: "", desc: "SET UP TWO QUICK ACCESS SLOTS", h:15, enabled:true,
       onDown: () => { g.menu="toolbar";g.menuSel=0;g.keys.act=false; },
-    },
-    {
-      label: "INVENTORY", right: "", desc: "BACKPACK AND EQUIPMENT", h:15, enabled:true,
-      onDown: () => { g.menu="inventory";g.inventoryFrom="pause";g.inventoryTab=0;g.keys.act=false; },
     },
   ];
 }
@@ -1721,13 +1738,11 @@ function drawRunChrome(ctx: any, g: any) {
   uiButton(ctx, g, 284, 21, 32, 16, "MENU", {
     onDown: () => { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; },
   });
-  // The new currency plaque is also a real inventory toggle. It is
-  // registered only during an unpaused run, so it cannot capture taps
-  // beneath any menu or interfere with the existing main Menu button.
-  g.zones.push({
-    x:HUD_RECTS.resources.x,y:HUD_RECTS.resources.y,
-    w:HUD_RECTS.resources.w,h:HUD_RECTS.resources.h,
-    onDown:()=>{g.menu="inventory";g.inventoryFrom="run";g.inventoryTab=0;g.inventorySel=0;g.keys.act=false;}
+  // A dedicated physical backpack button keeps Inventory one touch away.
+  // The top resources plaque is now a read-only weight/Ash display.
+  drawBackpackButton45(ctx,g,()=>{
+    g.menu="inventory";g.inventoryFrom="run";g.inventoryTab=0;
+    g.inventorySel=0;g.keys.act=false;g.pressE=false;
   });
 }
 
@@ -2044,7 +2059,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;
   if (g.menu !== "bench") g.craftConfirm = null;
-  if (g.menu !== "bench" && g.menu !== "build") g.buildConfirm = null;
+  // Two-tap station upgrades must survive rendering while the player
+  // remains beside that exact station, but expire on departure/menu opening.
+  if (g.menu !== "bench" && g.menu !== "build" &&
+      !(inRun && !g.menu && nearbyStation(g)===g.buildConfirm)) g.buildConfirm = null;
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
   const q = clamp(g.time / total, 0, 1);
@@ -2317,6 +2335,12 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     drawOffscreenGuide(ctx, g, guiding, camX);
   }
 
+  // Station bubbles are anchored above their real on-screen objects.
+  // Draw after the night mask so players can still see the icons at night,
+  // but below the top HUD and any full-screen menu.
+  if(inRun && !g.over && !g.menu) {
+    drawStationBubbles(ctx,g,nearbyStation(g),(id,action)=>performStationAction(g,meta,id,action));
+  }
   // screen chrome
   if (!inRun) drawScreen(ctx, g, meta);
   if (inRun && !g.over) {
@@ -2333,5 +2357,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, bankLevelOne, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, bankLevelOne, performStationAction, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

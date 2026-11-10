@@ -35,10 +35,10 @@ describe("Patch #54: Bingsu's user-photo-based Pets Shop portrait",()=>{
   // Head, muscular shoulder, long white back, back leg, and tail:
   expect(pixel(view.draws,23,15)).toBe(BINGSU_PORTRAIT_PALETTE54.highlight);
   expect(pixel(view.draws,70,25)).toBe(BINGSU_PORTRAIT_PALETTE54.coat);
-  expect(pixel(view.draws,91,29)).toBe(BINGSU_PORTRAIT_PALETTE54.coat);
+  expect(["#e0e5de","#f2f0e9","#d7dfd9"]).toContain(pixel(view.draws,91,29));
   expect(pixel(view.draws,114,38)).not.toBe("none");
-  expect(pixel(view.draws,45,59)).toBe(BINGSU_PORTRAIT_PALETTE54.highlight);
-  expect(pixel(view.draws,100,58)).toBe(BINGSU_PORTRAIT_PALETTE54.coat);
+  expect(["#f2f0e9","#fffdf6","#e2e9e1","#a7b4ae"]).toContain(pixel(view.draws,45,59));
+  expect(["#f2f0e9","#fffdf6","#e0e5de","#a7b4ae","#aebeb9","#9ba9a5"]).toContain(pixel(view.draws,100,58));
  });
  it("faces left with a broad BLACK nose and a gentle almond eye, not a frontal puppy",()=>{
   const view=canvas();

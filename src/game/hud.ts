@@ -2,7 +2,7 @@ import { W, WORLD_W, CX, BENCH_X, PILE_X } from "./config";
 import { drawText, textW } from "./font";
 import { clamp } from "./math";
 import { drawLivingThermometer, THERMOMETER_RECT } from "./thermometer";
-import { carryCap } from "./rules";
+import { occupiedInventorySlots, availableInventorySlots } from "./inventory";
 import { visualSeason, seasonDay } from "./palette";
 import { WEST_POST_X, EAST_POST_X, EAST_EXPANDED_X, EXPANSION_MARKER_X, campEstablished } from "./campBoundary";
 import { MUSEUM_X } from "./museum";
@@ -170,9 +170,8 @@ function meter(ctx: any, value: number, x: number, y: number, low: string, high:
 
 /** The new source-based layout uses exactly the same data as the old HUD.
  * The panel geometry leaves y=43 onward for notifications and guide access. */
-/** Narrow four-panel layout with no added visual height or scenery occlusion.
- * The third plaque displays the existing logs/carrying rule until the next
- * inventory patch introduces item stacks and genuine occupied-slot counts. */
+/** Four wooden panels. Inventory now shows real occupied item stacks and
+ * unlocked slots; backpack carrying weight remains a separate constraint. */
 export const HUD_RECTS = {
   survival: {x:3,y:17,w:103,h:23},
   thermometer: THERMOMETER_RECT,
@@ -181,10 +180,12 @@ export const HUD_RECTS = {
 } as const;
 
 export function hudInventoryReadout(g:any,meta:any):string {
-  const capacity = carryCap(g,meta);
-  const carried = clamp(Number(g.player.wood)||0,0,capacity);
-  // Compact for 13/21 without overflowing the narrow wood-frame plaque.
-  return "INV"+(capacity < 10 ? " " : "")+Math.floor(carried)+"/"+capacity;
+  const capacity = availableInventorySlots(g,meta);
+  const used = Math.min(capacity,occupiedInventorySlots(g));
+  // True occupied stack slots / unlocked backpack slots. The *separate*
+  // pine-log carrying weight is displayed inside the inventory modal.
+  const spaced = "INV "+used+"/"+capacity;
+  return textW(spaced)<=30?spaced:"INV"+used+"/"+capacity;
 }
 export function hudAshReadout(g:any):string {
   const earned = Math.max(0,Math.floor(Number(g.ashEarned)||0));
@@ -212,8 +213,7 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
 
   drawLivingThermometer(ctx,g);
 
-  // Interim HUD summary of ACTUAL log carry capacity, not invented bag
-  // slots. The MMO inventory patch will replace this with real item slots.
+  // Real occupied backpack stacks and run Ash, without remote crafting.
   drawText(ctx,hudInventoryReadout(g,meta),199,21,"#f1e1c3");
   drawText(ctx,hudAshReadout(g),199,32,"#d8bcf2");
 

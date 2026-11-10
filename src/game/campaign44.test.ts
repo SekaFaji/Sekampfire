@@ -121,7 +121,8 @@ describe("Patch #44: Level 1 completion and safe Ash rewards",()=>{
 
   it("draws safe, click-only 320x180 pending and banked screens",()=>{
     const g=campaign(),m=meta(),rects:any[]=[];
-    const ctx={fillStyle:"",fillRect:(x:number,y:number,w:number,h:number)=>{
+    const ctx={fillStyle:"",save:()=>{},restore:()=>{},translate:()=>{},scale:()=>{},
+      fillRect:(x:number,y:number,w:number,h:number)=>{
       expect([x,y,w,h].every(Number.isFinite)).toBe(true);
       expect(w).toBeGreaterThan(0);expect(h).toBeGreaterThan(0);
       rects.push({x,y,w,h});

@@ -168,9 +168,10 @@ function resumeRun(g: any, data: any, meta?: any) {
   keepFencePostsClear(g);
   if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
     g.dog = {
-      x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:156,
+      x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:PLAYER_Y,
       dir:data.dog.dir === -1 ? -1 : 1,
-      wood:Math.floor(finiteRange(data.dog.wood,0,2,0)),phase:"idle"
+      wood:Math.floor(finiteRange(data.dog.wood,0,2,0)),
+      phase:"idle",gait:0,motion:0
     };
   }
   g.ui = g.victoryPending ? "win" : g.levelCompletePending ? "levelComplete" : "run";

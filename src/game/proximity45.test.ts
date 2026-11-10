@@ -7,8 +7,8 @@ import {stationCost,stationLevel} from "./campProgress";
 import {guideTarget} from "./guidance";
 import {captureRunSnapshot} from "./save";
 import {
-  nearbyStation, stationBubbleRects, stationBubbleCenter, drawStationBubbles,
-  weightHudValues, BACKPACK_BUTTON45
+  nearbyStation, selectedStation, selectStation, stationBubbleRects, stationBubbleCenter,
+  drawStationBubbles, weightHudValues, BACKPACK_BUTTON45
 } from "./proximity45";
 
 let store:Map<string,string>;
@@ -53,9 +53,10 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     m.up.pack=1;
     expect(weightHudValues(g,m)).toEqual({weight:3,limit:21,label:"3/21KG"});
   });
-  it("shows nearby completed stations automatically and never creates a remote station",()=>{
+  it("finds nearby stations without automatically selecting or drawing buttons",()=>{
     const g=run();g.player.x=CX;
     expect(nearbyStation(g)).toBe("hearth");
+    expect(selectedStation(g)).toBeNull();
     g.player.x=BENCH_X;
     expect(nearbyStation(g)).toBeNull(); // unfinished bench
     g.builtBench=true;
@@ -73,23 +74,32 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     expect(fire.plans).toBeNull();
     expect(fire.primary!.x+fire.primary!.w).toBeLessThan(fire.upgrade!.x);
     const clicked:string[]=[];
+    // Just approaching the fire must not create actionable buttons.
+    drawStationBubbles(picture.ctx,g,"hearth",(id,action)=>clicked.push(id+":"+action));
+    expect(g.zones).toHaveLength(0);
+    expect(selectStation(g,"hearth")).toBe(true);
     drawStationBubbles(picture.ctx,g,"hearth",(id,action)=>clicked.push(id+":"+action));
     expect(g.zones).toHaveLength(2);
     g.zones[0].onDown();g.zones[1].onDown();
     expect(clicked).toEqual(["hearth:primary","hearth:upgrade"]);
     g.builtBench=true;g.player.x=BENCH_X;g.camX=BENCH_X-160;g.zones=[];
+    expect(selectStation(g,"bench")).toBe(true);
     const bench=stationBubbleRects(g,"bench");
     expect(bench.plans).not.toBeNull();
     drawStationBubbles(picture.ctx,g,"bench",(id,action)=>clicked.push(id+":"+action));
     expect(g.zones).toHaveLength(3);
     g.zones[1].onDown();expect(clicked[2]).toBe("bench:plans");
-    expect(stationBubbleCenter(g,"bench","plans")?.y).toBe(92.5);
+    expect(stationBubbleCenter(g,"bench","plans")?.y).toBe(bench.plans!.y+19);
     expect(picture.rects.length).toBeGreaterThan(90);
     expect(m.up).toBeDefined();
   });
-  it("ACT feeds the fire immediately instead of opening the old station overlay",()=>{
+  it("first ACT reveals fire circles, second lights, and later ACT feeds",()=>{
     const g=run(),m=meta();
     g.player.x=CX;g.fireLit=false;g.firestarter=1;
+    handleKey(g,m,"e",true);
+    update(g,m,0.02,{toast:vi.fn(),end:vi.fn()});
+    expect(g.fireLit).toBe(false);
+    expect(selectedStation(g)).toBe("hearth");
     handleKey(g,m,"e",true);
     update(g,m,0.02,{toast:vi.fn(),end:vi.fn()});
     expect(g.fireLit).toBe(true);
@@ -105,6 +115,7 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     const g=run(),m=meta();
     g.player.x=CX;g.fireLit=true;g.stored=20;
     const cost=stationCost(g,"hearth");
+    expect(selectStation(g,"hearth")).toBe(true);
     expect(performStationAction(g,m,"hearth","upgrade")).toBe(true);
     expect(g.buildConfirm).toBe("hearth");
     expect(stationLevel(g,"hearth")).toBe(0);
@@ -124,6 +135,7 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
   it("the left button keeps storage and Workbench real controls and back returns to the world",()=>{
     const g=run(),m=meta();
     g.builtPile=true;g.player.x=PILE_X;g.player.wood=5;
+    expect(selectStation(g,"pile")).toBe(true);
     expect(performStationAction(g,m,"pile","primary")).toBe(true);
     expect(g.stored).toBe(5);
     expect(g.player.wood).toBe(0);
@@ -131,9 +143,11 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     expect(g.player.wood).toBe(5);
     expect(g.stored).toBe(0);
     g.builtBench=true;g.player.x=BENCH_X;
+    expect(selectStation(g,"bench")).toBe(true);
     expect(performStationAction(g,m,"bench","primary")).toBe(true);
     expect(g.menu).toBe("bench");expect(g.stationFrom).toBe(false);
     closeMenu(g);expect(g.menu).toBeNull();
+    expect(selectStation(g,"bench")).toBe(true);
     expect(performStationAction(g,m,"bench","plans")).toBe(true);
     expect(g.menu).toBe("build");expect(g.stationFrom).toBe(false);
     closeMenu(g);expect(g.menu).toBeNull();
@@ -161,6 +175,8 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     const g=run(),m=meta();
     g.guideLevel=1;g.guideStoredTen=true;g.campExpansion=1;
     g.builtPile=true;g.stored=20;g.player.x=PILE_X;g.camX=PILE_X-160;
+    expect(guideTarget(g,m)).toMatchObject({space:"world",x:PILE_X});
+    expect(selectStation(g,"pile")).toBe(true);
     const target=guideTarget(g,m);
     expect(target?.space).toBe("screen");
     const center=stationBubbleCenter(g,"pile","upgrade");

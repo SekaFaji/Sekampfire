@@ -5,7 +5,7 @@ import { INVENTORY_GRID_SLOTS, ITEM_DEFINITIONS, type ItemId,
 import { assignQuickSlot } from "./quickSlots";
 import { saveMeta } from "./save";
 import { ownedAxeOptions, ownedPetOptions, equippedAxe, equippedPet,
-  equipAxe, equipPet, normalizeGearChoice, AXE_STATS, type AxeId, type GearCategory } from "./equipment50";
+  equipAxe, equipPet, AXE_STATS, type AxeId, type GearCategory } from "./equipment50";
 
 export const INVENTORY_MODAL = {x:18,y:8,w:284,h:164} as const;
 export const BAG_GRID = {x:29,y:46,cols:5,rows:4,size:22,gap:3} as const;

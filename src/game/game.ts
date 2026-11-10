@@ -24,6 +24,7 @@ import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./stat
 import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
+import { drawStationPopup } from "./stationPopup";
 import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { localTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
@@ -185,6 +186,7 @@ function createEngine(): any {
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
+    stationId: "hearth", stationFrom: false,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
@@ -515,36 +517,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
             : `Stacked ${add} logs on the site. ${g.benchLogs}/15.`);
         } else cb.toast("Bring 15 logs here to build the workbench.");
       } else if (nearBench) {
-        g.menu = "bench";
-        g.craftTab=0;
-        g.menuSel = 0;
-        g.craftConfirm = null;
-        g.buildConfirm = null;
-        g.keys.act = false;
+        openStation(g,"bench");
       } else if (nearPit) {
-        if (!g.fireLit) {
-          if (g.firestarter > 0) {
-            g.firestarter--; g.fireLit = true; g.everLit = true; g.fuel = 34;
-            AUDIO.effect("light");
-            cb.toast("The fire catches. Warm at last.");
-          } else if (p.wood >= 3 || g.stored >= 3) {
-            const fromStore = Math.max(0, 3 - p.wood);
-            p.wood -= 3 - fromStore; g.stored -= fromStore;
-            g.fireLit = true; g.everLit = true; g.fuel = 28;
-            AUDIO.effect("light");
-            cb.toast("You rebuild the fire from kindling. (3 wood)");
-          } else {
-            cb.toast("Need 3 wood to relight the fire.");
-          }
-        } else if (p.wood > 0 && g.fuel < 99) {
-          p.wood--;
-          g.guideStokes++;
-          g.fuel = Math.min(100, g.fuel + stationStokeGain(g));
-        } else if (g.stored > 0 && g.fuel < 99) {
-          g.stored--;
-          g.guideStokes++;
-          g.fuel = Math.min(100, g.fuel + stationStokeGain(g));
-        }
+        openStation(g,"hearth");
       } else if (nearPile && !g.builtPile) {
         g.keys.act = false;
         if (g.pileBuildT >= 0) {
@@ -560,15 +535,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
             : `Stacked ${add} logs on the site. ${g.pileLogs}/15.`);
         } else cb.toast("Bring 15 logs here to build the wood pile.");
       } else if (nearPile) {
-        if (p.wood > 0) {
-          const move = Math.min(p.wood, pcap - g.stored);
-          if (move <= 0) cb.toast("The wood pile is full.");
-          else { g.stored += move; p.wood -= move; cb.toast(`Stored ${move} pine logs on the pile.`); }
-        } else if (g.stored > 0) {
-          const take = Math.min(g.stored, cap - p.wood);
-          if (take <= 0) cb.toast("You cannot carry any more.");
-          else { p.wood += take; g.stored -= take; cb.toast(`Took ${take} pine logs from storage.`); }
-        } else cb.toast("The pile is empty.");
+        openStation(g,"pile");
       } else if (tree) {
         p.chopTree = tree;
         p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
@@ -579,10 +546,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 
   // ---- hold action: keep chopping / stoking ----
   if (g.keys.act && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
-    if (nearPit && g.fireLit && g.stokeCd <= 0 && g.fuel < 99) {
-      if (p.wood > 0) { p.wood--; g.guideStokes++; g.fuel = Math.min(100, g.fuel + stationStokeGain(g)); g.stokeCd = 0.3; }
-      else if (g.stored > 0) { g.stored--; g.guideStokes++; g.fuel = Math.min(100, g.fuel + stationStokeGain(g)); g.stokeCd = 0.3; }
-    } else if (!nearPit && !nearBench && !nearPile && tree) {
+    if (!nearPit && !nearBench && !nearPile && tree) {
       p.chopTree = tree;
       p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
       p.chopT = p.chopTime;
@@ -758,10 +722,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearGrooty) g.actionLabel = "TALK";
   else if (!campEstablished(g) && (nearBench || nearPile)) g.actionLabel = "BUILD POSTS";
-  else if (nearBench) g.actionLabel = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
-  else if (!g.fireLit && nearPit) g.actionLabel = g.firestarter > 0 ? "LIGHT" : (p.wood >= 3 || g.stored >= 3) ? "RELIGHT" : "GET WOOD";
-  else if (nearPit) g.actionLabel = p.wood > 0 || g.stored > 0 ? "STOKE" : "GET WOOD";
-  else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : p.wood > 0 ? "STORE" : g.stored > 0 ? "TAKE" : "PILE";
+  else if (nearBench) g.actionLabel = g.builtBench ? "USE BENCH" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
+  else if (nearPit) g.actionLabel = "FIREPLACE";
+  else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : "STORAGE";
   else if (tree) g.actionLabel = "CHOP";
   else g.actionLabel = "-";
 
@@ -2115,14 +2078,14 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
     } else if (nearBench2) {
-      const lbl = g.builtBench ? "CRAFT" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
+      const lbl = g.builtBench ? "ACCESS" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");
     }
     else if (nearPit2) {
-      const lbl = !g.fireLit ? (g.firestarter > 0 ? "LIGHT" : "RELIGHT") : "STOKE";
+      const lbl = "FIREPLACE";
       drawTextO(ctx, lbl, CX - 9, 118 - bob, "#ffe9a0", "#060a18");
     } else if (nearPile2) {
-      const lbl = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : p.wood > 0 ? "STORE" : g.stored > 0 ? "TAKE" : "PILE";
+      const lbl = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : "STORAGE";
       drawTextO(ctx, lbl, PILE_X - 7, 120 - bob, "#ffe9a0", "#060a18");
     } else if (tr) drawTextO(ctx, "CHOP", tr.x - 7, tr.y - 40 - bob, "#ffe9a0", "#060a18");
   }

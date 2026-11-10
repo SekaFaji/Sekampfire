@@ -3,10 +3,11 @@ import { drawText, drawTextC } from "./font";
 import { drawInventoryItemIcon } from "./inventoryMenu";
 import { stationCost, stationLevel } from "./campProgress";
 import { carriedWeight, carriedWeightLimit } from "./inventory";
+import { pileCap } from "./rules";
 import { clamp } from "./math";
 
 export type NearbyStation = "hearth" | "bench" | "pile";
-export type StationAction = "primary" | "upgrade" | "plans";
+export type StationAction = "primary" | "upgrade" | "plans" | "take";
 export type BubbleRect = {x:number;y:number;w:number;h:number};
 
 /** One station at a time, using exactly the old 22px physical reach. Nearby
@@ -54,9 +55,14 @@ export function stationBubbleRects(g:any,id:NearbyStation):Record<StationAction,
     x:center+dx,y:77+Math.round(Math.sin(t*2.0+phase)*2),w:38,h:38
   });
   if(id==="bench"){
-    return {primary:rect(-64,0),plans:rect(-19,1.35),upgrade:rect(26,2.7)};
+    return {primary:rect(-64,0),plans:rect(-19,1.35),take:null,upgrade:rect(26,2.7)};
   }
-  return {primary:rect(-46,0),plans:null,upgrade:rect(8,1.9)};
+  // When storage contains actual logs, keep STORE on the LEFT and UPGRADE
+  // on the RIGHT; the new distinct TAKE action floats in the MIDDLE.
+  if(id==="pile" && (Number(g.stored)||0)>0){
+    return {primary:rect(-64,0),take:rect(-19,1.35),plans:null,upgrade:rect(26,2.7)};
+  }
+  return {primary:rect(-46,0),plans:null,take:null,upgrade:rect(8,1.9)};
 }
 export function stationBubbleCenter(g:any,id:NearbyStation,action:StationAction):{x:number;y:number}|null {
   const r=stationBubbleRects(g,id)[action];
@@ -101,6 +107,14 @@ function button(ctx:any,g:any,r:BubbleRect,label:string,kind:StationAction,
     pixel(ctx,cx-5,y+9,10,3,ink);
     pixel(ctx,cx-8,y+12,16,3,ink);
     pixel(ctx,cx-3,y+15,6,8,ink);
+  }else if(kind==="take"){
+    // A distinct downward arrow over a small wooden log, not a second
+    // generic STORE icon. Visual language matches the existing UP arrow.
+    pixel(ctx,cx-2,y+6,4,8,ink);
+    pixel(ctx,cx-5,y+13,10,3,ink);
+    pixel(ctx,cx-3,y+16,6,3,ink);
+    pixel(ctx,cx-1,y+19,2,3,ink);
+    pixel(ctx,cx-7,y+22,14,2,"#ad8653");
   }else if(kind==="plans"){
     pixel(ctx,cx-8,y+7,16,14,"#9f8255");
     pixel(ctx,cx-6,y+8,12,12,"#ead4a0");
@@ -124,17 +138,24 @@ export function drawStationBubbles(ctx:any,g:any,station:NearbyStation|null,
   const wood=(Number(g.player?.wood)||0)+(Number(g.stored)||0);
   const confirmed=g.buildConfirm===station;
   const primaryLabel=station==="hearth"?(g.fireLit?"FEED":"LIGHT")
-    :station==="pile"?(g.player.wood>0?"STORE":"TAKE"):"CRAFT";
+    :station==="pile"?"STORE":"CRAFT";
   const upgradeLabel=lv>=2?"MAX":confirmed?"CONFIRM":cost+" LOG";
   const name=station==="hearth"?"CAMPFIRE":station==="bench"?"WORKBENCH":"LOG STORAGE";
   const wx=station==="hearth"?CX:station==="bench"?BENCH_X:PILE_X;
   const cam=Number.isFinite(g.camX)?g.camX:clamp(g.player.x-W/2,0,1600-W);
   const center=clamp(Math.round(wx-cam),70,W-70);
-  drawTextC(ctx,name,center,67,"#f4daab");
+  drawTextC(ctx,name,center,station==="pile"?57:67,"#f4daab");
+  if(station==="pile"){
+    // Actual storage content and REAL level-aware capacity, not carried wood.
+    const amount=Math.max(0,Math.floor(Number(g.stored)||0));
+    drawTextC(ctx,amount+"/"+pileCap(g)+" LOGS",center,66,"#d6dfc3");
+  }
   button(ctx,g,rects.primary!,primaryLabel,"primary",station,false,false,
     ()=>act(station,"primary"));
   if(rects.plans)button(ctx,g,rects.plans,"PLANS","plans",station,false,false,
     ()=>act(station,"plans"));
+  if(rects.take)button(ctx,g,rects.take,"TAKE","take",station,false,false,
+    ()=>act(station,"take"));
   button(ctx,g,rects.upgrade!,upgradeLabel,"upgrade",station,lv>=2,confirmed,
     ()=>act(station,"upgrade"));
   if(lv<2 && wood<cost)drawTextC(ctx,"NEED "+cost+" LOGS",center,119,"#dcb795");

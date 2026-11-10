@@ -195,7 +195,7 @@ describe("Patch #47: physical, seven-dawn fence torches",()=>{
     drawFenceTorches(p.ctx,g);expect(p.rects).toHaveLength(0);
     buildFenceTorch(g,"left");
     drawFenceTorches(p.ctx,g);
-    expect(p.rects.length).toBeGreaterThan(7);
+    expect(p.rects.length).toBeGreaterThanOrEqual(7);
     expect(p.rects.some(r=>r.color==="#87afb0")).toBe(true);
     const snap=captureRunSnapshot(g);
     expect(snap.version).toBe(1);

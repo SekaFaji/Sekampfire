@@ -103,7 +103,7 @@ export function drawMuseumHut(ctx: any): void {
 
 export function drawMuseumPage(ctx: any, g: any, meta: any, close:()=>void): void {
   const ox=19,oy=7,pw=282,ph=166,found=museumCount(meta);
-  ctx.fillStyle="rgba(8,13,25,0.96)";ctx.fillRect(ox,oy,pw,ph);
+  ctx.fillStyle="rgba(8,13,25,0.76)";ctx.fillRect(ox,oy,pw,ph);
   ctx.fillStyle="#bb945d";
   ctx.fillRect(ox,oy,pw,1);ctx.fillRect(ox,oy+ph-1,pw,1);
   ctx.fillRect(ox,oy,1,ph);ctx.fillRect(ox+pw-1,oy,1,ph);

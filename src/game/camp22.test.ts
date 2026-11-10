@@ -83,7 +83,7 @@ describe("real station upgrade progression", () => {
   });
   it("unlocks workbench recipes by tier, preserves confirmation and discounts on level two", () => {
     const g=camp(); g.menu="bench";g.craftTab=1;
-    expect(benchRows(g,meta)).toHaveLength(4);
+    expect(benchRows(g,meta)).toHaveLength(5); // added crafted Ember Torch
     expect(benchRows(g,meta)[1].right).toBe("BENCH LV1");
     expect(benchRows(g,meta)[2].right).toBe("BENCH LV2");
     const wood=g.player.wood+g.stored;

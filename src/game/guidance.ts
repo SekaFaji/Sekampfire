@@ -6,6 +6,7 @@ import { stationCost, stationLevel } from "./campProgress";
 import { stationCraftCost } from "./campProgress";
 import { clamp } from "./math";
 import { STATION_ACTIONS } from "./stationPopup";
+import { nearbyStation, stationBubbleCenter, type NearbyStation, type StationAction } from "./proximity45";
 
 export type FireflyTarget = {
   space: "world" | "screen" | "menu";
@@ -28,6 +29,11 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   const world = (x:number,y=114):FireflyTarget => ({space:"world",x,y,goal});
   const ui = (menu: "build"|"bench"|"station",tab:number,row:number):FireflyTarget =>
     ({space:"menu",x:0,y:0,menu,tab,row,goal});
+  const bubble = (station:NearbyStation,action:StationAction):FireflyTarget|null => {
+    if(g.menu || nearbyStation(g)!==station)return null;
+    const center=stationBubbleCenter(g,station,action);
+    return center?{space:"screen",x:center.x,y:center.y,goal}:null;
+  };
   const resources = (treesOnly=false):FireflyTarget|null => {
     const p = g.player;
     const drops = (g.pickups||[]).filter((d:any)=>d.w>0 && Number.isFinite(d.x));
@@ -48,18 +54,19 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   const build = (_tab:number,row:number):FireflyTarget => {
     if(g.menu==="build") return ui("build",0,row);
     if(g.menu==="station" && g.stationId==="bench")return ui("station",0,2);
-    // Camp plans may be accessed ONLY from the finished physical Workbench.
-    return world(BENCH_X,116);
+    // Building plans remain available only at the physical completed bench.
+    return bubble("bench","plans")||world(BENCH_X,116);
   };
   const craft = ():FireflyTarget => {
     if (g.menu==="bench") return ui("bench",0,0);
     if (g.menu==="station"&&g.stationId==="bench")return ui("station",0,0);
-    return world(BENCH_X,116);
+    return bubble("bench","primary")||world(BENCH_X,116);
   };
   const improvement = (station:"hearth"|"bench"|"pile"):FireflyTarget|null => {
     if (missingWood(stationCost(g,station))) return resources();
     if(g.menu==="station"&&g.stationId===station)return ui("station",0,1);
-    return world(station==="hearth"?CX:station==="bench"?BENCH_X:PILE_X,116);
+    return bubble(station,"upgrade")||
+      world(station==="hearth"?CX:station==="bench"?BENCH_X:PILE_X,116);
   };
   // Keep a live modal free of glow unless it contains the next actual step.
   // This prevents false guides over Settings, Grooty or the Museum.
@@ -69,8 +76,8 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
       case "chop": return resources(true);
       case "left-post": return wood<1?resources():world(WEST_POST_X);
       case "right-post": return wood<1?resources():world(EAST_POST_X);
-      case "light-fire": return world(CX,116);
-      case "feed-fire": return stock<1?resources():world(CX,116);
+      case "light-fire": return bubble("hearth","primary")||world(CX,116);
+      case "feed-fire": return stock<1?resources():bubble("hearth","primary")||world(CX,116);
       // Scouting is a world mission, not an instruction to idle at the fire.
       // During daylight Grooty explains to prepare for night; no false marker.
       case "scout-grove": return g.isNight?world(SCOUT_GROVE_X,112):null;
@@ -79,7 +86,7 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
       case "build-storage":
         return !g.builtPile && g.pileLogs<SITE_COST && wood<1
           ? resources():world(PILE_X,112);
-      case "store-ten": return wood<1?resources():world(PILE_X,112);
+      case "store-ten": return wood<1?resources():bubble("pile","primary")||world(PILE_X,112);
       case "expand": return missingWood(EXPANSION_COST)?resources():world(EXPANSION_MARKER_X,111);
       case "upgrade-storage": return improvement("pile");
       case "build-workbench":

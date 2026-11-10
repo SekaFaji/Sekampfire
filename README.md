@@ -2,6 +2,14 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #41: Square quick slots, Bingsu and Grooty's missions
+
+- **Small square tool slots:** both water-side tools are custom 22x22 pixel-art sockets with larger 28x26 invisible touch targets for Android. Neither overlaps the unchanged central ACT button. Short tap uses the tool; hold 0.5 seconds for the picker. Existing slot-1/slot-2 keys and legacy Ember assignments remain valid.
+- **Craftable Ember Torch:** a reusable torch costs 3 Pine Logs at the built Workbench (Supplies tab). Crafting adds a real owned `ember_torch` item to the Equipment inventory. Choose SLOT 1 or SLOT 2 from its item details or assign from the tool picker. It lights using the **existing** nearby lit campfire fuel/ember rule, not free fuel. The separately crafted Ember Lantern still extends the torch duration as before.
+- **Bingsu:** the permanent pet previously labeled Good Dog is now **Bingsu, a Dogo Argentino**. The Pets tab adds a detailed original pixel-art portrait and short backstory, and the in-world pet is redrawn with a sturdy white coat, dark nose, folded ears and personal collar. He is loyal, fearless and ready to risk everything for his owner. His **actual implemented ability** remains fetching and carrying up to two **real** dropped Pine Logs. Combat protection is character lore, **not a shipped combat feature**. Existing ownership is kept at `up.dog` and `petEquipped: dog` with the same 40-Ash cost.
+- **Grooty's tutorial text:** the run-local teaching steps now display **MISSION 1, MISSION 2, etc.**, including completion announcements, checklist headings and cabin prerequisite labels. Internal `guideLevel` saves and all existing objectives stay untouched; **actual station upgrade levels** retain their correct level numbering.
+- No unrelated gameplay economy, Ash banking, inventory data or campaign level restructuring was introduced.
+
 ## Patch #40: MMO-style inventory and Pine Logs
 
 - **Inventory window:** tap the INV panel at the top of the run, press I, or use Menu > Inventory. An original pixel-art backpack window has Backpack and Equipment tabs, 5x4 selectable slot grid, crisp log/axe/boot/pack item icons, quantities, descriptions and item weight. The open inventory blocks all gameplay underneath; X/Back/I/outside tap closes it.

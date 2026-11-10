@@ -1056,23 +1056,38 @@ function pauseRows(g: any, meta: any) {
   ];
 }
 
-/** Two real slots, with no imaginary inventory items until items exist. */
+/** Toolbar knows real craft ownership. The current fire Ember remains
+ * assignable for old players; the equipment-based Torch is craftable at
+ * the Workbench and can be assigned here or directly from Inventory. */
 function toolbarRows(g:any):any[] {
-  return [0,1].map(index => ({
-    label: "SLOT " + (index+1),
-    right: normalizeQuickSlots(g.quickSlots)[index]==="ember" ? "EMBER" : "EMPTY",
-    desc: "SELECT THIS SLOT TO ASSIGN AN ITEM",
-    h:15, enabled:true,
-    onDown:()=>openQuickSlotPicker(g,index,"toolbar"),
-  }));
+  return [0,1].map(index => {
+    const item=normalizeQuickSlots(g.quickSlots)[index];
+    return {
+      label:"SLOT "+(index+1),
+      right:item==="ember_torch"?"TORCH":item==="ember"?"EMBER":"EMPTY",
+      desc:"HOLD THE SQUARE SLOT OR SELECT TO EQUIP",
+      h:15,enabled:true,
+      onDown:()=>openQuickSlotPicker(g,index,"toolbar"),
+    };
+  });
 }
 function quickSlotRows(g:any):any[] {
   const index=g.quickSlotIndex===1?1:0;
   const learned=!!(g.everLit||g.fireLit);
+  const crafted=g.crafts?.torch===true;
   return [
     {
+      label:"EMBER TORCH",right:crafted?"ASSIGN":"CRAFT FIRST",
+      desc:crafted?"REUSABLE TOOL - IGNITE AT CAMPFIRE":"CRAFT AN EMBER TORCH AT THE WORKBENCH",
+      h:15,enabled:crafted,
+      onDown:()=>{
+        if(assignQuickSlot(g,index,"ember_torch")) closeMenu(g);
+        else toast(g,"CRAFT AN EMBER TORCH FIRST.");
+      },
+    },
+    {
       label:"FIRE EMBER",right:learned?"ASSIGN":"LOCKED",
-      desc:learned?"TAKE AN EMBER FROM THE CAMPFIRE":"LIGHT THE CAMPFIRE TO LEARN THIS ACTION",
+      desc:learned?"LEGACY FIRE ACTION - NEEDS A LIT FIRE":"LIGHT THE CAMPFIRE TO LEARN",
       h:15,enabled:learned,
       onDown:()=>{
         if(assignQuickSlot(g,index,"ember")) closeMenu(g);
@@ -1175,7 +1190,7 @@ function shopRows(g: any, meta: any) {
             meta.petEquipped = equipped ? null : "dog";
             g.upConfirm = null;
             saveMeta(meta);
-            toast(g, equipped ? "GOOD DOG WILL REST." : "GOOD DOG IS EQUIPPED.");
+            toast(g, equipped ? "BINGSU WILL REST." : "BINGSU JOINS YOUR CAMP.");
           } else toast(g, u.name.toUpperCase() + " is already yours.");
           return;
         }
@@ -1222,7 +1237,7 @@ function activateSel(g: any, meta: any) {
 function doBuildAction(g: any, meta: any) {
   if (!campEstablished(g)) { toast(g,"BUILD BOTH CAMP POSTS FIRST."); return; }
   if (g.stage >= 6) { g.menu = null; return; }
-  if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH GROOTYS FIRST FOUR LESSONS BEFORE THE CABIN."); return; }
+  if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH GROOTYS FIRST FOUR MISSIONS BEFORE THE CABIN."); return; }
   if (g.stage === 5 && !canCompleteCabin(g)) { toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
   const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
   if (g.player.wood + g.stored < cost) { toast(g, "Not enough wood."); return; }
@@ -1315,13 +1330,13 @@ function buildRows(g: any, meta: any) {
     const needsFence = !campEstablished(g);
     rows.push({
       label: STAGES[g.stage].name.toUpperCase(),
-      right: needsFence ? "BUILD FENCE" : needsGuide ? "FINISH LV1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
-      desc: needsFence ? "PLACE ONE LOG AT EACH CAMP BOUNDARY" : needsGuide ? "COMPLETE GROOTYS FIRST FOUR LESSONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
+      right: needsFence ? "BUILD FENCE" : needsGuide ? "FINISH M1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
+      desc: needsFence ? "PLACE ONE LOG AT EACH CAMP BOUNDARY" : needsGuide ? "COMPLETE GROOTYS FIRST FOUR MISSIONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
         g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
       h: 15, enabled: !needsFence && !needsGuide && !needsStations && total() >= cost,
       onDown: () => {
         if (needsFence) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
-        if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH GROOTYS FIRST FOUR LESSONS."); return; }
+        if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH GROOTYS FIRST FOUR MISSIONS."); return; }
         if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
         if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
         if (g.buildConfirm !== "stage") { g.buildConfirm = "stage"; return; }
@@ -1601,10 +1616,10 @@ function drawRunChrome(ctx: any, g: any) {
     onDown: () => { g.pressE = true; g.keys.act = true; },
     onUp: () => { g.keys.act = false; g.chopBlocked = false; },
   });
-  // Two configurable equipment sockets replace permanent BUILD / TORCH
-  // chrome. Hold a socket to assign; tap for its real, existing action.
-  drawQuickSlot(ctx,g,0,77,H-22);
-  drawQuickSlot(ctx,g,1,196,H-22);
+  // Compact 22px square pixel-art tool sockets; larger 28x26 invisible
+  // touch zones remain separate from the central ACT rectangle.
+  drawQuickSlot(ctx,g,0,100,H-27);
+  drawQuickSlot(ctx,g,1,198,H-27);
   // Located immediately below the minimap, away from the world and river controls.
   uiButton(ctx, g, 284, 21, 32, 16, "MENU", {
     onDown: () => { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; },

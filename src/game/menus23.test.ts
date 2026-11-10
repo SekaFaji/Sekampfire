@@ -68,13 +68,14 @@ describe("clear Ash banking and resumable victory", () => {
 });
 
 describe("menus split without hiding ownership or overlapping exit", () => {
-  it("moves Good Dog to Pets while preserving the existing ownership key", () => {
+  it("shows Bingsu in Pets while preserving existing dog ownership", () => {
     const g=createEngine(),m=meta();
     g.shopTab=0;
     expect(shopRows(g,m).map((x:any)=>x.label)).not.toContain("GOOD DOG");
     expect(shopRows(g,m)).toHaveLength(6);
     g.shopTab=1;
     expect(shopRows(g,m)).toHaveLength(1);
+    expect(shopRows(g,m)[0].label).toBe("BINGSU");
     expect(shopRows(g,m)[0].right).toBe("EQUIPPED");
     g.shopTab=2;
     expect(shopRows(g,m)).toHaveLength(0); // placeholder tab displays no rows
@@ -106,6 +107,6 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     g.menu="bench";g.craftTab=0;
     expect(benchRows(g,m)).toHaveLength(3);
     g.craftTab=1;
-    expect(benchRows(g,m)).toHaveLength(4);
+    expect(benchRows(g,m)).toHaveLength(5); // new Ember Torch under Supplies
   });
 });

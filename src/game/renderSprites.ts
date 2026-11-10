@@ -287,28 +287,61 @@ function drawPlayer(ctx: any, g: any) {
   }
 }
 
+/** Bingsu, a stout white Dogo Argentino with a broad chest, short coat,
+ * folded ears, dark nose and a warm leather collar. The companion stays a
+ * faithful two-log retriever; defense is personality/lore, NOT a fabricated
+ * combat mechanic. Every feature uses our original 320x180 pixel renderer. */
 function drawDog(ctx: any, g: any) {
-  const d = g.dog;
-  if (!d) return;
-  const x = Math.round(d.x), y = Math.round(d.y);
-  const dir = d.dir || 1;
-  const bob = d.phase !== "idle" ? Math.floor(g.animT * 8) % 2 : 0;
-  const idleBreath = d.phase === "idle" && Math.sin(g.animT * 2.2) > 0.6 ? -1 : 0;
-  ctx.fillStyle = "rgba(20,20,40,0.3)";
-  ctx.fillRect(x - 4, y - 1, 8, 1);
-  px(ctx, x - 4, y - 4 + idleBreath, 8, 3, "#d8dee4");
-  px(ctx, x - 4, y - 1 - bob, 1, 2, "#b8bec6");
-  px(ctx, x + 3, y - 2 + bob, 1, 2, "#b8bec6");
-  px(ctx, dir > 0 ? x + 3 : x - 6, y - 6, 3, 3, "#d8dee4");
-  px(ctx, dir > 0 ? x + 5 : x - 6, y - 7, 1, 2, "#c2c8ce");
-  px(ctx, dir > 0 ? x + 6 : x - 6, y - 5, 1, 1, "#2a2a2e");
-  const wag = Math.sin(g.animT * (d.phase === "idle" ? 5 : 12)) > 0 ? -1 : 0;
-  px(ctx, dir > 0 ? x - 5 : x + 4, y - 5 + wag, 1, 2, "#c2c8ce");
-  // Exactly one/two real dropped logs carried visibly above the dog's back.
-  for (let i = 0; i < Math.min(2,d.wood||0); i++) {
-    px(ctx,x-3+i*3,y-9-bob,4,2,"#67432a");
-    px(ctx,x-2+i*3,y-9-bob,2,1,"#b78b50");
-    px(ctx,x-3+i*3,y-9-bob,1,2,"#d0a878");
+  const d=g.dog;
+  if(!d)return;
+  const x=Math.round(d.x),y=Math.round(d.y),dir=d.dir===-1?-1:1;
+  const walking=d.phase!=="idle";
+  const step=walking?(Math.floor(g.animT*9)%2):0;
+  const breath=!walking && Math.sin(g.animT*2.1)>.55?-1:0;
+  const wag=Math.sin(g.animT*(walking?10:5))>0?-1:0;
+  const coat="#e9ede8",highlight="#f7f7ee",shadow="#aebabc";
+
+  ctx.fillStyle="rgba(19,24,33,0.28)";
+  ctx.fillRect(x-8,y-1,18,1);
+  // Tail, low and gently wagging, not a generic curled fox tail.
+  const tailX=dir>0?x-10:x+9;
+  px(ctx,tailX,y-10+wag,3,2,"#bbc7c7");
+  px(ctx,tailX+(dir>0?-2:2),y-12+wag,2,2,coat);
+  // Broad shoulders and short, muscular Dogo Argentino torso.
+  px(ctx,x-8,y-10+breath,16,7,shadow);
+  px(ctx,x-7,y-11+breath,15,7,coat);
+  px(ctx,x-5,y-11+breath,11,2,highlight);
+  px(ctx,x-6,y-6+breath,13,2,"#d4dddd");
+  // Stocky chest, neck and light upper muscle shading.
+  const neckX=dir>0?x+4:x-8;
+  px(ctx,neckX,y-12+breath,5,7,coat);
+  px(ctx,neckX,y-11+breath,2,4,highlight);
+  px(ctx,dir>0?x+4:x-7,y-7,4,3,shadow);
+  // Four paws grounded with a restrained stepping animation.
+  for(const lx of [x-6,x-2,x+3,x+7]){
+    const lift=walking && (lx===x-6||lx===x+7)?step:1-step;
+    px(ctx,lx,y-4-lift,2,4,coat);
+    px(ctx,lx-1,y-1-lift,3,1,"#c1c6c4");
+  }
+  const headX=dir>0?x+7:x-15;
+  // Square powerful head, cheek, short muzzle and folded ear.
+  px(ctx,headX,y-15+breath,8,9,shadow);
+  px(ctx,headX+1,y-15+breath,7,8,coat);
+  px(ctx,headX+2,y-15+breath,4,3,highlight);
+  px(ctx,dir>0?headX+1:headX+5,y-17+breath,3,4,"#bfc9c8");
+  px(ctx,dir>0?headX+2:headX+6,y-16+breath,1,2,"#b69d9a");
+  const muzzleX=dir>0?headX+6:headX-3;
+  px(ctx,muzzleX,y-10+breath,4,4,coat);
+  px(ctx,dir>0?muzzleX+3:muzzleX,y-9+breath,1,2,"#2c3335");
+  px(ctx,dir>0?headX+5:headX+2,y-12+breath,1,1,"#333d3d");
+  // Bingsu's distinctive small copper-red collar and golden tag.
+  px(ctx,dir>0?x+6:x-7,y-9+breath,2,4,"#b2644e");
+  px(ctx,dir>0?x+7:x-6,y-6+breath,1,2,"#e7bd77");
+  // One/two REAL dropped Pine Logs are visibly carried on his back.
+  for(let i=0;i<Math.min(2,d.wood||0);i++){
+    px(ctx,x-5+i*4,y-17-step,5,3,"#553824");
+    px(ctx,x-4+i*4,y-17-step,3,1,"#d3a064");
+    px(ctx,x-5+i*4,y-16-step,1,2,"#f0cc91");
   }
 }
 

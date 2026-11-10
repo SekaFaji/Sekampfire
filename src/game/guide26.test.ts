@@ -29,7 +29,7 @@ function canvas(){
   return {ctx,rects};
 }
 describe("Patch #26 run-scoped tutorial",()=>{
-  it("has five ordered levels teaching actual existing interactions",()=>{
+  it("has five ordered run missions teaching actual existing interactions",()=>{
     expect(GUIDE_LEVELS.map(level=>level.title)).toEqual([
       "FIRST CAMP","LOG STORAGE","TOOLS OF THE TRADE","A WARMER HOME","THE HOMESTEAD"
     ]);
@@ -69,15 +69,15 @@ describe("Patch #26 run-scoped tutorial",()=>{
     g.stage=6;g.campUpgrades.bench=1;g.campUpgrades.pile=1;
     advanceGuide(g,t=>notes.push(t));expect(g.guideLevel).toBe(5);
     expect(guideProgress(g).level).toBeNull();
-    expect(notes.at(-1)).toContain("ALL LESSONS");
+    expect(notes.at(-1)).toContain("ALL MISSIONS");
     advanceGuide(g,t=>notes.push(t));expect(notes).toHaveLength(3);
   });
-  it("requires finished teaching levels before the last cabin, not only enough wood",()=>{
+  it("requires finished teaching missions before the last cabin, not only enough wood",()=>{
     const g=running(),m=meta();
     g.stage=5;g.builtBench=true;g.builtPile=true;
     g.fenceLeft=true;g.fenceRight=true;
     g.campUpgrades={hearth:1,bench:1,pile:1};g.player.wood=5;g.stored=70;
-    expect(buildRows(g,m)[0].right).toBe("FINISH LV1-4");
+    expect(buildRows(g,m)[0].right).toBe("FINISH M1-4");
     expect(buildRows(g,m)[0].enabled).toBe(false);
     g.guideLevel=4;
     expect(buildRows(g,m)[0].enabled).toBe(true);

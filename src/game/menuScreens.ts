@@ -1,6 +1,6 @@
 import { drawText, drawTextC, drawTextWrap, textW } from "./font";
 import { drawTutorialArt, TUTORIAL_PAGES } from "./tutorial";
-import { drawBingsuPortrait } from "./bingsu";
+import { BINGSU, drawBingsuPortrait } from "./bingsu";
 import { drawShopCardIcon51, SHOP_CARD_LABEL51, SHOP_CARD_BENEFIT51, type ShopId51 } from "./shopCards51";
 
 function frame(ctx: any, x: number, y: number, w: number, h: number) {
@@ -230,10 +230,12 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
       }});
       drawText(ctx,"BINGSU",112,57,"#f9e8c7");
       drawText(ctx,"DOGO ARGENTINO",112,68,"#bed2cd");
-      drawText(ctx,"SHE IS A LOYAL",112,83,"#e6d9ba");
-      drawText(ctx,"WHITE COMPANION.",112,92,"#e6d9ba");
+      drawText(ctx,BINGSU.personality,112,79,"#e6d9ba");
+      drawText(ctx,BINGSU.affection,112,88,"#e6d9ba");
+      drawText(ctx,BINGSU.temperament,112,97,"#e6d9ba");
+      drawText(ctx,"FEARLESS FOR HER PERSON.",112,106,"#e6d9ba");
       drawText(ctx,rows[0].maxed?"OWNED - EQUIP IN INVENTORY":"UNLOCK HER WITH ASH",
-        112,107,rows[0].maxed?"#a7dcb8":"#e6c792");
+        112,114,rows[0].maxed?"#a7dcb8":"#e6c792");
       g.menuSel=0;
       drawShopDetails51(ctx,g,meta,rows);
     }else{

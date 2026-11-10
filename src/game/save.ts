@@ -24,12 +24,16 @@ function loadMeta(): any {
           wonEver: !!m.wonEver, up,
           petEquipped: m.petEquipped === null ? null : up.dog ? "dog" : null,
           museumBuilt: m.museumBuilt === true, collection: cleanLogCollection(m.collection),
-          guideFx: m.guideFx !== false };
+          guideFx: m.guideFx !== false,
+          maxCampaignLevel: m.maxCampaignLevel === 2 ? 2 : 1,
+          lastBankedRunId: typeof m.lastBankedRunId === "string" && m.lastBankedRunId.length < 100
+            ? m.lastBankedRunId : null };
       }
     }
   } catch (e) { /* Corrupted local saves should never prevent the game starting. */ }
   return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null,
-    museumBuilt:false, collection:cleanLogCollection(null), guideFx:true };
+    museumBuilt:false, collection:cleanLogCollection(null), guideFx:true,
+    maxCampaignLevel:1, lastBankedRunId:null };
 }
 
 
@@ -48,7 +52,7 @@ function captureRunSnapshot(g: any): any {
   if ((g.ui !== "run" && g.ui !== "levelComplete") || g.over) return null;
   const keys = ["time","night","isNight","weather","aurora","nightSkyEvent","fuel","fireLit","everLit",
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
-    "ashEarned","ashLedger","campaignLevel","levelCompletePending","won","victoryPending",
+    "ashEarned","ashLedger","campaignLevel","campaignRunId","levelCompletePending","won","victoryPending",
     "guideLevel","guideChops","guideStokes","guideStoredTen",
     "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
@@ -59,6 +63,8 @@ function captureRunSnapshot(g: any): any {
   // numbers; old checkpoints simply load all station levels as zero.
   state.ashLedger = validatedAshLedger(g.ashLedger);
   state.campaignLevel = g.campaignLevel === 1 ? 1 : 0;
+  state.campaignRunId = typeof g.campaignRunId === "string" && g.campaignRunId.length < 100
+    ? g.campaignRunId : null;
   state.levelCompletePending = g.levelCompletePending === true;
   state.campUpgrades = Object.fromEntries(stationIds.map(id => [
     id, Math.min(2, Math.max(0, Math.floor(Number(g.campUpgrades?.[id]) || 0)))

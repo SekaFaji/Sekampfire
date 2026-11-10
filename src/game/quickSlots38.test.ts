@@ -95,29 +95,29 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   const g=run();g.fireLit=true;g.everLit=true;g.fuel=90;
   assignQuickSlot(g,0,"ember");
   g.zones=[];drawRunChrome(canvas().ctx,g);
-  handlePointer(g,"down",7,88,166);
+  handlePointer(g,"down",7,111,166);
   expect(g.pressT).toBe(false);
   expect(g.pleft).toBe(false);expect(g.pright).toBe(false);
-  handlePointer(g,"up",7,88,166);
+  handlePointer(g,"up",7,111,166);
   expect(g.pressT).toBe(true);
   expect(Object.keys(g.pointers)).toHaveLength(0);
   g.pressT=false;g.fireLit=false;
-  handlePointer(g,"down",8,88,166);
-  handlePointer(g,"up",8,88,166);
+  handlePointer(g,"down",8,111,166);
+  handlePointer(g,"up",8,111,166);
   expect(g.pressT).toBe(false); // invalid without a fire
  });
  it("long press opens a modal picker without consuming the ember or moving",()=>{
   const g=run();g.fireLit=true;g.everLit=true;g.fuel=90;
   assignQuickSlot(g,0,"ember");
   g.zones=[];drawRunChrome(canvas().ctx,g);
-  handlePointer(g,"down",5,90,166);
+  handlePointer(g,"down",5,111,166);
   tickQuickSlotHolds(g,QUICK_SLOT_HOLD_SECONDS-.01);
   expect(g.menu).toBeNull();
   tickQuickSlotHolds(g,.02);
   expect(g.menu).toBe("quickslot");
   expect(g.quickSlotIndex).toBe(0);
   expect(g.pressT).toBe(false);
-  handlePointer(g,"up",5,90,166);
+  handlePointer(g,"up",5,111,166);
   expect(g.pressT).toBe(false);
   expect(g.pleft).toBe(false);
   expect(g.pright).toBe(false);
@@ -138,9 +138,9 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   expect(g.pressT).toBe(false);
   handlePointer(g,"down",4,310,95);
   expect(g.pright).toBe(true);
-  handlePointer(g,"down",5,90,166);
+  handlePointer(g,"down",5,111,166);
   expect(g.pright).toBe(true);
-  handlePointer(g,"up",5,90,166);
+  handlePointer(g,"up",5,111,166);
   expect(g.pright).toBe(true);
   handlePointer(g,"up",4,310,95);
   expect(g.pright).toBe(false);
@@ -159,8 +159,9 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   expect(g.quickSlotIndex).toBe(1);
   expect(quickSlotRows(g)[0].enabled).toBe(false);
   g.fireLit=true;g.everLit=true;
-  expect(quickSlotRows(g)[0].enabled).toBe(true);
-  quickSlotRows(g)[0].onDown();
+  expect(quickSlotRows(g)[0].enabled).toBe(false); // craftable Torch
+  expect(quickSlotRows(g)[1].enabled).toBe(true); // legacy Ember
+  quickSlotRows(g)[1].onDown();
   expect(g.quickSlots).toEqual([null,"ember"]);
   expect(g.menu).toBe("toolbar");
   closeMenu(g);
@@ -203,6 +204,6 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   expect(act).toBeTruthy();expect(quick).toHaveLength(2);
   expect(quick[0].x+quick[0].w).toBeLessThan(act.x);
   expect(quick[1].x).toBeGreaterThan(act.x+act.w);
-  expect(quick.every((z:any)=>z.h===18)).toBe(true);
+  expect(quick.every((z:any)=>z.w===28&&z.h===26)).toBe(true);
  });
 });

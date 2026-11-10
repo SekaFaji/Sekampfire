@@ -7,7 +7,7 @@ export const PINE_LOG_ID = "pine_log";
 
 export type ItemCategory = "material" | "tool" | "clothing" | "backpack" | "camp";
 export type ItemId = "pine_log" | "wood_axe" | "warm_boots" | "timber_pack" |
-  "fire_reflector" | "kindling_bundle" | "ember_lantern";
+  "fire_reflector" | "kindling_bundle" | "ember_lantern" | "ember_torch";
 export type ItemDef = {
   id: ItemId; name: string; category: ItemCategory;
   description: string[]; weight: number; maxStack: number; sprite: "log" | "axe" | "boots" | "pack" | "camp";
@@ -43,6 +43,10 @@ export const ITEM_DEFINITIONS: Record<ItemId, ItemDef> = {
     id:"kindling_bundle",name:"KINDLING BUNDLE",category:"camp",weight:0,maxStack:1,sprite:"camp",
     description:["IMPROVES EACH LOG", "ADDED TO THE FIRE."]
   },
+  ember_torch: {
+    id:"ember_torch",name:"EMBER TORCH",category:"tool",weight:0,maxStack:1,sprite:"camp",
+    description:["REUSABLE HANDHELD TORCH.", "IGNITE FROM A LIT CAMPFIRE.", "ASSIGN TO QUICK SLOT 1 OR 2."]
+  },
   ember_lantern: {
     id:"ember_lantern",name:"EMBER LANTERN",category:"tool",weight:0,maxStack:1,sprite:"camp",
     description:["EXTENDS EMBER TORCH", "DURATION WHEN CRAFTED."]
@@ -55,6 +59,7 @@ const GEAR_CRAFT_IDS: {craft:string;id:ItemId}[] = [
   {craft:"refl",id:"fire_reflector"},
   {craft:"kindling",id:"kindling_bundle"},
   {craft:"lantern",id:"ember_lantern"},
+  {craft:"torch",id:"ember_torch"},
 ];
 
 const cleanQuantity=(value:unknown,max:number):number=>{

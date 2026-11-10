@@ -47,6 +47,7 @@ describe("Patch #33 Grooty firefly wayfinding",()=>{
    state.everLit=true;state.guideStokes=0;
    expect(guideProgress(state).next?.id).toBe("feed-fire");
    state.guideStokes=1;state.night=1;state.isNight=false;
+   state.scoutVisited=true;state.scoutReturned=true;
    expect(guideProgress(state).next).toBeNull();
  });
  it("Level 2 teaches storage before expansion and points to the current site",()=>{

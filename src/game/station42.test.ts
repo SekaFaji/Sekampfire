@@ -39,11 +39,11 @@ function picture(){
  return {ctx,rects};
 }
 describe("Patch #42 physical construction, access and upgrade",()=>{
- it("has no remote BUILD pause row or B shortcut, yet retains crafting and inventory",()=>{
+ it("has no remote BUILD or inventory pause row; keeps world crafting and I shortcut",()=>{
   const g=state(),m=meta();
   const rows=pauseRows(g,m);
   expect(rows.some((r:any)=>r.label==="BUILD")).toBe(false);
-  expect(rows.some((r:any)=>r.label==="INVENTORY")).toBe(true);
+  expect(rows.some((r:any)=>r.label==="INVENTORY")).toBe(false);
   expect(rows.some((r:any)=>r.label==="END RUN")).toBe(true);
   handleKey(g,m,"b",true);
   expect(g.menu).toBeNull();
@@ -67,18 +67,20 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
   expect(openStation(g,"bench")).toBe(false);
   expect(openStation(g,"pile")).toBe(false);
  });
- it("completed Workbench, Storage, and Fireplace open their own physical station popup",()=>{
+ it("ACT at completed stations performs the left action instead of opening station popup",()=>{
   const g=state(),m=meta();
   g.builtBench=true;g.builtPile=true;g.player.x=BENCH_X;
   g.pressE=true;update(g,m,.02,cb());
-  expect(g.menu).toBe("station");
-  expect(g.stationId).toBe("bench");
+  expect(g.menu).toBe("bench"); // real crafting recipes still use a list
+  expect(g.stationFrom).toBe(false);
   closeMenu(g);expect(g.menu).toBeNull();
-  g.player.x=PILE_X;g.pressE=true;update(g,m,.02,cb());
-  expect(g.menu).toBe("station");expect(g.stationId).toBe("pile");
-  closeMenu(g);g.player.x=CX;g.pressE=true;update(g,m,.02,cb());
-  expect(g.menu).toBe("station");expect(g.stationId).toBe("hearth");
-  closeMenu(g);g.player.x=CX+130;
+  g.player.x=PILE_X;g.player.wood=2;g.pressE=true;update(g,m,.02,cb());
+  expect(g.menu).toBeNull();expect(g.stored).toBe(2);
+  g.player.x=CX;g.fireLit=true;g.fuel=10;g.player.wood=1;
+  g.pressE=true;update(g,m,.02,cb());
+  expect(g.menu).toBeNull();expect(g.stationId).toBe("hearth");
+  expect(g.player.wood).toBe(0);expect(g.guideStokes).toBe(1);
+  g.player.x=CX+130;
   expect(openStation(g,"bench")).toBe(false);
   expect(openStation(g,"pile")).toBe(false);
  });
@@ -161,7 +163,7 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
   g.guideLevel=1;g.guideStoredTen=true;g.campExpansion=1;g.stored=15;
   g.campUpgrades.pile=0;g.player.x=PILE_X;
   let target=guideTarget(g,m);
-  expect(target).toMatchObject({space:"world",x:PILE_X});
+  expect(target).toMatchObject({space:"screen"});
   openStation(g,"pile");
   target=guideTarget(g,m);
   expect(target).toMatchObject({space:"menu",menu:"station",row:1});
@@ -171,7 +173,7 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
     y:STATION_ACTIONS.upgrade.y+STATION_ACTIONS.upgrade.h/2});
   closeMenu(g);
   g.guideLevel=3;g.stage=0;g.player.x=BENCH_X;
-  target=guideTarget(g,m);expect(target).toMatchObject({space:"world",x:BENCH_X});
+  target=guideTarget(g,m);expect(target).toMatchObject({space:"screen"});
   openStation(g,"bench");
   target=guideTarget(g,m);
   expect(target).toMatchObject({space:"menu",menu:"station",row:2});

@@ -120,13 +120,13 @@ describe("Patch #39: four compact survival HUD plaques",()=>{
    for(const f of frames)expect(v.marks.some(m=>m.x===f.x&&m.y===f.y&&m.w===f.w&&m.h===f.h)).toBe(true);
    expect(v.marks.every(m=>m.x>=0&&m.x+m.w<=320)).toBe(true);
  });
- it("readout shows real occupied item slots separately from carried weight, and actual Run Ash",()=>{
+ it("readout shows real carried kg instead of occupied item slots, and actual Run Ash",()=>{
    const g=state(),m=meta();
-   expect(hudInventoryReadout(g,m)).toBe("INV 0/5");
-   g.player.wood=4;expect(hudInventoryReadout(g,m)).toBe("INV 1/5");
-   g.player.wood=5;expect(hudInventoryReadout(g,m)).toBe("INV 1/5");
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 0/5KG");
+   g.player.wood=4;expect(hudInventoryReadout(g,m)).toBe("WEIGHT 4/5KG");
+   g.player.wood=5;expect(hudInventoryReadout(g,m)).toBe("WEIGHT 5/5KG");
    (m.up as any).pack=1;g.crafts.pack=true;g.player.wood=19;
-   expect(hudInventoryReadout(g,m)).toBe("INV 1/15");
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 19/21KG");
    g.ashEarned=18;expect(hudAshReadout(g)).toBe("ASH 18");
    g.ashEarned=1276;expect(hudAshReadout(g)).toBe("ASH 1.3K");
    expect(m.ash).toBe(28); // no banking just because Ash appears on HUD

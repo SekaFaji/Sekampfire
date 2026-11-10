@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #45: fast backpack, true kg weight and proximity camp actions
+
+- **Bottom-right BAG:** An original pixel-art backpack button opens the existing Backpack and Equipment inventory in one tap from the run. The top resource plaque is read-only and the redundant Pause Inventory entry is removed; the keyboard I shortcut remains. The touch rectangle takes precedence over the right-side 15% movement region.
+- **WEIGHT instead of INV:** The top plaque reports carried kilograms and actual carrying capacity instead of occupied inventory-stack slots. Pine Logs already weigh **1 kg each**, so 0/5KG becomes 3/5KG after collecting three logs. Existing pack tiers remain 5/13/21 kg; the separate Ash balance sits directly beneath the Weight plaque.
+- **In-world station interactions:** Walking near a completed Campfire, Workbench or Log Storage automatically reveals pixel-art action buttons above that station, with no interrupting station modal. The left action is also triggered by ACT: light/feed the fire, store/take logs, or enter real Workbench crafting. The right up-arrow improves the station using the **existing two-step confirmation** and costs. Workbench gets a small third Plans button for real physical construction.
+- **Safety and guidance:** Buttons appear only within the old 22px station reach, disappear on departure or when a menu opens, and use the existing authoritative resource/upgrade logic. Grooty's fireflies target the real inline buttons. Workbench recipe/build lists remain dedicated menus because they need full details; no other game progression or save format was changed.
+- **Validation:** A new Patch #45 test suite covers weight, touch-zone priority, direct ACT, fire/storage/crafting, upgrades, nearby prompts and guide markers. Android landscape visual and gameplay review remains to be completed.
+
+
 ## Patch #44: Level 1 completion, verified Ash sources, and Level 2 unlock
 
 - **Real Level 1 ending:** newly started campaign runs use the first three Grooty milestones as **The First Settlement**. Completing the Workbench milestone freezes the run at a dedicated completion screen, without starting the old cabin lessons or Long Night automatically. Already-saved pre-#44 runs retain their legacy five-group/cabin/Long Night path.

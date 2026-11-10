@@ -1,5 +1,16 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #45 - Proximity station actions, weight HUD and backpack button
+- [x] Show an always-visible dedicated bottom-right pixel-art inventory button; remove redundant Pause Inventory entry while preserving the I key.
+- [x] Display real kg weight instead of occupied inventory stack slots, without changing Pine Logs (1 kg each), 5/13/21 kg capacities, or earned Ash.
+- [x] Show the real station's main and upgrade actions automatically on approach, without opening the old station overlay from ACT.
+- [x] ACT and primary icon trigger the same existing action. Upgrade arrow uses existing wood cost and double-press confirmation. Workbench has a third in-world Plans button.
+- [x] Preserve Workbench recipe/plan menus and exact fireplace, storage and station upgrade effects.
+- [x] Relocate Grooty's firefly guidance to the real nearby buttons.
+- [ ] Test all interaction bubbles, the weight HUD and bottom-right bag position on an actual Android landscape display with both touch and keyboard.
+- [ ] Consider retiring the now-unreachable legacy station overlay helpers and old modal tests in a dedicated cleanup after device verification.
+
+
 ## Patch #44 - Level 1 completion and Ash banking
 - [x] New campaign runs enter a dedicated pending victory screen on completion of The First Settlement's third milestone. Old run checkpoints stay on the former five-guide-group/Long Night path.
 - [x] Record real Run Ash reward sources for dawn, aurora, structures and station improvements; attribute unknown older balances honestly, with no fabricated completion payout.

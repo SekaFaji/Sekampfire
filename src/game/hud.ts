@@ -2,7 +2,7 @@ import { W, WORLD_W, CX, BENCH_X, PILE_X } from "./config";
 import { drawText, textW } from "./font";
 import { clamp } from "./math";
 import { drawLivingThermometer, THERMOMETER_RECT } from "./thermometer";
-import { occupiedInventorySlots, availableInventorySlots } from "./inventory";
+import { weightHudValues } from "./proximity45";
 import { visualSeason, seasonDay } from "./palette";
 import { WEST_POST_X, EAST_POST_X, EAST_EXPANDED_X, EXPANSION_MARKER_X, campEstablished } from "./campBoundary";
 import { MUSEUM_X } from "./museum";
@@ -170,8 +170,8 @@ function meter(ctx: any, value: number, x: number, y: number, low: string, high:
 
 /** The new source-based layout uses exactly the same data as the old HUD.
  * The panel geometry leaves y=43 onward for notifications and guide access. */
-/** Four wooden panels. Inventory now shows real occupied item stacks and
- * unlocked slots; backpack carrying weight remains a separate constraint. */
+/** Four wooden panels. Carry weight is the REAL backpack mass in kg,
+ * independent of inventory stack slots. Ash gets its own compact third chip. */
 export const HUD_RECTS = {
   survival: {x:3,y:17,w:103,h:23},
   thermometer: THERMOMETER_RECT,
@@ -180,12 +180,9 @@ export const HUD_RECTS = {
 } as const;
 
 export function hudInventoryReadout(g:any,meta:any):string {
-  const capacity = availableInventorySlots(g,meta);
-  const used = Math.min(capacity,occupiedInventorySlots(g));
-  // True occupied stack slots / unlocked backpack slots. The *separate*
-  // pine-log carrying weight is displayed inside the inventory modal.
-  const spaced = "INV "+used+"/"+capacity;
-  return textW(spaced)<=32?spaced:"INV"+used+"/"+capacity;
+  // Preserve a public readout helper used by older HUD tests, but it now
+  // reports the actual total weight rather than occupied stack slots.
+  return "WEIGHT "+weightHudValues(g,meta).label;
 }
 export function hudAshReadout(g:any):string {
   const earned = Math.max(0,Math.floor(Number(g.ashEarned)||0));
@@ -195,8 +192,8 @@ export function hudAshReadout(g:any):string {
 }
 
 /** Four native-resolution wooden panels:
- * WARMTH/FUEL | +8°C | WINDY glass instrument | INV/ASH | DAY/SEASON/MENU.
- * Weather is drawn inside the thermometer, never in the calendar panel. */
+ * WARMTH/FUEL | AIR TEMP WEATHER | WEIGHT | DAY/SEASON/MENU.
+ * The small Ash chip stays immediately beneath Weight, without crowding it. */
 export function drawCampHUD(ctx: any, g: any, meta: any) {
   for(const panel of Object.values(HUD_RECTS)){
     drawHudFrame(ctx,panel.x,panel.y,panel.w,panel.h);
@@ -213,9 +210,13 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
 
   drawLivingThermometer(ctx,g);
 
-  // Real occupied backpack stacks and run Ash, without remote crafting.
-  drawText(ctx,hudInventoryReadout(g,meta),199,21,"#f1e1c3");
-  drawText(ctx,hudAshReadout(g),199,32,"#d8bcf2");
+  // Keep both full-length WEIGHT and real kg capacity legible inside the
+  // existing 38px plaque. The number does not count inventory stack slots.
+  const carrying=weightHudValues(g,meta);
+  drawText(ctx,"WEIGHT",199,21,"#f1e1c3");
+  drawText(ctx,carrying.label,199,32,carrying.weight>=carrying.limit?"#ffd49e":"#d8dbda");
+  drawHudFrame(ctx,HUD_RECTS.resources.x,43,HUD_RECTS.resources.w,11);
+  drawText(ctx,hudAshReadout(g),199,46,"#d8bcf2");
 
   const day = g.isNight ? "NIGHT "+g.night : "DAY "+(g.night+1);
   drawText(ctx,day,239,21,"#f1e2c9");

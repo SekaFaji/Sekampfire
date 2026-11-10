@@ -1,5 +1,16 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #44 - Level 1 completion and Ash banking
+- [x] New campaign runs enter a dedicated pending victory screen on completion of The First Settlement's third milestone. Old run checkpoints stay on the former five-guide-group/Long Night path.
+- [x] Record real Run Ash reward sources for dawn, aurora, structures and station improvements; attribute unknown older balances honestly, with no fabricated completion payout.
+- [x] Explicit bank action unlocks Level 2, deposits pending Run Ash once and returns with replay/Shop/Main Menu actions. No bank on just seeing the win dialog.
+- [x] Add optional run save fields and permanent unlock plus durable banking receipt; preserve v1 checkpoint identifier and Shop purchases.
+- [x] Title shows Level 2 unlocked, clearly **COMING SOON** because playable Level 2 missions are not yet shipped.
+- [ ] Validate portrait-safe landscape Android completion screen, resume across app/browser restart, no double-bank after repeated taps, and Ash Shop transition on real hardware.
+- [ ] Patch #45: implement playable Level 2 mission architecture, Ash farming goals and deliberate in-game Ash Shop access. Define whether/how permanent starting structures are earned before coding.
+- [ ] Revisit classic Long Night access for fresh campaign runs as campaign chapters expand, preserving the finite original challenge and old checkpoints.
+
+
 ## Patch #43 - First Settlement milestone foundation
 - [x] Introduce three named Level 1 milestones in Grooty's dialogue while retaining old run-local five-group tutorial completion and all legacy save keys.
 - [x] Require a physical ACT conversation with Grooty as the first mission.

@@ -21,7 +21,7 @@ export type InventoryState = {slots: (InventoryStack | null)[]};
 export const ITEM_DEFINITIONS: Record<ItemId, ItemDef> = {
   pine_log: {
     id:"pine_log", name:"PINE LOGS", category:"material", weight:1,maxStack:99,sprite:"log",
-    description:["COMMON SOFTWOOD FROM", "PINE TREES.", "USED AS FUEL AND", "CAMP BUILDING MATERIAL."]
+    description:["COMMON SOFTWOOD FROM", "PINE TREES.", "BURNS FOR 5-20 FUEL.", "ALSO BUILDS THE CAMP."]
   },
   stick: {
     id:"stick",name:"WOOD STICK",category:"tool",weight:0,maxStack:1,sprite:"axe",

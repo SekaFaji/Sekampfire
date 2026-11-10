@@ -176,7 +176,7 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    handleKey(g,m,"escape",true);
    expect(g.menu).toBeNull();
    const open=pauseRows(g,m).find((r:any)=>r.label==="INVENTORY");
-   expect(open).toBeTruthy();g.menu="pause";open.onDown();
+   expect(open).toBeTruthy();g.menu="pause";open!.onDown();
    expect(g.menu).toBe("inventory");
    expect(g.inventoryFrom).toBe("pause");
    closeMenu(g);

@@ -1,7 +1,7 @@
 import {beforeEach,afterEach,describe,expect,it,vi} from "vitest";
 import {BINGSU,drawBingsuPortrait,drawBingsuShopProfile,BINGSU_PORTRAIT55} from "./bingsu";
 import {BINGSU_PALETTE55} from "./bingsuPortrait55";
-import {drawShopTabs,SHOP_BUY51,SHOP_DETAILS51} from "./menuScreens";
+import {drawShopTabs,SHOP_BUY51,SHOP_DETAILS51,BINGSU_PET_FIT57} from "./menuScreens";
 import {createEngine,shopRows} from "./game";
 import {drawBingsuWorldSprite} from "./bingsuWorld49";
 
@@ -48,6 +48,40 @@ describe("Patch #55-56: approved Bingsu portrait, now with more chest visible",(
      const scan=v.rectangles.filter(r=>r.y===y);
      expect(scan.reduce((n,r)=>n+r.w,0)).toBe(94);
    }
+ });
+ it("fits the ENTIRE approved image within 3px vertical and 7px horizontal matting",()=>{
+   const card=BINGSU_PET_FIT57.card,art=BINGSU_PET_FIT57.art;
+   expect(card).toEqual({x:31,y:50,w:100,h:68});
+   expect(art).toEqual({x:38,y:53,w:86,h:62});
+   expect(art.x-card.x).toBe(card.w-(art.x-card.x)-art.w);
+   expect(art.y-card.y).toBe(card.h-(art.y-card.y)-art.h);
+   expect(art.x).toBeGreaterThan(card.x+1);
+   expect(art.y).toBeGreaterThan(card.y+1);
+   expect(art.x+art.w).toBeLessThan(card.x+card.w-1);
+   expect(art.y+art.h).toBeLessThan(card.y+card.h-1);
+   expect(card.y+card.h).toBeLessThan(SHOP_DETAILS51.y);
+   const v=surface();
+   drawBingsuPortrait(v.ctx,art.x,art.y,art.w,art.h);
+   expect(v.rectangles.every(r=>
+     r.x>=art.x&&r.y>=art.y&&r.x+r.w<=art.x+art.w&&r.y+r.h<=art.y+art.h
+   )).toBe(true);
+   expect(v.rectangles.every(r=>BINGSU_PALETTE55.includes(r.color as any)))
+     .toBe(true);
+   for(let y=art.y;y<art.y+art.h;y++){
+     const scan=v.rectangles.filter(r=>r.y===y);
+     expect(scan.reduce((n,r)=>n+r.w,0)).toBe(art.w);
+   }
+ });
+ it("draws the new matte and intact card border in the actual Shop",()=>{
+   const g=createEngine(),m=meta();g.shopTab=1;g.menu="shop";g.ui="run";g.zones=[];
+   const v=surface();drawShopTabs(v.ctx,g,m,shopRows(g,m),()=>{g.menu=null});
+   const c=BINGSU_PET_FIT57.card;
+   expect(v.rectangles.some(r=>r.x===c.x&&r.y===c.y&&
+     r.w===c.w&&r.h===1&&r.color==="#eac487")).toBe(true);
+   expect(v.rectangles.some(r=>r.x===c.x+2&&r.y===c.y+2&&
+     r.w===c.w-4&&r.h===c.h-4&&r.color==="#455150")).toBe(true);
+   expect(g.zones.filter((z:any)=>z.x===c.x&&z.y===c.y&&z.w===c.w&&z.h===c.h))
+     .toHaveLength(1);
  });
  it("preserves the inspected portrait's broad dark nose, gentle eyes and soft white face",()=>{
    const v=surface();drawBingsuPortrait(v.ctx,0,0);

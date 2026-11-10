@@ -222,8 +222,8 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     // Bingsu has one personal featured card with her authentic Dogo portrait.
     if(rows.length){
       const chosen=(g.menuSel||0)===0;
-      // Native 90x68 head-and-chest portrait, finally giving her face the
-      // visual priority. 98px artwork frame and separate 150px text column.
+      // Same approved Bingsu painting, framed more widely at 94x68 to show
+      // her neck and shoulders. Separate text and real BUY button unchanged.
       // Tabs end at y49, card ends at y118; details begin at y119.
       shopBox51(ctx,31,50,100,68,"rgba(26,45,52,0.64)",
         chosen?"#eac487":"#61798b");

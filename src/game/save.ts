@@ -47,7 +47,8 @@ function captureRunSnapshot(g: any): any {
   if (g.ui !== "run" || g.over) return null;
   const keys = ["time","night","isNight","weather","aurora","nightSkyEvent","fuel","fireLit","everLit",
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
-    "ashEarned","won","victoryPending","guideLevel","guideChops","guideStokes","guideStoredTen","depth","builtBench","builtPile","benchLogs","pileLogs",
+    "ashEarned","won","victoryPending","guideLevel","guideChops","guideStokes","guideStoredTen",
+    "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
     "fenceLeft","fenceRight","campExpansion","heatSoak","cold","dampness"];
   const state: any = {};

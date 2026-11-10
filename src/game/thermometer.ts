@@ -1,4 +1,4 @@
-import { DAY_LEN } from "./config";
+import { DAY_LEN, CX, WEATHER_TEXT } from "./config";
 import { clamp } from "./math";
 import { visualSeason } from "./palette";
 import { weatherIntensity } from "./weather";
@@ -49,18 +49,37 @@ export function thermometerLiquidColor(temperature: number): string {
   return lerpHex("#9bd7c9", "#eb9f5d", (c - 7) / 28);
 }
 
-export const THERMOMETER_RECT = { x: 114, y: 17, w: 105, h: 23 } as const;
+/** Player-local air, measured by one thermometer. Outside climate stays
+ * independent of the player and their equipment. Close to a lit fire, nearby
+ * air warms gradually with distance and fuel; the instrument itself eases
+ * between these temperatures through settleThermometer(). */
+export function localTemperature(g: any): number {
+  const outdoor = ambientTemperature(g);
+  const fuel = clamp(Number(g.fuel) || 0, 0, 100);
+  if (!g.fireLit || fuel <= 0 || !Number.isFinite(g.player?.x)) return outdoor;
+  const radius = 20 + (fuel / 100) * 34; // same actual fire influence radius
+  const proximity = clamp(1 - Math.abs(g.player.x - CX) / radius, 0, 1);
+  const heat = proximity * (4 + (fuel / 100) * 8);
+  return clamp(outdoor + heat, AIR_TEMP_MIN, AIR_TEMP_MAX);
+}
 
-/** All hand-drawn at the game's native 320x180 resolution with strict pixel
- * rectangles. Caller draws the existing wooden HUD frame first.
- *
- * Scale is intentionally small: a carved nameplate, brass brackets and tick
- * marks, inset glass, reservoir bulb, colored liquid, crystal glint, and
- * chilly/warm finishing pixels. Every pixel stays inside the centre plaque.
- */
+/** Four separate HUD frames, all in the existing y=17..39 band:
+ * WARMTH/FUEL | LOCAL TEMPERATURE AND WEATHER | CARRIED/ASH | DAY/MENU.
+ * Temp has its own lovely full-width glass rail despite the smaller panel. */
+export const THERMOMETER_RECT = { x: 108, y: 17, w: 85, h: 23 } as const;
+
+export function formatTemperature(value: number): string {
+  const n = Math.round(clamp(Number.isFinite(value) ? value : 0, AIR_TEMP_MIN, AIR_TEMP_MAX));
+  return (n > 0 ? "+" : "") + n;
+}
+
+/** Original engraved brass/glass art at 320x180 native pixel resolution.
+ * Temperature + current weather occupy ONE line, with the second line
+ * entirely dedicated to the breathing glass thermometer. All pixels fit
+ * the smaller panel, and no UI click zones are created. */
 export function drawLivingThermometer(ctx: any, g: any): void {
   const temperature = clamp(
-    Number.isFinite(g.thermometerTemp) ? g.thermometerTemp : ambientTemperature(g),
+    Number.isFinite(g.thermometerTemp) ? g.thermometerTemp : localTemperature(g),
     AIR_TEMP_MIN, AIR_TEMP_MAX
   );
   const t = Number.isFinite(g.animT) ? g.animT : 0;
@@ -68,126 +87,120 @@ export function drawLivingThermometer(ctx: any, g: any): void {
   const liquidHighlight = lerpHex(liquid, "#fff0d2", 0.47);
   const cold = temperature <= 0;
   const warm = temperature >= 20;
+  const weather = WEATHER_TEXT[g.weather] || "CLEAR";
 
-  // Engraved face label; every display element sits within the existing
-  // translucent oak frame at x=114..218 / y=17..39.
-  drawText(ctx, "AIR TEMP", 119, 20, "#d6bc91");
-  const rounded = Math.round(temperature);
-  const reading = (rounded > 0 ? "+" : "") + rounded;
-  const digitsX = 204 - textW(reading);
-  drawText(ctx, reading, digitsX, 20, cold ? "#bde6f0" : warm ? "#f1c18b" : "#eee0c5");
+  // +8°C | WINDY - inline on the same row, including a hand-drawn degree
+  // ring and hairline divider because these aren't in the small pixel font.
+  const value = formatTemperature(temperature);
+  const labelX = 112;
+  drawText(ctx, value, labelX, 20, cold ? "#bde6f0" : warm ? "#f1c18b" : "#f2e0be");
+  const degreeX = labelX + textW(value) + 2;
+  ctx.fillStyle = "#d3b997";
+  ctx.fillRect(degreeX, 20, 2, 1);
+  ctx.fillRect(degreeX, 22, 2, 1);
+  ctx.fillRect(degreeX - 1, 21, 1, 1);
+  ctx.fillRect(degreeX + 2, 21, 1, 1);
+  drawText(ctx, "C", degreeX + 4, 20, "#e1d0b5");
+  const dividerX = degreeX + 11;
+  ctx.fillStyle = "#b69d78";
+  ctx.fillRect(dividerX, 20, 1, 5);
+  drawText(ctx, weather, dividerX + 4, 20, "#c6d8d7");
 
-  // Custom two-pixel degree ring (the 3x5 game font has no degree glyph).
-  ctx.fillStyle = "#b9a88c";
-  ctx.fillRect(207, 20, 2, 1);
-  ctx.fillRect(207, 22, 2, 1);
-  ctx.fillRect(206, 21, 1, 1);
-  ctx.fillRect(209, 21, 1, 1);
-  drawText(ctx, "C", 211, 20, "#d8c8ae");
+  // Weathered wood nameplate and small rivets - all inside x108..192.
+  ctx.fillStyle = "#8b7150";
+  ctx.fillRect(111, 27, 1, 1);
+  ctx.fillRect(189, 27, 1, 1);
+  ctx.fillStyle = "#d2b184";
+  ctx.fillRect(111, 26, 1, 1);
+  ctx.fillRect(189, 26, 1, 1);
 
-  // Delicate metallic mounting bolts and a raised nameplate groove.
-  ctx.fillStyle = "#7f674c";
-  ctx.fillRect(118, 27, 1, 2);
-  ctx.fillRect(215, 27, 2, 1);
-  ctx.fillStyle = "#d1ad71";
-  ctx.fillRect(118, 27, 1, 1);
-  ctx.fillRect(216, 27, 1, 1);
-
-  // A lengthened glass instrument now fills the entire center plaque.
-  // Thick brass top rail and fine graduations carry the eye to the right cap.
-  for (let i = 0; i <= 20; i++) {
-    const x = 129 + i * 4;
-    const major = i % 5 === 0;
-    ctx.fillStyle = major ? "#d1b387" : "#8e785b";
-    ctx.fillRect(x, major ? 25 : 26, 1, major ? 3 : 2);
+  // Brass scale and tiny, varied-width engraved graduations.
+  for (let i = 0; i <= 12; i++) {
+    const tickX = 126 + i * 5;
+    const major = i % 3 === 0;
+    ctx.fillStyle = major ? "#ceb182" : "#8e795d";
+    ctx.fillRect(tickX, major ? 25 : 26, 1, major ? 3 : 2);
   }
-  // Zero-degree reference uses the actual -30..+35 proportion.
-  const zeroX = 129 + Math.round(80 * (0 - AIR_TEMP_MIN) / (AIR_TEMP_MAX - AIR_TEMP_MIN));
-  ctx.fillStyle = "#e7eadb";
+  const zeroX = 126 + Math.round(60 * (0 - AIR_TEMP_MIN) / (AIR_TEMP_MAX - AIR_TEMP_MIN));
+  ctx.fillStyle = "#e6e6d4";
   ctx.fillRect(zeroX, 25, 1, 3);
-  ctx.fillStyle = "#617881";
-  ctx.fillRect(zeroX, 28, 1, 1);
 
-  // Instrument drop shadow and brass tube casing.
-  ctx.fillStyle = "rgba(4,10,18,0.45)";
-  ctx.fillRect(121, 37, 94, 1);
-  ctx.fillStyle = "#41362d";
-  ctx.fillRect(126, 28, 88, 9);
-  ctx.fillStyle = "#b68d54";
-  ctx.fillRect(127, 28, 86, 1);
-  ctx.fillStyle = "#73583c";
-  ctx.fillRect(127, 36, 86, 1);
+  // A near-panel-width glass tube, with an inset dark core and two-tone
+  // liquid, a 1px brass lip and a shaped metal end cap.
+  ctx.fillStyle = "rgba(4,10,18,0.48)";
+  ctx.fillRect(116, 37, 73, 1);
+  ctx.fillStyle = "#403429";
+  ctx.fillRect(124, 28, 65, 9);
+  ctx.fillStyle = "#b78b53";
+  ctx.fillRect(125, 28, 63, 1);
+  ctx.fillStyle = "#77583a";
+  ctx.fillRect(125, 36, 63, 1);
   ctx.fillStyle = "#d4ad70";
-  ctx.fillRect(128, 29, 84, 1);
-  ctx.fillStyle = "#253e4a";
-  ctx.fillRect(128, 30, 84, 5);
-  ctx.fillStyle = "rgba(113,169,181,0.20)";
-  ctx.fillRect(129, 30, 82, 1);
-  ctx.fillStyle = "#192a36";
-  ctx.fillRect(128, 34, 83, 1);
+  ctx.fillRect(126, 29, 61, 1);
+  ctx.fillStyle = "#233d49";
+  ctx.fillRect(126, 30, 60, 5);
+  ctx.fillStyle = "rgba(113,169,181,0.22)";
+  ctx.fillRect(127, 30, 58, 1);
+  ctx.fillStyle = "#172b36";
+  ctx.fillRect(126, 34, 59, 1);
 
-  // Animated liquid extends from a real bulb at the start of the glass.
   const ratio = (temperature - AIR_TEMP_MIN) / (AIR_TEMP_MAX - AIR_TEMP_MIN);
-  const length = Math.max(1, Math.min(82, Math.round(82 * ratio)));
+  const fill = Math.max(1, Math.min(59, Math.round(59 * ratio)));
   ctx.fillStyle = liquid;
-  ctx.fillRect(128, 32, length, 2);
+  ctx.fillRect(126, 32, fill, 2);
   ctx.fillStyle = liquidHighlight;
-  ctx.fillRect(128, 32, length, 1);
-  const tipX = 128 + length - 1;
+  ctx.fillRect(126, 32, fill, 1);
+  const tipX = 126 + fill - 1;
   ctx.fillStyle = lerpHex(liquid, "#fff7dd", 0.65);
   ctx.fillRect(tipX, 31, 1, 2);
-  if (length < 82) {
-    ctx.fillStyle = "#263744";
-    ctx.fillRect(128 + length, 32, 82 - length, 1);
+  if (fill < 59) {
+    ctx.fillStyle = "#243744";
+    ctx.fillRect(126 + fill, 32, 59 - fill, 1);
   }
-  // Warm reflective light beneath the glass gives the bulb and the long tube
-  // a consistent sense of depth, without becoming a UI progress bar.
-  ctx.fillStyle = "rgba(243,226,187,0.13)";
-  ctx.fillRect(135, 35, 69, 1);
-  ctx.fillStyle = "#a78656";
-  ctx.fillRect(211, 29, 2, 7);
-  ctx.fillStyle = "#dac08d";
-  ctx.fillRect(212, 30, 1, 3);
+  ctx.fillStyle = "rgba(243,226,187,0.16)";
+  ctx.fillRect(133, 35, 48, 1);
+  ctx.fillStyle = "#997449";
+  ctx.fillRect(186, 29, 2, 7);
+  ctx.fillStyle = "#ddbc83";
+  ctx.fillRect(187, 30, 1, 3);
 
-  // Bulb / rounded glass reservoir, foregrounded over tube's left end.
+  // Hand-shaped bulb with a reflective glass inset. The tube genuinely
+  // meets the bulb rather than visually starting in the middle of the bar.
   ctx.fillStyle = "#382d29";
-  ctx.fillRect(120, 28, 10, 9);
-  ctx.fillRect(122, 27, 6, 11);
-  ctx.fillStyle = "#ae8855";
-  ctx.fillRect(121, 29, 8, 7);
-  ctx.fillRect(123, 28, 4, 9);
-  ctx.fillStyle = "#264351";
-  ctx.fillRect(122, 30, 6, 6);
-  ctx.fillRect(123, 29, 4, 7);
+  ctx.fillRect(115, 28, 11, 9);
+  ctx.fillRect(117, 27, 7, 11);
+  ctx.fillStyle = "#b08a5a";
+  ctx.fillRect(116, 29, 9, 7);
+  ctx.fillRect(118, 28, 5, 9);
+  ctx.fillStyle = "#263f4a";
+  ctx.fillRect(117, 30, 7, 6);
+  ctx.fillRect(118, 29, 5, 7);
   ctx.fillStyle = liquid;
-  ctx.fillRect(122, 32, 6, 3);
-  ctx.fillRect(123, 30, 4, 4);
+  ctx.fillRect(117, 32, 7, 3);
+  ctx.fillRect(118, 30, 5, 4);
   ctx.fillStyle = liquidHighlight;
-  ctx.fillRect(124, 30, 2, 3);
-  ctx.fillStyle = "rgba(245,250,248,0.66)";
-  ctx.fillRect(122, 29, 1, 2);
+  ctx.fillRect(119, 30, 2, 3);
+  ctx.fillStyle = "rgba(246,251,248,0.64)";
+  ctx.fillRect(117, 29, 1, 2);
   ctx.fillStyle = "#f1cd8b";
-  ctx.fillRect(123, 27, 4, 1);
+  ctx.fillRect(118, 27, 5, 1);
 
-  // Glass sheen travels gently, only across empty/safe glass coordinates.
-  const glint = 135 + Math.round(((Math.sin(t * 0.9) + 1) / 2) * 69);
+  const glint = 132 + Math.round(((Math.sin(t * 0.9) + 1) / 2) * 46);
   ctx.fillStyle = "rgba(229,248,250,0.46)";
   ctx.fillRect(glint, 30, 2, 1);
   ctx.fillStyle = "rgba(248,245,222,0.18)";
   ctx.fillRect(glint + 1, 31, 1, 2);
 
   if (cold) {
-    // Just three crystalline ice flecks, not an opaque snow overlay.
     ctx.fillStyle = "#a7d6e2";
-    ctx.fillRect(205, 32, 2, 1);
-    ctx.fillRect(204, 34, 1, 1);
-    ctx.fillRect(207, 30, 1, 2);
+    ctx.fillRect(181, 32, 2, 1);
+    ctx.fillRect(180, 34, 1, 1);
+    ctx.fillRect(183, 30, 1, 2);
   } else if (warm) {
-    // A restrained honey-coloured lamp gleam inside the brass fixture.
     const alpha = 0.23 + (Math.sin(t * 1.5) + 1) * 0.08;
     ctx.fillStyle = `rgba(248,186,96,${alpha.toFixed(3)})`;
-    ctx.fillRect(205, 32, 3, 3);
+    ctx.fillRect(179, 32, 3, 3);
     ctx.fillStyle = "#c38d54";
-    ctx.fillRect(207, 30, 1, 1);
+    ctx.fillRect(182, 30, 1, 1);
   }
 }

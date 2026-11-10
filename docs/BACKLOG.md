@@ -1,5 +1,16 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #56 - wider crop of the approved Bingsu unlock portrait
+- [x] Reuse the user's approved head-and-chest Dogo portrait artwork; do NOT design another dog.
+- [x] Move the crop outward to display more of her natural folded ears, neck, white chest and shoulders without changing her face or expression.
+- [x] Keep the same 100x68 Pet Shop card, text layout, 40-Ash purchase target, tab and close hit zones.
+- [x] Encode the wider 94x68 crop as verified, offline-only native-pixel Canvas data; do not introduce remote image loading or a new framework.
+- [x] Keep the already-approved in-world Bingsu sprite, two-log fetching, equipment, save data and pet lore unchanged.
+- [x] Update pixel, layout and purchase regression tests; preserve source integrity.
+- [ ] Confirm the wider portrait is displayed as intended on the actual deployed Android landscape Shop. Additional creative changes only if requested.
+- [ ] Continue playable Level 2 missions once the pet portrait is accepted.
+
+
 ## Patch #55 - replace rejected Bingsu full-body unlock portrait
 - [x] Respect the approved art direction: a calm, affectionate, recognizable Dogo Argentino **head and chest** in three-quarter view, with the muzzle facing slightly left.
 - [x] Replace the rejected artificial full-body polygons with a reviewed and pixelized real illustration, with nuanced white coat shading, natural folded ears, strong muzzle and gentle expression.

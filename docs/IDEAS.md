@@ -233,6 +233,15 @@ Ambient Celsius responds to actual seasons, time of day and weather transitions.
 - **Grooty:** player-visible run tutorial teaching sections are called numbered **MISSIONS** rather than LEVELS or LESSONS, including cabin prerequisite text. This changes presentation only; it does **not** implement the future full campaign Level/Milestone/Mission architecture and does not change any save identifiers or requirements.
 - **Still future:** station-local ACCESS/UPGRADE popups, removing remote Build from Pause, broader item tool variety, dog defense gameplay (after balancing), and the substantial campaign Levels / Milestones / Missions restructure.
 
+### Patch #42: physical structures and upgrade popups (implemented 2026-11-10)
+
+- Player-facing **remote BUILD** has been removed from the Pause screen and from the B shortcut. **BUILD PLANS** is only available at a completed Workbench, reached by approaching it and using ACT. Workbench plans contain new structures and the Museum, but no remote station upgrades.
+- Both the first Workbench and Log Storage still start as physical empty sites requiring logs and on-site hammering. The campfire and boundary fence remain on the actual map.
+- All completed stations show a compact native-pixel context panel with ACCESS and UPGRADE. Workbench adds a separate BUILD PLANS choice. Workbench ACCESS opens Tools/Supplies; Storage ACCESS transfers actual logs; Fireplace ACCESS lights, relights or stokes. The three-log relight cost now correctly aggregates carried and stored Pine Logs.
+- Station upgrades require a clear second press and show next level benefits and the original Pine Log cost. Their effects and two-Ash reward still use the real station purchase logic; there is no duplicate upgrade in the crafting list.
+- Grooty's single-target fireflies now guide from the relevant world structure into the exact ACCESS, UPGRADE or BUILD PLANS button and then to the correct plan/recipe row. The full future **campaign levels / milestones / missions** conversion remains separate.
+- The normal in-game inventory, currency panel, square quick tools and legacy run saves remain unchanged. Future content can add new types of structures or stations through their physical world sites rather than resurrecting remote building.
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

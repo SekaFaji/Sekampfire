@@ -20,6 +20,7 @@ import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable,
 import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
+import { trackNightScout, drawScoutGrove } from "./campaign43";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
 import { installInventory } from "./inventory";
@@ -134,6 +135,11 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.guideChops = Math.floor(finiteRange(data.guideChops,0,100000,g.night>0?1:0));
   g.guideStokes = Math.floor(finiteRange(data.guideStokes,0,100000,g.night>0?1:0));
   g.guideStoredTen = data.guideStoredTen===true || g.stored>=10;
+  // Old runs already past the first mission group remain completed. Optional
+  // boolean fields extend v1 without invalidating existing checkpoints.
+  g.guideTalked = flag("guideTalked") || g.guideLevel > 0;
+  g.scoutVisited = flag("scoutVisited") || g.guideLevel > 0;
+  g.scoutReturned = flag("scoutReturned") || g.guideLevel > 0;
   // Missing fields indicate a pre-#31 checkpoint. Completed structures or
   // past tutorial levels are grandfathered, avoiding an impossible build gate.
   const legacyFence = g.stage > 0 || g.builtBench || g.builtPile || g.guideLevel > 0;
@@ -184,6 +190,7 @@ function createEngine(): any {
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
     ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
+    guideTalked: false, scoutVisited: false, scoutReturned: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     stationId: "hearth", stationFrom: false,
@@ -496,6 +503,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         g.menuSel = 0;
         g.keys.act = false;
       } else if (nearGrooty) {
+        g.guideTalked = true;
         g.menu = "guide";
         g.keys.act = false;
       } else if (!campEstablished(g) && (nearBench || nearPile)) {
@@ -728,6 +736,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else g.actionLabel = "-";
 
   if (g.stored >= 10) g.guideStoredTen = true;
+  // Scouting is measured after real movement and before objective completion.
+  trackNightScout(g, cb.toast);
   advanceGuide(g, cb.toast);
   g.windAmt = windAmt;
 }
@@ -2128,6 +2138,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   }
 
   const ents: { y: number; f: () => void }[] = [];
+  ents.push({ y: 149.2, f: () => drawScoutGrove(ctx, g) });
   ents.push({ y: 149.5, f: () => drawGrooty(ctx, g) });
   ents.push({ y: 150, f: () => drawStructures(ctx, g) });
   for (const tr of g.trees) {

@@ -1341,7 +1341,7 @@ function shopRows(g: any, meta: any) {
     const maxed = lvl >= u.max;
     const cost = maxed ? 0 : u.costs[lvl];
     const confirm = g.upConfirm === u.id;
-    const pet = u.id === "dog", equipped = pet && activePet(meta) === "dog";
+    const pet = u.id === "dog";
     const enabled = (pet && maxed) || (!maxed && meta.ash >= cost);
     return {
       label: u.name.toUpperCase() + (u.max > 1 ? " " + lvl + "/" + u.max : ""),

@@ -21,6 +21,7 @@ import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { trackNightScout, drawScoutGrove } from "./campaign43";
+import { grantRunAsh, validatedAshLedger, ashSummary, beginFirstSettlementCompletion, drawCampaignResult, unlockedCampaignLevel } from "./campaign44";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
 import { installInventory } from "./inventory";
@@ -76,6 +77,10 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.endlessMode = flag("endlessMode");
   g.endlessN = Math.floor(n("endlessN", 0, 100000, 0));
   g.ashEarned = n("ashEarned", 0, 10000000, 0);
+  g.ashLedger = validatedAshLedger(data.ashLedger);
+  // Unmarked v1 checkpoints remain on their original five-group Long Night
+  // journey; only new P44 campaign runs enter the new completion flow.
+  g.campaignLevel = data.campaignLevel === 1 ? 1 : 0;
   g.victoryPending = flag("victoryPending");
   g.depth = n("depth", 0, 10000, 0);
   g.builtBench = flag("builtBench");
@@ -132,6 +137,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   const legacyGuideLevel = g.stage >= 5 ? 4 : g.stage >= 2 ? 3
     : g.builtBench && g.crafts.pack ? 2 : g.builtPile ? 1 : 0;
   g.guideLevel = Math.floor(finiteRange(data.guideLevel,0,5,legacyGuideLevel));
+  g.levelCompletePending = g.campaignLevel === 1 && flag("levelCompletePending") && g.guideLevel >= 3;
   g.guideChops = Math.floor(finiteRange(data.guideChops,0,100000,g.night>0?1:0));
   g.guideStokes = Math.floor(finiteRange(data.guideStokes,0,100000,g.night>0?1:0));
   g.guideStoredTen = data.guideStoredTen===true || g.stored>=10;
@@ -156,7 +162,7 @@ function resumeRun(g: any, data: any, meta?: any) {
       wood:Math.floor(finiteRange(data.dog.wood,0,2,0)),phase:"idle"
     };
   }
-  g.ui = g.victoryPending ? "win" : "run";
+  g.ui = g.victoryPending ? "win" : g.levelCompletePending ? "levelComplete" : "run";
   if (g.victoryPending) g.lastResult = {kind:"won",nights:g.night,ash:Math.floor(g.ashEarned)};
   g.won = flag("won") || g.victoryPending;
   g.menu = null;
@@ -188,7 +194,8 @@ function createEngine(): any {
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
-    ashEarned: 0, depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
+    ashEarned: 0, ashLedger: {}, campaignLevel: 0, levelCompletePending: false,
+    depth: 0, actionLabel: "-", windAmt: 0, moveT: 0,
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
     guideTalked: false, scoutVisited: false, scoutReturned: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
@@ -248,6 +255,7 @@ function startRunEngine(g: any, meta: any) {
   installInventory(g,null,0);
   g.cb = cb; g.fsToggle = fsToggle;
   g.museumBuilt = !!meta.museumBuilt;
+  g.campaignLevel = 1; // fresh campaigns; old saved runs remain legacy
   genScenery(g, Math.floor(Math.random() * 1e9));
   spawnTrees(g, 26);
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
@@ -263,6 +271,14 @@ function startRun(g: any, meta: any) {
   g.ui = "run";
   g.menu = null;
   saveRunSnapshot(g);
+}
+
+function bankLevelOne(g:any,meta:any) {
+  if(g.ui!=="levelComplete" || !g.levelCompletePending || g.ashBanked) return;
+  if(g.cb && g.cb.end) {
+    const breakdown=ashSummary(g);
+    g.cb.end("campaign",{nights:g.night,ash:breakdown.total,campaignLevel:1,ashLines:breakdown.lines});
+  }
 }
 
 function goEndless(g: any) {
@@ -426,7 +442,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
       g.longNightActive = false;
       g.weather = "clear";
       g.won = true;
-      g.ashEarned += 100;
+      grantRunAsh(g,"longNight",100);
       // Pause on a resumable completion choice. Do not bank until the player
       // explicitly selects Finish; both options preserve a safe save path.
       g.victoryPending = true;
@@ -438,11 +454,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
     }
     if (g.endlessMode) {
       g.endlessN++;
-      g.ashEarned += Math.round((3 + g.night) * (1 + g.endlessN * 0.3));
+      grantRunAsh(g,"dawn",Math.round((3 + g.night) * (1 + g.endlessN * 0.3)));
     } else {
-      g.ashEarned += 3 + g.night;
+      grantRunAsh(g,"dawn",3 + g.night);
     }
-    if (g.aurora) g.ashEarned += 2;
+    if (g.aurora) grantRunAsh(g,"aurora",2);
     spawnTrees(g, 8);
     if (g.night > 0) cb.toast(`Dawn breaks. Night ${g.night} survived.`);
     g.aurora = false;
@@ -739,6 +755,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // Scouting is measured after real movement and before objective completion.
   trackNightScout(g, cb.toast);
   advanceGuide(g, cb.toast);
+  if (beginFirstSettlementCompletion(g,()=>saveRunSnapshot(g))) return;
   g.windAmt = windAmt;
 }
 
@@ -1198,7 +1215,7 @@ function stationUpgradeRow(g: any, id: "hearth" | "bench" | "pile") {
       if (g.buildConfirm !== id) { g.buildConfirm = id; return; }
       g.buildConfirm = null;
       if (!purchaseStation(g, id)) { toast(g, "NOT ENOUGH WOOD."); return; }
-      g.ashEarned += 2;
+      grantRunAsh(g,"stations",2);
       AUDIO.effect("build");
       toast(g, info.label + " NOW LEVEL " + stationLevel(g, id) + ".");
     }
@@ -1319,7 +1336,7 @@ function doBuildAction(g: any, meta: any) {
   g.player.wood -= fromCarried;
   g.stored -= cost - fromCarried;
   g.stage++;
-  g.ashEarned += 4;
+  grantRunAsh(g,"structures",4);
   AUDIO.effect("build");
   g.menu = null;
   g.keys.act = false;
@@ -1817,6 +1834,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
     drawBig(ctx, "SEKAMPFIRE", W / 2, 18, 5, "#ffd98a");
     drawTextC(ctx, "FOUR SEASONS. ONE FIRE.", W / 2, 50, "#c8d2e8");
     drawTextC(ctx, "BANKED ASH " + meta.ash + " - BEST " + (meta.best || 0) + " NIGHTS", W / 2, 60, "#d0c9d3");
+    drawTextC(ctx, unlockedCampaignLevel(meta)>=2 ? "LEVEL 2 UNLOCKED - COMING SOON" : "LEVEL 1 - FIRST SETTLEMENT",W/2,167,"#d9c49b");
     // Main decisions stay compact and centred; optional help and socials
     // occupy separate side areas without cluttering keyboard navigation.
     const items = titleActions(g, meta);
@@ -1865,6 +1883,13 @@ function drawScreen(ctx: any, g: any, meta: any) {
       });
     }
 
+  } else if (g.ui === "levelComplete" || g.ui === "levelBanked") {
+    drawCampaignResult(ctx,g,meta,{
+      bank:()=>bankLevelOne(g,meta),
+      replay:()=>startRun(g,meta),
+      shop:()=>{g.menu="shop";g.shopTab=0;g.menuSel=0;},
+      main:()=>returnToMainMenu(g),
+    });
   } else if (g.ui === "dead" && g.lastResult) {
     ctx.fillStyle = "rgba(8,10,26,0.62)";
     ctx.fillRect(0, 0, W, H);
@@ -1898,7 +1923,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
 
 // Gameplay and menus inject their handlers into this input adapter.
 const { handleKey, handlePointer, tickQuickSlotHolds } = createInputHandlers({
-  audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu
+  audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu, bankLevelOne
 });
 
 // ============ world-object reflection ============
@@ -2303,5 +2328,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, bankLevelOne, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

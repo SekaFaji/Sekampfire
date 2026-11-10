@@ -105,7 +105,7 @@ export function updateDogCompanion(g: any, meta: any, dt: number): void {
 
   if (d.wood > 0) {
     // A dog who carries real logs can visit the rack only while the PLAYER
-    // is nearby. He must not disappear into the distance when the player
+    // is nearby. She must not disappear into the distance when the player
     // leaves camp.
     if(g.builtPile && g.stored < pileCap(g)
        && Math.abs(p.x - PILE_X) <= BINGSU_STORAGE_LEASH) {

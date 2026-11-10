@@ -1,5 +1,16 @@
 # Sekampfire
 
+## Patch #47: small Ash Shop button, temperature, Museum gate, fence torches and sky-visible UI
+
+- **One-line Ash button:** The upper-right Ash plaque is now a smaller single-line button directly below MENU, aligned with its right edge. Tapping opens the existing real Shop tabs (Upgrades/Pets/Coming Soon), where only **banked Ash** can be spent. Earned Run Ash remains unbanked until End Run or Level completion. It briefly highlights when tapped.
+- **Cleaner pause menu:** The redundant Toolbar entry is removed. The two functional quick slots remain visible in the river HUD; holding a slot or assigning a crafted Ember Torch from Inventory remains supported.
+- **Cold matters:** The **actual local air temperature** now increases warmth loss below +8°C, reaching a capped 1.72x ambient factor during deep freezes. This complements the existing weather-dependent Cold exposure, while campfire heating, Warm Blood, torches, boots and shelter still work.
+- **Museum discovery lock:** The first **Ordinary Log** can be recognized before construction, but **Twisted/Hand/Figure-8 collectible logs cannot be discovered until the permanent Log Museum has been built**. Old already-earned Museum collectibles stay owned.
+- **Seven-dawn fence torches:** Once both camp posts are built, visit either **physical fence post**, carry **2 Pine Logs**, and press ACT to build a small permanent-mounted (but run-temporary) cool-glowing torch. Each side has its own countdown of **seven completed dawns**, is saved with the existing v1 run, and can be rebuilt for another two logs once burned out. One torch prevents warmth drain near its own post; **both lit torches prevent warmth loss throughout the claimed camp interior** (not beyond the fence). They do not regenerate Warmth as the central campfire does. When the fence expands, the right-mounted torch follows the actual relocated east post.
+- **Softer visual language:** HUD frames, Menu/ACT buttons, quick slots, backpack button, pause/Shop/crafting/inventory/Grooty/Museum panels and event messages use more transparent backgrounds so seasons, weather and the real sky remain visible. Text contrast and action hit zones are kept.
+- **QA:** The Patch #47 suite covers genuine temperatures, Museum eligibility, seven-dawn expiration, torch construction and save migration, native light colors, Ash Shop hit targets, quick-slot continuity, and translucent UI. Android landscape testing remains outstanding.
+
+
 ## Patch #46: choose a station, then use floating circular controls
 
 - **ACT selection:** merely approaching a built Campfire, Workbench or Log Storage shows no floating action circles. **First ACT selects that nearby structure** and reveals its controls; **second ACT performs its left/default action**, as do subsequent ACT presses while the selection stays in range. The central ACT label changes to LIGHT/FEED, CRAFT, or STORE/TAKE when selected.

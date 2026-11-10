@@ -129,6 +129,12 @@ function button(ctx:any,g:any,r:BubbleRect,label:string,kind:StationAction,
   if(!disabled)g.zones.push({...r,onDown:act});
 }
 
+/** The physical pile's log count and true upgrade-dependent capacity. */
+export function storageReadout48(g:any):string {
+  const amount=Math.max(0,Math.floor(Number(g.stored)||0));
+  return amount+"/"+pileCap(g)+" LOGS";
+}
+
 /** Only the ACT-selected station may expose its floating controls. */
 export function drawStationBubbles(ctx:any,g:any,station:NearbyStation|null,
   act:(id:NearbyStation,action:StationAction)=>void):void {
@@ -147,8 +153,7 @@ export function drawStationBubbles(ctx:any,g:any,station:NearbyStation|null,
   drawTextC(ctx,name,center,station==="pile"?57:67,"#f4daab");
   if(station==="pile"){
     // Actual storage content and REAL level-aware capacity, not carried wood.
-    const amount=Math.max(0,Math.floor(Number(g.stored)||0));
-    drawTextC(ctx,amount+"/"+pileCap(g)+" LOGS",center,66,"#d6dfc3");
+    drawTextC(ctx,storageReadout48(g),center,66,"#d6dfc3");
   }
   button(ctx,g,rects.primary!,primaryLabel,"primary",station,false,false,
     ()=>act(station,"primary"));

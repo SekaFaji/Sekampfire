@@ -34,6 +34,8 @@ describe("Patch #26 run-scoped tutorial",()=>{
       "FIRST CAMP","LOG STORAGE","TOOLS OF THE TRADE","A WARMER HOME","THE HOMESTEAD"
     ]);
     const g=running();
+    expect(guideProgress(g).next?.label).toBe("TALK TO GROOTY AT CAMP");
+    g.guideTalked=true;
     expect(guideProgress(g).next?.label).toBe("CHOP ONE PINE TREE");
     g.guideChops=1;
     expect(guideProgress(g).next?.label).toBe("BUILD THE LEFT FENCE POST");
@@ -44,7 +46,11 @@ describe("Patch #26 run-scoped tutorial",()=>{
     g.everLit=true;
     expect(guideProgress(g).next?.label).toBe("FEED ONE LOG TO THE FIRE");
     g.guideStokes=1;
-    expect(guideProgress(g).next?.label).toBe("SURVIVE YOUR FIRST NIGHT");
+    expect(guideProgress(g).next?.label).toBe("SCOUT THE PINE GROVE AT NIGHT");
+    g.scoutVisited=true;
+    expect(guideProgress(g).next?.label).toBe("RETURN TO THE CAMPFIRE");
+    g.scoutReturned=true;
+    expect(guideProgress(g).next?.label).toBe("SURVIVE THE NIGHT TO DAWN");
     g.night=1;
     const report=callbacks();update(g,meta(),0.02,report);
     expect(g.guideLevel).toBe(1);

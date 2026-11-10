@@ -1,5 +1,16 @@
 # Sekampfire
 
+## Patch #43: First Settlement milestone foundation and night scouting
+
+- **Level 1 foundation:** Grooty's first three existing run-local teaching groups are now presented as the three milestones of **The First Settlement**: Establish & Explore, Log Storage and The Workbench. The two existing later cabin lessons remain explicitly labeled **Camp Challenges** during the transition; they have not been silently converted into separate campaign levels.
+- **Actual first mission:** approach Grooty in the world and press ACT to talk before chopping. The small ? shortcut remains available for help without pretending the player physically met him.
+- **Night exploration:** after claiming the camp and stoking the fire, follow fireflies to a small handcrafted Pine Grove marker east of the original fence during an actual night, then return to the campfire and survive until dawn. Leaving before night does not count; missing a night does not reset the run. The fireflies guide outward and back instead of pointing at the fire all night.
+- **Compact guide:** Grooty's modal displays Level 1 / Milestone 1-3, the current mission checklist and concise hints. Long checklists reveal a six-row window centered on the next unfinished task, preserving the 320x180 layout.
+- **No save reset:** optional run-local `guideTalked`, `scoutVisited` and `scoutReturned` values are persisted in the existing v1 run checkpoint. Previously completed guide groups remain completed. The existing five groups, camp economy, Long Night and Ash banking are not rebalanced in this patch.
+- **Tests:** new scouting, wayfinding, missed-night, NPC interaction and save-snapshot coverage, plus adjusted earlier tutorial assertions.
+- **Next:** Patch #44 should design and implement true Level 1 completion, Ash itemization, unlock state and clear transition to Level 2 without confusing them with the retained Camp Challenges.
+
+
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
 ## Patch #42: Physical camp station interactions and upgrades

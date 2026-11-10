@@ -191,17 +191,20 @@ describe("Patch #41: Grooty labels tutorial missions, not campaign levels",()=>{
   const g=run();g.guideLevel=0;
   expect(GUIDE_LEVELS).toHaveLength(5);
   expect(guideProgress(g).index).toBe(0);
+  expect(guideProgress(g).next?.label).toBe("TALK TO GROOTY AT CAMP");
+  g.guideTalked=true;
   expect(guideProgress(g).next?.label).toBe("CHOP ONE PINE TREE");
   const v=ctx();g.zones=[];drawGuideDialog(v.canvas,g,()=>{g.menu=null;});
   expect(v.rects.length).toBeGreaterThan(20);
  });
- it("announces MISSION 2 and eventual completion, preserving internal guideLevel",()=>{
+ it("announces milestone 1 completion and final camp challenges, preserving internal guideLevel",()=>{
   const g=run(),messages:string[]=[];
   g.guideChops=1;g.fenceLeft=true;g.fenceRight=true;g.everLit=true;
   g.guideStokes=1;g.night=1;g.isNight=false;
+  g.guideTalked=true;g.scoutVisited=true;g.scoutReturned=true;
   advanceGuide(g,text=>messages.push(text));
   expect(g.guideLevel).toBe(1);
-  expect(messages[0]).toContain("MISSION 2");
+  expect(messages[0]).toContain("MILESTONE 1/3 COMPLETE");
   g.guideLevel=4;g.stage=6;g.campUpgrades={hearth:1,bench:1,pile:1};
   advanceGuide(g,text=>messages.push(text));
   expect(messages.at(-1)).toContain("ALL MISSIONS COMPLETE");

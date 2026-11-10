@@ -6,6 +6,7 @@ import {WEST_POST_X,EAST_POST_X,EXPANSION_MARKER_X} from "./campBoundary";
 import {CX,BENCH_X,PILE_X} from "./config";
 function g(){
  const g=createEngine();g.ui="run";g.time=12;g.player.x=CX;
+ g.guideTalked=true;
  g.trees=[{x:600,y:149,id:1},{x:1250,y:151,id:2}];g.pickups=[];
  return g;
 }
@@ -46,6 +47,7 @@ describe("Patch #33 Grooty firefly wayfinding",()=>{
    state.everLit=true;state.guideStokes=0;
    expect(guideProgress(state).next?.id).toBe("feed-fire");
    state.guideStokes=1;state.night=1;state.isNight=false;
+   state.scoutVisited=true;state.scoutReturned=true;
    expect(guideProgress(state).next).toBeNull();
  });
  it("Level 2 teaches storage before expansion and points to the current site",()=>{

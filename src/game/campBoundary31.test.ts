@@ -121,9 +121,10 @@ describe("Patch #31 establish a real camp",()=>{
   const g=camp();
   expect(GUIDE_LEVELS).toHaveLength(5);
   expect(GUIDE_LEVELS[0].title).toBe("FIRST CAMP");
-  g.guideChops=1;
+  g.guideTalked=true;g.guideChops=1;
   expect(guideProgress(g).next?.label).toBe("BUILD THE LEFT FENCE POST");
   g.fenceLeft=true;g.fenceRight=true;g.everLit=true;g.guideStokes=1;g.night=1;
+  g.scoutVisited=true;g.scoutReturned=true;
   update(g,meta(),0.02,callbacks());
   expect(g.guideLevel).toBe(1);
   // Patch #33 teaches building storage first, before expanding the fence.

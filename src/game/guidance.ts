@@ -1,6 +1,7 @@
 import { W, WORLD_W, CX, BENCH_X, PILE_X, SITE_COST, STAGES, CRAFTS } from "./config";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST } from "./campBoundary";
-import { guideProgress } from "./guide";
+import { guideProgress, GROOTY_X } from "./guide";
+import { SCOUT_GROVE_X } from "./campaign43";
 import { stationCost, stationLevel } from "./campProgress";
 import { stationCraftCost } from "./campProgress";
 import { clamp } from "./math";
@@ -64,11 +65,16 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   // This prevents false guides over Settings, Grooty or the Museum.
   const target = (():FireflyTarget|null => {
     switch(goal) {
+      case "talk-grooty": return world(GROOTY_X,106);
       case "chop": return resources(true);
       case "left-post": return wood<1?resources():world(WEST_POST_X);
       case "right-post": return wood<1?resources():world(EAST_POST_X);
       case "light-fire": return world(CX,116);
       case "feed-fire": return stock<1?resources():world(CX,116);
+      // Scouting is a world mission, not an instruction to idle at the fire.
+      // During daylight Grooty explains to prepare for night; no false marker.
+      case "scout-grove": return g.isNight?world(SCOUT_GROVE_X,112):null;
+      case "return-home": return world(CX,116);
       case "survive-night": return world(CX,116);
       case "build-storage":
         return !g.builtPile && g.pileLogs<SITE_COST && wood<1

@@ -75,11 +75,11 @@ describe("Patch #41: small square toolbar and craftable Ember Torch",()=>{
   g.builtBench=true;g.craftTab=1;g.player.wood=3;
   const row=benchRows(g,m).find((r:any)=>r.label==="EMBER TORCH");
   expect(row).toBeDefined();
-  expect(row.enabled).toBe(true);
-  row.onDown(); // deliberate two-step purchase
+  expect(row!.enabled).toBe(true);
+  row!.onDown(); // deliberate two-step purchase
   expect(g.crafts.torch).not.toBe(true);
   expect(g.player.wood).toBe(3);
-  benchRows(g,m).find((r:any)=>r.label==="EMBER TORCH").onDown();
+  benchRows(g,m).find((r:any)=>r.label==="EMBER TORCH")!.onDown();
   expect(g.crafts.torch).toBe(true);
   expect(g.player.wood).toBe(0);
   const torch=inventoryEquipment(g,m).find(e=>e.id==="ember_torch");

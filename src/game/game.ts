@@ -1036,7 +1036,9 @@ function performStationAction(g:any,meta:any,id:NearbyStation,action:StationActi
   const rowIndex=action==="primary"?0:action==="upgrade"?1:2;
   const row=stationRows(g,meta)[rowIndex];
   if(!row || row.enabled===false) {
-    if(action==="upgrade") toast(g, "THIS STATION IS FULLY UPGRADED.");
+    if(action==="upgrade") toast(g,stationLevel(g,id)>=2
+      ? "THIS STATION IS FULLY UPGRADED."
+      : "NEED "+stationCost(g,id)+" PINE LOGS TO UPGRADE.");
     return false;
   }
   g.pressE=false;

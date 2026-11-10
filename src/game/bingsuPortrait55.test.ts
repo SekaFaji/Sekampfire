@@ -35,27 +35,27 @@ function pixel(draws:any[],x:number,y:number):string {
 }
 const meta=()=>({ash:40,up:{dog:0},petEquipped:null as "dog"|null});
 
-describe("Patch #55: reviewed Bingsu close-up, no more blocky full-body",()=>{
- it("renders exactly 90x68 native picture pixels with natural shading",()=>{
+describe("Patch #55-56: approved Bingsu portrait, now with more chest visible",()=>{
+ it("renders exactly 94x68 original pixels, fully inside the Pet portrait card",()=>{
    const v=surface();
    drawBingsuPortrait(v.ctx,0,0);
-   expect(BINGSU_PORTRAIT55).toEqual({w:90,h:68});
+   expect(BINGSU_PORTRAIT55).toEqual({w:94,h:68});
    expect(v.rectangles.length).toBeGreaterThan(1000);
-   expect(v.rectangles.every(r=>r.x>=0&&r.y>=0&&r.x+r.w<=90&&r.y+r.h<=68)).toBe(true);
+   expect(v.rectangles.every(r=>r.x>=0&&r.y>=0&&r.x+r.w<=94&&r.y+r.h<=68)).toBe(true);
    expect(BINGSU_PALETTE55.length).toBeGreaterThanOrEqual(30);
    expect(v.rectangles.every(r=>BINGSU_PALETTE55.includes(r.color as any))).toBe(true);
    for(let y=0;y<68;y++){
      const scan=v.rectangles.filter(r=>r.y===y);
-     expect(scan.reduce((n,r)=>n+r.w,0)).toBe(90);
+     expect(scan.reduce((n,r)=>n+r.w,0)).toBe(94);
    }
  });
  it("preserves the inspected portrait's broad dark nose, gentle eyes and soft white face",()=>{
    const v=surface();drawBingsuPortrait(v.ctx,0,0);
-   expect(pixel(v.rectangles,16,37)).toBe("#2c2829");
-   expect(pixel(v.rectangles,45,10)).toBe("#f0e5d5");
-   expect(pixel(v.rectangles,25,19)).toBe("#e5d5c4");
-   expect(pixel(v.rectangles,55,35)).toBe("#c6b2a5");
-   expect(pixel(v.rectangles,80,20)).toBe("#333a3a");
+   expect(pixel(v.rectangles,25,42)).toBe("#201c1d");
+   expect(pixel(v.rectangles,40,15)).toBe("#f8efdf");
+   expect(pixel(v.rectangles,45,30)).toBe("#dac6b7");
+   expect(pixel(v.rectangles,50,65)).toBe("#b9aa9f");
+   expect(pixel(v.rectangles,30,65)).toBe("#fcf6e8");
  });
  it("keeps the Dogo Argentino portrait collar-free and preserves Bingsu's personality",()=>{
    const v=surface();drawBingsuPortrait(v.ctx,0,0);

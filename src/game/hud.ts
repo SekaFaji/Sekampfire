@@ -198,9 +198,13 @@ export function hudAshButtonLabel(g:any):string {
   const full=hudAshReadout(g);
   if(textW(full)<=ASH_PANEL_RECT.w-4)return full;
   const ash=Math.max(0,Math.floor(Number(g.ashEarned)||0));
-  if(ash>=1000000) return "A"+(ash/1000000).toFixed(1)+"M";
-  if(ash>=10000) return "A"+Math.floor(ash/1000)+"K";
-  return "A"+(ash/1000).toFixed(1)+"K";
+  // Truncate abbreviated values rather than prematurely rounding the
+  // balance up (999 Ash must never look like 1K).
+  if(ash<1000) return "A"+ash;
+  if(ash<10000) return "A"+(Math.floor(ash/100)/10).toFixed(1)+"K";
+  if(ash<1000000) return "A"+Math.floor(ash/1000)+"K";
+  if(ash<10000000) return "A"+(Math.floor(ash/100000)/10).toFixed(1)+"M";
+  return "A10M";
 }
 
 /** Four native-resolution wooden panels:

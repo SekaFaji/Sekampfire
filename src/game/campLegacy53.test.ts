@@ -141,7 +141,7 @@ describe("Patch #53: four permanent Camp Legacy levels",()=>{
     const m=meta();
     const g=newRun(m);
     g.shopTab=0;
-    const row=shopRows(g,m).find((x:any)=>x.id==="legacy");
+    const row=shopRows(g,m).find((x:any)=>x.id==="legacy")!;
     expect(row).toBeDefined();
     const value=m.ash;
     row.buy();
@@ -159,7 +159,7 @@ describe("Patch #53: four permanent Camp Legacy levels",()=>{
     const m=meta();const g=createEngine();g.shopTab=0;g.menu="shop";
     const expenses=[35,60,95,140];
     for(let i=0;i<4;i++){
-      const row=shopRows(g,m).find((x:any)=>x.id==="legacy");
+      const row=shopRows(g,m).find((x:any)=>x.id==="legacy")!;
       expect(row.level).toBe(i);
       expect(row.cost).toBe(expenses[i]);
       expect(row.canBuy).toBe(true);
@@ -168,7 +168,7 @@ describe("Patch #53: four permanent Camp Legacy levels",()=>{
       expect(m.up.legacy).toBe(i+1);
       expect(m.ash).toBe(1000-expenses.slice(0,i+1).reduce((a,b)=>a+b,0));
     }
-    const max=shopRows(g,m).find((x:any)=>x.id==="legacy");
+    const max=shopRows(g,m).find((x:any)=>x.id==="legacy")!;
     expect(max.maxed).toBe(true);
     expect(max.canBuy).toBe(false);
     const ash=m.ash;
@@ -180,7 +180,7 @@ describe("Patch #53: four permanent Camp Legacy levels",()=>{
   it("Ash insufficiency and non-purchased Legacy never grant buildings",()=>{
     const m=meta();m.ash=34;
     const g=createEngine();g.shopTab=0;
-    const row=shopRows(g,m).find((x:any)=>x.id==="legacy");
+    const row=shopRows(g,m).find((x:any)=>x.id==="legacy")!;
     expect(row.canBuy).toBe(false);
     row.buy();
     expect(m.up.legacy).toBe(0);expect(m.ash).toBe(34);

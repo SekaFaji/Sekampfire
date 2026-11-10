@@ -142,18 +142,32 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
   closeMenu(g);
   expect(g.buildConfirm).toBeNull();
  });
- it("Hearth ACCESS preserves original firestarter, 3-log relight and tutorial stoke behavior",()=>{
+ it("Hearth ACCESS lights and relights using ONE real Pine Log, keeping first tinder",()=>{
   const g=state();g.player.x=CX;
-  g.fireLit=false;g.firestarter=1;g.fuel=0;
+  g.fireLit=false;g.firestarter=1;g.fuel=0;g.player.wood=0;
   accessHearth(g);
-  expect(g.fireLit).toBe(true);expect(g.fuel).toBe(34);
+  expect(g.fireLit).toBe(false);expect(g.firestarter).toBe(1);
+  expect(g.fuel).toBe(0);
+  g.player.wood=1;accessHearth(g);
+  expect(g.fireLit).toBe(true);
+  expect(g.fuel).toBeGreaterThanOrEqual(25);
+  expect(g.fuel).toBeLessThanOrEqual(40);
+  expect(g.player.wood).toBe(0);
   expect(g.firestarter).toBe(0);expect(g.everLit).toBe(true);
+  expect(g.guideStokes).toBe(0); // lighting is not the "feed fire" mission
   g.player.wood=2;accessHearth(g);
   expect(g.player.wood).toBe(1);expect(g.guideStokes).toBe(1);
   g.fireLit=false;g.fuel=0;g.player.wood=1;g.stored=2;
   accessHearth(g);
   expect(g.fireLit).toBe(true);expect(g.player.wood).toBe(0);
-  expect(g.stored).toBe(0);expect(g.fuel).toBe(28);
+  expect(g.stored).toBe(2);
+  expect(g.fuel).toBeGreaterThanOrEqual(5);
+  expect(g.fuel).toBeLessThanOrEqual(20);
+  g.fireLit=false;g.fuel=0;
+  accessHearth(g);
+  expect(g.stored).toBe(1);
+  expect(g.fuel).toBeGreaterThanOrEqual(5);
+  expect(g.fuel).toBeLessThanOrEqual(20);
  });
  it("Storage ACCESS conserves real Pine Logs, still respects original capacities",()=>{
   const g=state(),m=meta();g.builtPile=true;g.player.x=PILE_X;

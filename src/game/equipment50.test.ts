@@ -26,7 +26,7 @@ beforeEach(()=>{
 afterEach(()=>vi.unstubAllGlobals());
 function meta(){
  return {up:{dog:0,axe:0,pack:0},ash:99,totalAsh:100,
-  petEquipped:null,axeEquipped:"stick",guideFx:true};
+  petEquipped:null as "dog"|null,axeEquipped:"stick",guideFx:true};
 }
 function run(){
  const g=createEngine();g.ui="run";g.over=false;g.menu="inventory";
@@ -137,14 +137,14 @@ describe("Patch #50: one genuinely equipped axe and permanent Stick",()=>{
   g.player.wood=5;g.craftTab=0;
   const recipe=benchRows(g,m).find((r:any)=>r.label==="WOOD AXE");
   expect(recipe).toBeDefined();
-  recipe.onDown();recipe.onDown();
+  recipe!.onDown();recipe!.onDown();
   expect(g.crafts.maul).toBe(true);
   expect(g.equippedAxe).toBe("wood_axe");
   expect(choppingSeconds(g,m)).toBe(.7);
   g.shopTab=0;
   const card=shopRows(g,m).find((r:any)=>r.label.includes("GRANDPAS AXE"));
   expect(card).toBeDefined();
-  card.onDown();card.onDown();
+  card!.onDown();card!.onDown();
   expect(m.up.axe).toBe(1);
   expect(g.equippedAxe).toBe("grandpas_axe");
   expect(loadMeta().axeEquipped).toBe("grandpas_axe");

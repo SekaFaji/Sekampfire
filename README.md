@@ -8,6 +8,7 @@
 - **Does not abandon player:** Bingsu fetches only actual existing dropped logs, maximum two. He visits the built rack only while his owner is nearby. Otherwise he follows while carrying and hands the logs off when there's bag space. Unequipping, full storage, and a saturated pickup array conserve every carried log.
 - **Old save compatibility:** No change to run-save or permanent Ash keys, Bingsu's `up.dog` ownership bit, 40-Ash purchase, inventory, wood count, or current pet equipment state. The restored dog sprite starts on the same ground line and derives its gait as transient animation state. The next patch handles the new inventory-based pet/axe equipment UI.
 - **Regression coverage:** Patch #49 tests validate the world sprite's bounding box, left/right mirroring, actual gait stepping, idle stance, stable following during player direction changes, pickup and camp leashes, conservation of wood on unequip and v1 checkpoint restoration.
+- **Device follow-up:** Pixel silhouette and behavior are source-verified and regression-tested; a real 320x180 landscape phone view is still needed to approve Bingsu's final size, body shading and walk timing.
 
 
 ## Patch #48: real fence-corner torches, clean night lighting, Log Storage TAKE

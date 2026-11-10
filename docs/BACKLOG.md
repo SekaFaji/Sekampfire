@@ -1,5 +1,15 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #57 - properly contain Bingsu's approved portrait in her Pet Shop card
+- [x] Fix screenshot-confirmed problem where the approved portrait paints over the top/bottom border of its 100x68 container.
+- [x] Preserve the exact approved 94x68 image data and center a proportionate 86x62 nearest-neighbor rendering, with 7px side and 3px vertical padding.
+- [x] Give the portrait a uniform slate matte and show the selected gold frame all the way around.
+- [x] Keep the three tabs, text column, detail panel, real BUY/OWNED button, and touch target positions unchanged.
+- [x] Update profile framing and add tests for fit dimensions, pixel coverage and nonoverlapping hitboxes.
+- [x] Leave Bingsu's pet price, permanent ownership, game-world sprite and fetching mechanics untouched.
+- [ ] Verify the actual deployed 320x180 composition on landscape Android and tweak padding only if necessary.
+
+
 ## Patch #56 - wider crop of the approved Bingsu unlock portrait
 - [x] Reuse the user's approved head-and-chest Dogo portrait artwork; do NOT design another dog.
 - [x] Move the crop outward to display more of her natural folded ears, neck, white chest and shoulders without changing her face or expression.

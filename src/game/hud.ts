@@ -77,6 +77,11 @@ export function drawCampMinimap(ctx: any, g: any, colors: any) {
     ctx.fillStyle="#e0ad74";
     ctx.fillRect(sx,y+7,2,4);
     ctx.fillRect(ex,y+7,2,4);
+    // Expansion retains the ORIGINAL east corner as a third real post.
+    if(g.campExpansion>=1){
+      ctx.fillStyle="#e0ad74";
+      ctx.fillRect(mm(EAST_POST_X),y+7,2,4);
+    }
     for(let q=sx+4;q<ex-2;q+=4){
       ctx.fillStyle="#926442";
       ctx.fillRect(q,y+7,1,3);

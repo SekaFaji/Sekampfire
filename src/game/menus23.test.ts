@@ -107,6 +107,6 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     g.menu="bench";g.craftTab=0;
     expect(benchRows(g,m)).toHaveLength(3);
     g.craftTab=1;
-    expect(benchRows(g,m)).toHaveLength(4);
+    expect(benchRows(g,m)).toHaveLength(5); // new Ember Torch under Supplies
   });
 });

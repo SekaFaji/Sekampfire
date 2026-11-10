@@ -49,14 +49,15 @@ export function drawBingsuWorldSprite(ctx:any,d:any,animT=0):void {
   px(-9,-8+tail,2,2,shade);
   px(-11,-9+tail,3,2,coat);
 
-  // Compact solid torso, shaded underside and small muscular shoulder.
-  px(-7,-10+bodyLift,13,6,ink);
-  px(-6,-10+bodyLift,12,6,shade);
-  px(-6,-9+bodyLift,12,4,coat);
-  px(-5,-10+bodyLift,8,2,light);
-  px(-5,-5+bodyLift,10,1,"#cdd5d1");
-  px(2,-10+bodyLift,4,5,light);
-  px(4,-8+bodyLift,3,4,coat);
+  // Adult Dogo's muscular shoulder, deep chest and athletic body.
+  px(-8,-10+bodyLift,14,6,ink);
+  px(-7,-10+bodyLift,13,6,shade);
+  px(-7,-9+bodyLift,13,4,coat);
+  px(-6,-10+bodyLift,9,2,light);
+  px(-5,-5+bodyLift,11,1,"#cdd5d1");
+  px(1,-11+bodyLift,5,6,light);
+  px(3,-9+bodyLift,4,5,coat);
+  px(4,-6+bodyLift,3,2,"#d0d9d4");
 
   // Near legs overlap body, moving in opposite phase to the far pair.
   px(-6,-5-rightLift,2,5,coat);
@@ -68,14 +69,15 @@ export function drawBingsuWorldSprite(ctx:any,d:any,animT=0):void {
   px(4,-10+bodyLift,2,5,coat);
   px(4,-10+bodyLift,1,3,light);
 
-  // A square Dogo Argentino jaw, white muscular cheek and short muzzle.
-  px(5,-12+bodyLift,5,7,shade);
-  px(5,-12+bodyLift,5,5,coat);
+  // Broad skull, dark gentle eye, square jaw and an uncropped dropped ear.
+  px(5,-13+bodyLift,5,8,shade);
+  px(6,-12+bodyLift,4,7,coat);
   px(6,-12+bodyLift,3,2,light);
-  px(6,-7+bodyLift,4,2,light);
-  // A low folded ear and a single readable eye.
-  px(5,-14+bodyLift,2,3,ink);
-  px(5,-14+bodyLift,1,3,shade);
+  px(6,-8+bodyLift,5,3,light);
+  // Natural ear folds over the cheek, not a sharp, pointed puppy ear.
+  px(5,-14+bodyLift,3,3,shade);
+  px(5,-12+bodyLift,2,4,shade);
+  px(6,-13+bodyLift,2,2,coat);
   const blink=Math.sin(time*1.1)>0.997;
   px(8,-10+bodyLift,1,1,blink?"#a7aeb0":"#333a3d");
   // Short square muzzle and dark nose; remain symmetric on left facing.

@@ -4,6 +4,7 @@ import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLocked
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
 import { useOneFireLog52 } from "./firewood52";
+import { applyCampLegacy53, campLegacyNextBenefit53 } from "./campLegacy53";
 import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
@@ -275,6 +276,7 @@ function startRunEngine(g: any, meta: any) {
   g.museumBuilt = !!meta.museumBuilt;
   g.equippedAxe = defaultPermanentAxe(meta);
   g.campaignLevel = 1; // fresh campaigns; old saved runs remain legacy
+  const legacyLevel=applyCampLegacy53(g,meta);
   genScenery(g, Math.floor(Math.random() * 1e9));
   g.campaignRunId = "lv1-" + g.scenerySeed + "-" + Date.now();
   spawnTrees(g, 26);
@@ -282,7 +284,9 @@ function startRunEngine(g: any, meta: any) {
   else { g.firestarter = 1; }
   g.thermometerTemp = localTemperature(g);
   toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a pine tree. Then light the fire pit.");
-  toast(g, "Grooty can show you how to claim your camp with two log posts.");
+  toast(g, legacyLevel>=3
+    ? "YOUR CAMP LEGACY RESTORES THE FENCE. GROOTY HAS MORE MISSIONS."
+    : "Grooty can show you how to claim your camp with two log posts.");
 }
 
 function startRun(g: any, meta: any) {
@@ -1368,7 +1372,9 @@ function purchaseShopUpgrade51(g:any,meta:any,id:string):boolean {
   if(id==="dog")meta.petEquipped="dog";
   g.upConfirm=null;
   saveMeta(meta);
-  toast(g,u.name.toUpperCase()+" UNLOCKED.");
+  toast(g,id==="legacy"
+    ? "CAMP LEGACY LV"+meta.up[id]+" ACTIVE ON YOUR NEXT RUN."
+    : u.name.toUpperCase()+" UNLOCKED.");
   return true;
 }
 function shopRows(g:any,meta:any) {
@@ -1384,7 +1390,8 @@ function shopRows(g:any,meta:any) {
         id:u.id,level:lvl,max:u.max,maxed,cost,canBuy,
         label:u.name.toUpperCase()+(u.max>1?" "+lvl+"/"+u.max:""),
         right:maxed?"OWNED":confirm?"BUY?":cost+" ASH",
-        desc:u.id==="dog" && maxed?"OWNED. EQUIP OR UNEQUIP IN INVENTORY."
+        desc:u.id==="legacy"?campLegacyNextBenefit53(lvl)
+          :u.id==="dog" && maxed?"OWNED. EQUIP OR UNEQUIP IN INVENTORY."
           :maxed?u.desc:confirm?"PRESS AGAIN TO CONFIRM":u.desc,
         h:15,enabled:(u.id==="dog"&&maxed)||canBuy,
         // New card UI uses ONLY buy(), never this old action. Preserve

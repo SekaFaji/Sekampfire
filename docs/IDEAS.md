@@ -1,5 +1,16 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #53 implemented (2026-11-10) - Camp Legacy and Bingsu
+
+**Four sequential permanent foundations:** New banked-Ash upgrade `legacy` costs 35, 60, 95 and 140 Ash. Level 1 prebuilds Log Storage, 2 prebuilds Workbench, 3 restores both fence posts, and 4 restores eastern expansion. These are intentionally run-start foundations rather than carried-over mutable game-state snapshots. No station upgrades, remaining logs, pre-lit torches, fire fuel, crafts, earned Run Ash or completed missions carry over. The built flags apply only to newly created runs, so old v1 checkpoints never change their historical content when an upgrade is purchased later. The first tutorial still requires talking, chopping, lighting and night exploration; fence goals automatically detect inherited actual posts.
+
+**Shop extends without squashing its cards:** The existing 320x180 layout retains three columns by two rows of 82x30 original pixel-art cards. Page 1 contains six existing upgrades; page 2 features Camp Legacy with navigation controls located entirely in the details panel above the BUY row, and a clear 1/2-page indicator. The separate BUY button is the only touch purchase action; selecting a card or page does nothing to the Ash balance. The Legacy card's details show precisely what the *next* owned level buys.
+
+**Bingsu is a specific personality, not a generic fierce guard dog:** She is sweet, calm, loving and wants hugs, rarely barks, and can be stubborn. If her person is threatened she would fight to the death, but this remains a small lore line rather than fictitious combat gameplay. Her original pixel portrait is refined to look like an adult Dogo Argentino: strong mostly white head, deep chest, short coat, naturally hanging ears, dark almond eyes and wide black nose. Her smaller world sprite remains proportional and collar-free, with the original animated two-log companion behavior. Do not mention the human/pet who inspired the character.
+
+**Balance review:** Level 3-4 Legacy removes early fence-building and expansion costs, so review Grooty's pacing and the Level 1 completion loop on actual devices before adding playable Level 2. The main story/tutorial is still run-local, not permanently completed, and long-term progression must not turn into instant free Run Ash.
+
+
 ## Patch #52 implemented (2026-11-10)
 
 **One actual Pine Log for every manual ignition:** Old code allowed a free first fire with a `firestarter` flag, then required three logs and 28 fixed fuel for relighting. This now costs one Pine Log every time, drawn from the actual player backpack first or stored logs if there is no carried Pine. The first run's starter tinder is a separate +20 fuel bonus to the rolled 5-20 fuel of that consumed log, yielding 25-40 fuel for the first manual fire. Once burned, starter tinder expires permanently for the current run. The purchased Old Flint Ash perk still provides its actual pre-lit 40-fuel fire and starting wood, unchanged.

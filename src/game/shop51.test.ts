@@ -79,7 +79,7 @@ describe("Patch #51: Ash Shop six compact pixel-art cards",()=>{
   expect(SHOP_DETAILS51.y).toBeGreaterThan(
    SHOP_CARD51.y+SHOP_CARD51.h*2+SHOP_CARD51.rowGap-1);
   expect(v.pixels.every(r=>r.x>=24&&r.y>=8&&r.x+r.w<=296&&r.y+r.h<=172)).toBe(true);
-  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(7);
+  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // 7 upgrade icons plus Bingsu
   expect(Object.values(SHOP_CARD_BENEFIT51).every(s=>s.length>10)).toBe(true);
  });
  it("tapping a card ONLY selects details and cannot spend banked or run Ash",()=>{
@@ -182,7 +182,7 @@ describe("Patch #51: Bingsu is SHE, no collar, authentic white Dogo Argentino",(
   const v=canvas();
   drawBingsuPortrait(v.ctx,40,20);
   expect(v.pixels.some(p=>p.ink==="#f8f8f1")).toBe(true);
-  expect(v.pixels.some(p=>p.ink==="#252e30")).toBe(true);
+  expect(v.pixels.some(p=>p.ink==="#191f22")).toBe(true); // new wide Dogo nostrils
   for(const red of ["#a95745","#d47e63","#e2c47b","#b2644e"])
     expect(v.pixels.some(p=>p.ink===red)).toBe(false);
   const dog=canvas();

@@ -1,5 +1,18 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #53 - permanent Camp Legacy and Bingsu adult Dogo profile
+- [x] Add four increasingly useful banked-Ash Legacy levels (35, 60, 95, 140 Ash): prebuilt Storage, Workbench, Fence Posts and Eastern Expansion for future runs.
+- [x] Preserve real resources: no free stored wood, carried wood, lit torches, fuel, run Ash, station upgrade levels, crafts, Museum entries or fake mission completion.
+- [x] Apply Legacy only to genuinely NEW runs; old v1 checkpoints restore their saved structures, even if the player purchases Legacy later.
+- [x] Keep Ash Shop cards readable by paginating six real cards and displaying one distinct Legacy card on page two with visible Prev/Next and exact level-specific next benefit.
+- [x] Rewrite Bingsu's profile as affectionate, calm, quiet, a little stubborn and fearlessly protective, without referencing her real-life inspiration or promising unimplemented combat.
+- [x] Repaint Bingsu's collar-free native-pixel portrait and strengthen the compact in-world side sprite with Dogo Argentino anatomy: muscular white head/chest, black nose, natural ears and gentle eyes.
+- [x] Add regression tests for all tiers, existing save migration, purchase price and max cap, safe Shop hit zones and female Dogo lore/art.
+- [ ] Real Android landscape QA for Shop's page arrows and Bingsu's subtle new details.
+- [ ] Test the perceived time-to-afford Camp Legacy costs in the first few Level 1 runs, and whether prebuilt early buildings make tutorial goals too fast.
+- [ ] Continue with playable **Level 2** and new missions. Level 2 remains unlocked but Coming Soon.
+
+
 ## Patch #52 - One-log ignition and species-aware Pine fuel
 - [x] Make the first manual fire and every subsequent relight consume exactly 1 real Pine Log from backpack or Log Storage. No more free first lighting or 3-log relight.
 - [x] Preserve first-run starter tinder as a one-time +20 fuel bonus (first fire 25-40 including actual Pine roll); preserve purchased Old Flint's 40-fuel pre-lit start.
@@ -158,7 +171,7 @@ This is a tracked product backlog; **not completed merely because it is document
 - [x] Patch #32 source: strict modal hit-zone isolation and inside/outside/X/back behavior, no title/game click-through, translucent wooden top HUD, wider tree-canopy spawn exclusion and wood pickups relocated off posts without losing resources. Regression tests included; Android visual QA pending.
 ## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #31 source: two one-log claimed boundary posts, palisade behind camp, eastern five-log expansion, relocated Museum, claimed-ground no-respawn trees with existing trees converted into regular pickups, Grooty levels 1-2 integrated, v1 checkpoint-compatible old-run protection. Native device visual and pacing QA pending.
-- [ ] Later: Ash Camp Legacy upgrade preserving fence and expansion across runs; not introduced in this patch.
+- [x] Patch #53 Camp Legacy restores the two fence posts and Eastern Expansion at paid levels 3-4, without inherited torches or resource counters.
 
 - [x] Patch #30 source: fix overlapping lock and double-drawn ENDLESS NIGHT title label by drawing the button exactly once with separated icon/text spacing. Preserve the Coming Soon popup and original touch zone; pixel-geometry regression test added. Phone visual QA pending.
 
@@ -170,7 +183,7 @@ This is a tracked product backlog; **not completed merely because it is document
 
 - [x] Patch #26 source: five real run-scoped tutorial levels with optional guide HUD access, fixed talking-tree guide Grooty with ACT dialogue and dynamic hints, Museum removed from title actions but retained as camp building. Version-one run checkpoints store objective counters; new runs reset to Level 1. Automated tests added; Android browser playtesting still pending.
 - [ ] Future optional separate **Endless Night** game mode: concept not finalized. Keep the current finite campaign Long Night and its Bank/Continue choices as-is. The menu preview is intentionally locked until a later design decision.
-- [ ] Later: Ash-funded Camp Legacy upgrades preserving actual station levels between runs. No permanent tutorial level unlocks.
+- [x] Patch #53 Camp Legacy prebuilds camp foundations at future run start, but does not preserve actual station upgrade levels or completed missions.
 
 - [x] Patch #23: compact dynamic title menu, separate Shop header and Upgrades/Pets/Coming Soon tabs, compact Build Structures/Upgrades and Craft Tools/Supplies tabs, banked vs pending Ash labels, Long Night victory choice to bank or continue and resume safe checkpoint. Source-tested; phone QA pending.
 - [x] Patch #24: Good Dog retains ownership, moves into Pets for equip/unequip, follows, carries up to 2 actual world-drop logs, deposits to storage/player and persists cargo. Source-tested; device gameplay QA pending.

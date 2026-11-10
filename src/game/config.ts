@@ -39,7 +39,8 @@ const UPGRADES = [
   { id: "axe", name: "Grandpas Axe", costs: [20], max: 1, desc: "CHOP ALMOST TWICE AS FAST" },
   { id: "blue", name: "Blueprints", costs: [22], max: 1, desc: "ALL BUILDING COSTS 20 PERCENT LESS" },
   { id: "scarf", name: "Everwarm Scarf", costs: [30], max: 1, desc: "TORCHES LAST 50S INSTEAD OF 30S" },
-  { id: "dog", name: "Bingsu", costs: [40], max: 1, desc: "LOYAL DOGO ARGENTINO. FETCHES 2 PINE LOGS." },
+  { id: "dog", name: "Bingsu", costs: [40], max: 1, desc: "SWEET, CALM DOGO ARGENTINO. FETCHES 2 PINE LOGS." },
+  { id: "legacy", name: "Camp Legacy", costs: [35, 60, 95, 140], max: 4, desc: "RESTORE CAMP BUILDINGS IN FUTURE RUNS" },
 ];
 
 const WEATHER_TEXT: Record<string, string> = {

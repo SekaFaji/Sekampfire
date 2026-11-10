@@ -6,7 +6,7 @@ import {
   canCompleteFirstSettlement, drawCampaignResult, unlockedCampaignLevel,
 } from "./campaign44";
 let storage: Map<string,string>;
-const meta=()=>({ash:12,totalAsh:12,best:0,runs:0,up:{},maxCampaignLevel:1,lastBankedRunId:null});
+const meta=()=>({ash:12,totalAsh:12,best:0,runs:0,wonEver:false,up:{},maxCampaignLevel:1,lastBankedRunId:null as string|null});
 beforeEach(()=>{
   storage=new Map();
   vi.stubGlobal("localStorage",{

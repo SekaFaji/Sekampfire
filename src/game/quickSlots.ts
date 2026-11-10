@@ -89,7 +89,7 @@ export function drawQuickSlot(ctx:any,g:any,index:number,x:number,y:number):void
   const ready=item!==null && quickItemAvailable(g,item)
     && g.fireLit && g.fuel>12 && g.player.torchT<=0;
   ctx.fillStyle="rgba(8,16,23,0.35)";ctx.fillRect(x+1,y+2,w,h-1);
-  ctx.fillStyle="rgba(26,39,44,0.91)";ctx.fillRect(x,y,w,h);
+  ctx.fillStyle="rgba(26,39,44,0.59)";ctx.fillRect(x,y,w,h);
   ctx.fillStyle="#b39467";ctx.fillRect(x,y,w,1);
   ctx.fillRect(x,y,1,h);
   ctx.fillStyle="#725638";ctx.fillRect(x,y+h-1,w,1);

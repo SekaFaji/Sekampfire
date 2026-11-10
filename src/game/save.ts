@@ -4,6 +4,7 @@ import { clamp } from "./math";
 import { cleanLogCollection } from "./museum";
 import { snapshotInventory } from "./inventory";
 import { validatedAshLedger } from "./campaign44";
+import { normalizeFenceTorches } from "./fenceTorches47";
 
 function saveMeta(m: any) { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) { } }
 function safeCount(v: any): number {
@@ -56,12 +57,13 @@ function captureRunSnapshot(g: any): any {
     "guideLevel","guideChops","guideStokes","guideStoredTen",
     "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
-    "fenceLeft","fenceRight","campExpansion","heatSoak","cold","dampness"];
+    "fenceLeft","fenceRight","campExpansion","fenceTorches","heatSoak","cold","dampness"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
   // Keep the existing v1 checkpoint key/version. Persist only validated tier
   // numbers; old checkpoints simply load all station levels as zero.
   state.ashLedger = validatedAshLedger(g.ashLedger);
+  state.fenceTorches = normalizeFenceTorches(g.fenceTorches);
   state.campaignLevel = g.campaignLevel === 1 ? 1 : 0;
   state.campaignRunId = typeof g.campaignRunId === "string" && g.campaignRunId.length < 100
     ? g.campaignRunId : null;

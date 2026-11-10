@@ -10,10 +10,10 @@ import { GROOTY_X } from "./guide";
 
 // Translucent slate retains contrast while letting the real game sky,
 // weather and forest stay visible behind the resource panels.
-const WOOD_LIGHT = "rgba(206,174,119,0.82)";
-const WOOD_MID = "rgba(148,106,64,0.80)";
-const WOOD_DARK = "rgba(63,46,32,0.68)";
-const INK = "rgba(18,30,41,0.64)";
+const WOOD_LIGHT = "rgba(206,174,119,0.68)";
+const WOOD_MID = "rgba(148,106,64,0.57)";
+const WOOD_DARK = "rgba(63,46,32,0.45)";
+const INK = "rgba(18,30,41,0.39)";
 
 /** One shared, native-resolution pixel frame for the in-game HUD.
  * UI only: doesn't introduce new sprites or replace the world renderer. */
@@ -180,7 +180,7 @@ export const HUD_RECTS = {
 } as const;
 /** The right-aligned Ash panel stacks immediately below the MENU button
  * (284..316, 21..37), instead of hanging under the Weight plaque. */
-export const ASH_PANEL_RECT = {x:284,y:41,w:32,h:22} as const;
+export const ASH_PANEL_RECT = {x:284,y:40,w:32,h:14} as const;
 
 export function hudInventoryReadout(g:any,meta:any):string {
   // Preserve a public readout helper used by older HUD tests, but it now
@@ -193,10 +193,23 @@ export function hudAshReadout(g:any):string {
   const compact = earned<10000 ? (earned/1000).toFixed(1)+"K" : Math.floor(earned/1000)+"K";
   return "ASH "+compact;
 }
+/** A one-line Ash Shop button cannot overflow the 32px MENU width. */
+export function hudAshButtonLabel(g:any):string {
+  const full=hudAshReadout(g);
+  if(textW(full)<=ASH_PANEL_RECT.w-4)return full;
+  const ash=Math.max(0,Math.floor(Number(g.ashEarned)||0));
+  // Truncate abbreviated values rather than prematurely rounding the
+  // balance up (999 Ash must never look like 1K).
+  if(ash<1000) return "A"+ash;
+  if(ash<10000) return "A"+(Math.floor(ash/100)/10).toFixed(1)+"K";
+  if(ash<1000000) return "A"+Math.floor(ash/1000)+"K";
+  if(ash<10000000) return "A"+(Math.floor(ash/100000)/10).toFixed(1)+"M";
+  return "A10M";
+}
 
 /** Four native-resolution wooden panels:
  * WARMTH/FUEL | AIR TEMP WEATHER | WEIGHT | DAY/SEASON/MENU.
- * Run Ash is displayed in its own compact two-line panel beneath MENU. */
+ * Run Ash is a clickable compact SINGLE-LINE panel beneath MENU. */
 export function drawCampHUD(ctx: any, g: any, meta: any) {
   for(const panel of Object.values(HUD_RECTS)){
     drawHudFrame(ctx,panel.x,panel.y,panel.w,panel.h);
@@ -218,14 +231,17 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
   const carrying=weightHudValues(g,meta);
   drawText(ctx,"WEIGHT",199,21,"#f1e1c3");
   drawText(ctx,carrying.label,199,32,carrying.weight>=carrying.limit?"#ffd49e":"#d8dbda");
-  // Two-line stacked Ash badge: same right edge as the real MENU button,
-  // not the weight panel. Every value stays inside its 32px engraved frame.
+  // Ash is a miniature BUTTON, aligned exactly under the MENU control.
+  // The visible color reacts to touch; the game registers its own hit zone.
   drawHudFrame(ctx,ASH_PANEL_RECT.x,ASH_PANEL_RECT.y,ASH_PANEL_RECT.w,ASH_PANEL_RECT.h);
-  const ashValue=hudAshReadout(g).slice(4);
-  drawText(ctx,"ASH",ASH_PANEL_RECT.x+Math.floor((ASH_PANEL_RECT.w-textW("ASH"))/2),
-    ASH_PANEL_RECT.y+4,"#e3c0ee");
-  drawText(ctx,ashValue,ASH_PANEL_RECT.x+Math.floor((ASH_PANEL_RECT.w-textW(ashValue))/2),
-    ASH_PANEL_RECT.y+13,"#e9d3f6");
+  if(g.ashTapFx>0){
+    ctx.fillStyle="rgba(240,209,153,0.28)";
+    ctx.fillRect(ASH_PANEL_RECT.x+1,ASH_PANEL_RECT.y+1,
+      ASH_PANEL_RECT.w-2,ASH_PANEL_RECT.h-2);
+  }
+  const ashLabel=hudAshButtonLabel(g);
+  drawText(ctx,ashLabel,ASH_PANEL_RECT.x+Math.max(2,Math.floor((ASH_PANEL_RECT.w-textW(ashLabel))/2)),
+    ASH_PANEL_RECT.y+4,"#f1d9ee");
 
   const day = g.isNight ? "NIGHT "+g.night : "DAY "+(g.night+1);
   drawText(ctx,day,239,21,"#f1e2c9");
@@ -235,8 +251,8 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
   const seasonText = textW(season)>43 ? season.slice(0,3)+" "+seasonDay(g)+"/7" : season;
   drawText(ctx,seasonText,239,32,"#dfc69d");
   if(g.endlessMode){
-    drawText(ctx,"E"+Math.floor(g.endlessN||0),239,46,"#b7d4ed");
+    drawText(ctx,"E"+Math.floor(g.endlessN||0),236,56,"#b7d4ed");
   }else if(g.longNightActive&&Math.sin(g.animT*6)>0){
-    drawText(ctx,"LONG NIGHT",239,46,"#8fd0ff");
+    drawText(ctx,"LONG NIGHT",236,56,"#8fd0ff");
   }
 }

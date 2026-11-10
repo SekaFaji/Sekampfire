@@ -1,5 +1,18 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #47 - Pocket Ash Shop, ambient cold, Museum unlock, fence torches and opacity
+- [x] Make Ash a single-line small panel directly under MENU; tapping it opens the real banked-Ash Shop rather than banking Run Ash.
+- [x] Remove Toolbar from the pause menu, while keeping equipment quick slots and Inventory assignment.
+- [x] Make genuinely colder local ambient Celsius increase Warmth loss using the existing Cold pipeline, with a bounded factor and no unrelated reset.
+- [x] Prevent unusual/rare/legendary Museum Log discoveries until the real permanent Museum is constructed. Ordinary log and historical collectible ownership survive.
+- [x] Build one torch at each real finished fence post for 2 carried Pine Logs, lasting seven dawns each and expiring visibly; both active posts shelter the claimed interior, one post shelters locally.
+- [x] Add gently cool-toned night illumination to the fence posts, distinct from the warm Campfire. Keep the lighting effect within a smaller radius.
+- [x] Save independent torch timers in the unchanged v1 run snapshot, compatible with old saves, and preserve normal fenced expansion behavior.
+- [x] Lower HUD, control, shop/inventory/guide/menu overlay opacity without making game controls decorative or unclickable.
+- [ ] Test the extra night lighting and warmth protection in an actual Android landscape run, including seven-dawn torch expiry, high cold pressure and expanded fence.
+- [ ] Verify new HUD/Shop single-line panel, all modal text contrast, and sunlight/season scenery behind buttons on a phone.
+
+
 ## Patch #46 - Explicit station selection, floating circular controls, right Ash
 - [x] No station bubbles appear on proximity alone. First ACT on a finished station selects it; second ACT performs the primary action. While selected, ACT continues using the default action without opening a generic panel.
 - [x] Replace opaque rectangular station buttons with translucent rounded pixel-art buttons, short labels and a restrained vertical bob. Touch regions and Grooty's goal markers follow the same animated geometry.

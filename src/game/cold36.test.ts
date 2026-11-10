@@ -96,14 +96,19 @@ describe("Patch #36 - environmental Cold exposure",()=>{
     g.cold=80;
     const high=coldWarmthDrain(g,m);
     expect(high).toBeGreaterThan(low*2);
-    g.weather="coldsnap"; // weather cannot be counted again by this pure function
-    expect(coldWarmthDrain(g,m)).toBe(high);
+    // Patch #47: subfreezing local air adds REAL warmth drain even when the
+    // legacy Cold meter is held constant, with no change to its value.
+    g.weather="coldsnap";
+    const snap=coldWarmthDrain(g,m);
+    expect(snap).toBeGreaterThan(high);
     g.weather="blizzard";
-    expect(coldWarmthDrain(g,m)).toBe(high);
+    const freeze=coldWarmthDrain(g,m);
+    expect(freeze).toBeGreaterThan(snap);
+    expect(g.cold).toBe(80);
     (m.up as any).blood=2;
-    expect(coldWarmthDrain(g,m)).toBeCloseTo(high*0.7);
+    expect(coldWarmthDrain(g,m)).toBeCloseTo(freeze*0.7);
     g.player.torchT=10;
-    expect(coldWarmthDrain(g,m)).toBeCloseTo(high*0.7*0.5);
+    expect(coldWarmthDrain(g,m)).toBeCloseTo(freeze*0.7*0.5);
     g.player.torchT=0;g.stage=6;g.player.x=CX;
     expect(coldWarmthDrain(g,m)).toBeLessThan(high*0.5);
   });

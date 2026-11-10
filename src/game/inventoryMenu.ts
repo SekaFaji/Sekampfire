@@ -17,7 +17,7 @@ function border(ctx:any,x:number,y:number,w:number,h:number,color:string){
 }
 function actionable(ctx:any,g:any,x:number,y:number,w:number,h:number,
   label:string,onDown:()=>void,active=false){
-  block(ctx,x,y,w,h,active?"#685139":"#29394a");
+  block(ctx,x,y,w,h,active?"rgba(104,81,57,0.78)":"rgba(41,57,74,0.62)");
   border(ctx,x,y,w,h,active?"#dfb77a":"#987950");
   drawTextC(ctx,label,x+w/2,y+4,active?"#ffe3a8":"#d5c8af");
   g.zones.push({x,y,w,h,onDown});
@@ -95,9 +95,9 @@ export function inventorySelection(g:any,meta:any):{id:ItemId;qty:number;source:
 export function drawInventoryMenu(ctx:any,g:any,meta:any,close:()=>void):void{
   const {x,y,w,h}=INVENTORY_MODAL;
   g.menuRect={x,y,w,h};
-  block(ctx,x,y,w,h,"rgba(13,24,34,0.97)");
+  block(ctx,x,y,w,h,"rgba(13,24,34,0.76)");
   border(ctx,x,y,w,h,"#bd9761");
-  block(ctx,x+2,y+2,w-4,h-4,"rgba(31,44,50,0.92)");
+  block(ctx,x+2,y+2,w-4,h-4,"rgba(31,44,50,0.44)");
   drawText(ctx,"INVENTORY",x+9,y+8,"#ffdf9a");
   const used=occupiedInventorySlots(g),capacity=availableInventorySlots(g,meta);
   const header=g.inventoryTab===1?"EQUIPPED":"SLOTS "+used+"/"+capacity;

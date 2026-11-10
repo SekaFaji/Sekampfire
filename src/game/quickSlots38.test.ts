@@ -145,26 +145,21 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   handlePointer(g,"up",4,310,95);
   expect(g.pright).toBe(false);
  });
- it("pause menu preserves End Run and the toolbar without remote Build",()=>{
+ it("pause preserves End Run without Toolbar, while long-hold still equips quickslots",()=>{
   const g=run(),m=meta();g.ashEarned=19;
   expect(pauseRows(g,m)[2].right).toBe("+19 ASH");
-  expect(pauseRows(g,m).some((row:any)=>row.label==="BUILD")).toBe(false);
-  pauseRows(g,m)[3].onDown();
-  expect(g.menu).toBe("toolbar");
-  toolbarRows(g)[1].onDown();
+  expect(pauseRows(g,m).map((row:any)=>row.label)).toEqual(["RESUME","SETTINGS","END RUN"]);
+  g.fireLit=true;g.everLit=true;
+  g.zones=[];drawRunChrome(canvas().ctx,g);
+  handlePointer(g,"down",7,210,166);
+  tickQuickSlotHolds(g,QUICK_SLOT_HOLD_SECONDS+0.1);
   expect(g.menu).toBe("quickslot");
   expect(g.quickSlotIndex).toBe(1);
-  expect(quickSlotRows(g)[0].enabled).toBe(false);
-  g.fireLit=true;g.everLit=true;
-  expect(quickSlotRows(g)[0].enabled).toBe(false); // craftable Torch
+  expect(quickSlotRows(g)[0].enabled).toBe(false); // craftable Torch not owned
   expect(quickSlotRows(g)[1].enabled).toBe(true); // legacy Ember
   quickSlotRows(g)[1].onDown();
   expect(g.quickSlots).toEqual([null,"ember"]);
-  expect(g.menu).toBe("toolbar");
-  closeMenu(g);
-  expect(g.menu).toBe("pause");
-  closeMenu(g);
-  expect(g.menu).toBeNull();
+  expect(g.menu).toBeNull(); // returns directly to live run
  });
  it("preserves assignments in existing version one run saves, sanitizing old and corrupted data",()=>{
   const g=run(),m=meta();g.fireLit=true;g.everLit=true;g.fuel=25;

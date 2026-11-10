@@ -945,7 +945,7 @@ function skyColor(q: number): string {
 // ============ HUD ============
 // ============ in-canvas UI ============
 function panel(ctx: any, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = "rgba(8,12,26,0.9)";
+  ctx.fillStyle = "rgba(8,12,26,0.75)";
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = "#6a4a26";
   ctx.fillRect(x, y, w, 1);
@@ -963,13 +963,13 @@ function uiButton(ctx: any, g: any, x: number, y: number, w: number, h: number, 
   const sel = !!opts.sel;
   const water = !!opts.water;
   const pressed = !!opts.pressed && enabled;
-  ctx.fillStyle = water ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.4)";
+  ctx.fillStyle = water ? "rgba(0,0,0,0.12)" : "rgba(0,0,0,0.20)";
   ctx.fillRect(x + 1, y + 2, w, h - 1);
   if (water) {
     // Source-based wooden button treatment, using the same layout and hitzones.
-    ctx.fillStyle = !enabled ? "rgba(21,29,36,0.76)"
-      : opts.accent ? (pressed ? "rgba(92,53,27,0.93)" : "rgba(92,60,35,0.90)")
-      : (pressed ? "rgba(46,46,42,0.93)" : "rgba(25,40,47,0.87)");
+    ctx.fillStyle = !enabled ? "rgba(21,29,36,0.49)"
+      : opts.accent ? (pressed ? "rgba(92,53,27,0.76)" : "rgba(92,60,35,0.61)")
+      : (pressed ? "rgba(46,46,42,0.70)" : "rgba(25,40,47,0.59)");
     ctx.fillRect(x, y, w, h);
     const edge = !enabled ? "#655647" : opts.accent ? "#f3cb7e" : "#bba078";
     ctx.fillStyle = edge;
@@ -985,7 +985,7 @@ function uiButton(ctx: any, g: any, x: number, y: number, w: number, h: number, 
       ctx.fillRect(x + 2, y + 2, w - 4, 2);
     }
   } else {
-    px(ctx, x, y, w, h, enabled ? (sel ? "#7a4a1e" : "#4a3020") : "#1e2438");
+    px(ctx, x, y, w, h, enabled ? (sel ? "rgba(122,74,30,0.77)" : "rgba(74,48,32,0.58)") : "rgba(30,36,56,0.47)");
     const edge = enabled ? (sel ? "#ffd98a" : "#b08a5a") : "#3a4462";
     ctx.fillStyle = edge;
     ctx.fillRect(x, y, w, 1);
@@ -1690,7 +1690,7 @@ function drawMenu(ctx: any, g: any, meta: any) {
   } else if (g.menu === "privacy" || g.menu === "credits") {
     g.menuRect = {x:23,y:10,w:274,h:160};
   }
-  ctx.fillStyle = "rgba(4,6,16,0.5)";
+  ctx.fillStyle = "rgba(4,6,16,0.25)";
   ctx.fillRect(0, 0, W, H);
   if (g.menu === "inventory") {
     drawInventoryMenu(ctx,g,meta,()=>closeMenu(g));

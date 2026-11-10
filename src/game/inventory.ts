@@ -5,12 +5,12 @@ export const INVENTORY_START_SLOTS = 5;
 export const INVENTORY_PACK_BONUS_SLOTS = 5;
 export const PINE_LOG_ID = "pine_log";
 
-export type ItemCategory = "material" | "tool" | "clothing" | "backpack" | "camp";
-export type ItemId = "pine_log" | "wood_axe" | "warm_boots" | "timber_pack" |
+export type ItemCategory = "material" | "tool" | "clothing" | "backpack" | "camp" | "pet";
+export type ItemId = "pine_log" | "stick" | "wood_axe" | "grandpas_axe" | "bingsu" | "warm_boots" | "timber_pack" |
   "fire_reflector" | "kindling_bundle" | "ember_lantern" | "ember_torch";
 export type ItemDef = {
   id: ItemId; name: string; category: ItemCategory;
-  description: string[]; weight: number; maxStack: number; sprite: "log" | "axe" | "boots" | "pack" | "camp";
+  description: string[]; weight: number; maxStack: number; sprite: "log" | "axe" | "boots" | "pack" | "camp" | "pet";
 };
 export type InventoryStack = {id: ItemId; qty: number};
 export type InventoryState = {slots: (InventoryStack | null)[]};
@@ -22,6 +22,18 @@ export const ITEM_DEFINITIONS: Record<ItemId, ItemDef> = {
   pine_log: {
     id:"pine_log", name:"PINE LOGS", category:"material", weight:1,maxStack:99,sprite:"log",
     description:["COMMON SOFTWOOD FROM", "PINE TREES.", "USED AS FUEL AND", "CAMP BUILDING MATERIAL."]
+  },
+  stick: {
+    id:"stick",name:"WOOD STICK",category:"tool",weight:0,maxStack:1,sprite:"axe",
+    description:["PERMANENT STARTER.", "AVAILABLE EVERY RUN.", "NEVER CONSUMED."]
+  },
+  grandpas_axe: {
+    id:"grandpas_axe",name:"GRANDPA'S AXE",category:"tool",weight:0,maxStack:1,sprite:"axe",
+    description:["PERMANENT ASH UPGRADE.", "STRONGER CHOPPING.", "EQUIP OR UNEQUIP."]
+  },
+  bingsu: {
+    id:"bingsu",name:"BINGSU",category:"pet",weight:0,maxStack:1,sprite:"pet",
+    description:["LOYAL DOGO ARGENTINO.", "RETRIEVES 2 REAL LOGS.", "EQUIP OR UNEQUIP."]
   },
   wood_axe: {
     id:"wood_axe", name:"WOOD AXE", category:"tool", weight:0,maxStack:1,sprite:"axe",
@@ -142,7 +154,8 @@ export function inventoryEquipment(g:any,meta:any):{id:ItemId;source:string}[] {
   for(const row of GEAR_CRAFT_IDS){
     if(g.crafts?.[row.craft]===true) result.push({id:row.id,source:"CRAFTED"});
   }
-  if(meta?.up?.axe>0&&!g.crafts?.maul)result.push({id:"wood_axe",source:"ASH GEAR"});
+  if(meta?.up?.axe>0)result.push({id:"grandpas_axe",source:"ASH GEAR"});
+  if(meta?.up?.dog>0)result.push({id:"bingsu",source:"PERMANENT PET"});
   if(meta?.up?.pack>0&&!g.crafts?.pack)result.push({id:"timber_pack",source:"ASH GEAR"});
   return result;
 }

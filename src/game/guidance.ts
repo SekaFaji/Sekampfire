@@ -1,6 +1,6 @@
 import { W, WORLD_W, CX, BENCH_X, PILE_X, SITE_COST, STAGES, CRAFTS } from "./config";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST } from "./campBoundary";
-import { guideProgress } from "./guide";
+import { guideProgress, GROOTY_X } from "./guide";
 import { SCOUT_GROVE_X } from "./campaign43";
 import { stationCost, stationLevel } from "./campProgress";
 import { stationCraftCost } from "./campProgress";
@@ -65,6 +65,7 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   // This prevents false guides over Settings, Grooty or the Museum.
   const target = (():FireflyTarget|null => {
     switch(goal) {
+      case "talk-grooty": return world(GROOTY_X,106);
       case "chop": return resources(true);
       case "left-post": return wood<1?resources():world(WEST_POST_X);
       case "right-post": return wood<1?resources():world(EAST_POST_X);

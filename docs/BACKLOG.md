@@ -1,5 +1,17 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #52 - One-log ignition and species-aware Pine fuel
+- [x] Make the first manual fire and every subsequent relight consume exactly 1 real Pine Log from backpack or Log Storage. No more free first lighting or 3-log relight.
+- [x] Preserve first-run starter tinder as a one-time +20 fuel bonus (first fire 25-40 including actual Pine roll); preserve purchased Old Flint's 40-fuel pre-lit start.
+- [x] Introduce `WOOD_SPECIES52` registry for real Pine item/tree/weight and inclusive uniform 5-20 fuel rolled only at the moment of consumption.
+- [x] Replace fixed 16/21 feed amounts with per-log roll plus optional crafted Kindling Bundle +5 bonus.
+- [x] Keep the same 100 fuel cap, real inventory and stored-wood accounting, Warmth and existing weather/Reflector/Hearth consumption rate.
+- [x] Update actual one-log lighting messages, beginner tutorial, Grooty guide and Pine inventory benefit text.
+- [x] Add deterministic edge-value, kindling, resource conservation, no-free-light, storage fallback, fuel-cap, old save and Old Flint regression tests.
+- [ ] Playtest the first dawn and first cold night when a Pine Log rolls 5, including blizzard/rain, and refine fuel pacing only with evidence.
+- [ ] Check the 5-20 fuel readout and short fire messages on an actual Android landscape device.
+
+
 ## Patch #51 - illustrated Ash cards and Bingsu female Dogo portrait
 - [x] Replace plain Shop rows with a native 3-by-2 illustrated six-card Upgrades grid. Original pixel icons for all six current permanent upgrades.
 - [x] Give Bingsu a separate personal Pets card with her real portrait and accurate 40-Ash ownership.
@@ -11,12 +23,6 @@
 - [x] Add native touch/keyboard/card visual/buy/cost and female pet art regression tests.
 - [ ] Review precise pixel scale, icon clarity, portrait likeness, transparency, and BUY tap comfort on Android landscape.
 - [ ] Review all six cards at low Ash balances and multi-level Warm Blood upgrades on a real phone.
-
-## Upcoming approved Patch #52 - Wood types and fuel
-- [ ] Introduce real wood species data (start with Pine Logs) and randomized 5-20 fuel addition when each log burns, keeping existing item-stack compatibility.
-- [ ] Preserve weather/fuel-drain rules, normal material costs and Museum collectible ownership. Review earliest night balance and clarify optional kindling boost.
-- [ ] Add deterministic tests for species rolls, edge values and save consistency without changing old currency or wood inventory unexpectedly.
-
 
 ## Patch #50 - Inventory and Equipment
 - [x] Keep the native 20-slot backpack on the left with no changes to carried logs or weight capacity.
@@ -31,8 +37,8 @@
 - [ ] Review whether future boots/backpack equipment slots should become optional equips, rather than automatic crafted benefits.
 
 ## Remaining approved milestones
-- [ ] **Patch #51 - Ash Shop overhaul:** original illustrated upgrade cards with separate selection, details at bottom and one BUY button. Pets become unlock-only, equips stay in Inventory.
-- [ ] **Patch #52 - Variable log fuel:** wood species definitions and random Pine Log burn values 5-20 rolled when used, preserving stacks and balancing first-night difficulty.
+- [x] **Patch #51 - Ash Shop overhaul:** original illustrated upgrade cards with separate selection, details at bottom and one BUY button. Pets become unlock-only, equips stay in Inventory.
+- [x] **Patch #52 - Variable log fuel:** wood species definitions and random Pine Log burn values 5-20 rolled when used, preserving stacks and balancing first-night difficulty.
 
 
 ## Patch #49 - Bingsu visual and movement reconstruction
@@ -46,9 +52,9 @@
 - [ ] Check actual phone landscape proportions, walking and turning, night silhouette and two-log carry visually. This still needs device QA.
 
 ## Proposed follow-up patches from approved roadmap
-- [ ] **Patch #50 - Inventory & equipment:** a side-by-side backpack with dedicated AXE and PET equipment slots. Permanent starter Stick as fallback; equip/unequip an owned axe or Bingsu from Inventory, while keeping the existing quick slots. Persistent pet state and equipment migrations.
-- [ ] **Patch #51 - Ash Shop:** replace the plain list with original pixel-art upgrade boxes, one selectable card, detailed effects at the bottom and a distinct BUY confirmation button. Pets become unlock-only in Shop, while equipping occurs in Inventory.
-- [ ] **Patch #52 - Wood & fuel:** data-driven species definitions, random Pine Log fuel value 5-20 at the moment of burning, keep wood stacks as materials. Verify early-run balance and ensure rare Museum collectibles remain separate.
+- [x] **Patch #50 - Inventory & equipment:** a side-by-side backpack with dedicated AXE and PET equipment slots. Permanent starter Stick as fallback; equip/unequip an owned axe or Bingsu from Inventory, while keeping the existing quick slots. Persistent pet state and equipment migrations.
+- [x] **Patch #51 - Ash Shop:** replace the plain list with original pixel-art upgrade boxes, one selectable card, detailed effects at the bottom and a distinct BUY confirmation button. Pets become unlock-only in Shop, while equipping occurs in Inventory.
+- [x] **Patch #52 - Wood & fuel:** data-driven species definitions, random Pine Log fuel value 5-20 at the moment of burning, keep wood stacks as materials. Verify early-run balance and ensure rare Museum collectibles remain separate.
 
 
 ## Patch #48 - No phantom camp lights; every fence corner; storage Take button

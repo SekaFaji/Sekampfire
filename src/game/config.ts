@@ -29,6 +29,7 @@ const CRAFTS = [
   { id: "refl", name: "Fire Reflector", cost: 8, desc: "THE FIRE BURNS SLOWER" },
   { id: "kindling", name: "Kindling Bundle", cost: 9, benchTier: 1, desc: "EACH LOG STOKES MORE FUEL" },
   { id: "lantern", name: "Ember Lantern", cost: 15, benchTier: 2, desc: "TORCHES LAST 20S LONGER" },
+  { id: "torch", name: "Ember Torch", cost: 3, desc: "REUSABLE TORCH. EQUIP IN INVENTORY" },
 ];
 
 const UPGRADES = [
@@ -38,7 +39,7 @@ const UPGRADES = [
   { id: "axe", name: "Grandpas Axe", costs: [20], max: 1, desc: "CHOP ALMOST TWICE AS FAST" },
   { id: "blue", name: "Blueprints", costs: [22], max: 1, desc: "ALL BUILDING COSTS 20 PERCENT LESS" },
   { id: "scarf", name: "Everwarm Scarf", costs: [30], max: 1, desc: "TORCHES LAST 50S INSTEAD OF 30S" },
-  { id: "dog", name: "Good Dog", costs: [40], max: 1, desc: "A GOOD DOG FETCHES STICKS FOR YOU" },
+  { id: "dog", name: "Bingsu", costs: [40], max: 1, desc: "LOYAL DOGO ARGENTINO. FETCHES 2 PINE LOGS." },
 ];
 
 const WEATHER_TEXT: Record<string, string> = {

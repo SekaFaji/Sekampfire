@@ -1,5 +1,21 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #49 - Bingsu visual and movement reconstruction
+- [x] Rebuild Bingsu's in-world white Dogo Argentino silhouette at realistic small native-pixel proportions compared with the player.
+- [x] Use one mirrored pixel-art sprite for both directions, with stable paws, grounded shadow, gentle breathing, tail wag, and visible two-log carry pose.
+- [x] Change walk animation to advance from actual world movement, never arbitrary global timer stepping while idle.
+- [x] Make Bingsu follow the player's actual position with a relaxed proximity band rather than snapping across the player when facing direction flips.
+- [x] Keep a short real-world pickup leash; only travel to the Log Storage when the player is near camp; never fabricate or destroy logs.
+- [x] Preserve dog pickup cargo, 40-Ash unlock, existing pet equip data and v1 checkpoint compatibility.
+- [x] Add new proportion, mirror, gait, follow, log-transfer and old-save tests.
+- [ ] Check actual phone landscape proportions, walking and turning, night silhouette and two-log carry visually. This still needs device QA.
+
+## Proposed follow-up patches from approved roadmap
+- [ ] **Patch #50 - Inventory & equipment:** a side-by-side backpack with dedicated AXE and PET equipment slots. Permanent starter Stick as fallback; equip/unequip an owned axe or Bingsu from Inventory, while keeping the existing quick slots. Persistent pet state and equipment migrations.
+- [ ] **Patch #51 - Ash Shop:** replace the plain list with original pixel-art upgrade boxes, one selectable card, detailed effects at the bottom and a distinct BUY confirmation button. Pets become unlock-only in Shop, while equipping occurs in Inventory.
+- [ ] **Patch #52 - Wood & fuel:** data-driven species definitions, random Pine Log fuel value 5-20 at the moment of burning, keep wood stacks as materials. Verify early-run balance and ensure rare Museum collectibles remain separate.
+
+
 ## Patch #48 - No phantom camp lights; every fence corner; storage Take button
 - [x] Remove two unearned max-level camp "window" light sources and three invisible mid-fence spotlights; night illumination comes only from actual lit fires and torches.
 - [x] Keep the original east junction post visible and buildable after camp expansion while adding a third outer-east post and independent 7-dawn torch.

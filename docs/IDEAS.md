@@ -1,5 +1,14 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #49 implemented - Bingsu rebuilt (2026-11-10)
+
+**World sprite vs portrait:** The old Bingsu sprite was overlarge compared with the 25-pixel player, with a two-frame global-timer leg shuffle. Replace the live sprite with a compact ~23x15 pixel Dogo Argentino side silhouette, mirrored exactly for both directions. Keep the larger Shop portrait intact because it is an illustration, not the world sprite. New gait advances from real traveled distance; resting paws do not slide, and both feet share the player's exact ground line.
+
+**Better following:** Walking and turning are distinct. A 17px resting zone stops Bingsu constantly swapping sides whenever the player taps left/right. He picks up only actual dropped wood near the player, carries at most two logs, and only runs to the storage when the player is also near it. A full carrying bag or rack does not lose his cargo; unequipping preserves it in the world or defers the drop if the pickup list is full. This patch does not add combat or change his pet ownership.
+
+**Future work approved after #49:** Patch #50 joins Backpack and dedicated Axe/Pet equipment slots in one inventory, with a permanent starter Stick fallback. Patch #51 uses selectable Ash Shop cards and a separate BUY button, leaving pet equipping to Inventory. Patch #52 introduces wood species and Pine's 5-20 variable fuel value, initially rolled when burned so inventory stacking remains straightforward. Verify early-game fire survival balance before increasing the randomness.
+
+
 ## Patch #48 implemented (2026-11-10)
 
 **Every fence corner is a torch location.** The original east corner remains a physical post when the east palisade is extended, and the new outer east corner is its own post. There are three independent paid, expiring torches after expansion, not two torches that teleport. Existing P47 saves are migrated based on their historical visible torch position: if the run was already expanded, the former right timer becomes the outer timer, preserving its remaining life with no duplicated resources.

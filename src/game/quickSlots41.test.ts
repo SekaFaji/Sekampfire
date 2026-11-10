@@ -167,13 +167,17 @@ describe("Patch #41: Bingsu the Dogo Argentino",()=>{
   drawShopTabs(shop.canvas,g,m,shopRows(g,m),()=>{g.menu=null;});
   expect(shop.rects.some(r=>r.color==="#f3f2ec")).toBe(true);
  });
- it("draws a larger white Dogo with ear, dark nose, colored collar and real carried logs",()=>{
-  const g=run();g.dog={x:800,y:156,wood:2,dir:1,phase:"walk"};
+ it("draws a compact white Dogo with mirrored head, collar and two real carried logs",()=>{
+  const g=run();g.dog={x:800,y:g.player.y,wood:2,dir:1,phase:"walk",motion:70,gait:0.8};
   const v=ctx();drawDog(v.canvas,g);
   expect(v.rects.some(r=>r.color==="#e9ede8")).toBe(true);
-  expect(v.rects.some(r=>r.color==="#f7f7ee")).toBe(true);
+  expect(v.rects.some(r=>r.color==="#faf9ef")).toBe(true);
   expect(v.rects.some(r=>r.color==="#b2644e")).toBe(true);
-  expect(v.rects.some(r=>r.color==="#553824")).toBe(true);
+  expect(v.rects.filter(r=>r.color==="#553824")).toHaveLength(2);
+  const x0=Math.min(...v.rects.map(r=>r.x)),x1=Math.max(...v.rects.map(r=>r.x+r.w));
+  const y0=Math.min(...v.rects.map(r=>r.y)),y1=Math.max(...v.rects.map(r=>r.y+r.h));
+  expect(x1-x0).toBeLessThanOrEqual(24);
+  expect(y1-y0).toBeLessThanOrEqual(16);
   expect(v.rects.every(r=>r.w>0&&r.h>0)).toBe(true);
  });
  it("keeps fetching exactly two real existing pickups and never creates logs for free",()=>{

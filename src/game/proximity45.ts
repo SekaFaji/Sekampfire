@@ -153,7 +153,7 @@ export const BACKPACK_BUTTON45={x:281,y:151,w:34,h:26} as const;
 export function drawBackpackButton45(ctx:any,g:any,open:()=>void):void {
   const {x,y,w,h}=BACKPACK_BUTTON45;
   pixel(ctx,x+1,y+2,w,h-1,"rgba(4,10,18,0.42)");
-  pixel(ctx,x,y,w,h,"rgba(31,49,57,0.92)");
+  pixel(ctx,x,y,w,h,"rgba(31,49,57,0.61)");
   pixel(ctx,x,y,w,1,"#c2a273");
   pixel(ctx,x,y,1,h,"#97754d");
   pixel(ctx,x+w-1,y,1,h,"#8e6d49");

@@ -1,5 +1,15 @@
 # Sekampfire
 
+## Patch #49: Bingsu's world sprite and companion motion rebuilt
+
+- **Proportionate white Dogo Argentino:** Replace the oversized 30+ pixel-wide Bingsu in-world artwork with a compact, original ~23x15 native-resolution pixel sprite (including tail and carried logs), compared with the player's ~25-pixel height. His square muzzle, folded ear, short white coat, copper collar, dark nose and one/two REAL Pine Logs remain recognizable. The enlarged permanent Shop portrait is not resized.
+- **Grounded animations:** Both dog and player stand on the same world-space foot baseline. Walking legs use the actual distance traveled, rather than a time-dependent two-frame flip that kept sliding. Idle breathing, short tail movement and an occasional blink remain subtle, with correctly mirrored art and planted paws at rest.
+- **Natural follow behavior:** Bingsu stays on the side of the player where he already is. Turning around does not instantly send him across the player. World-space follow range has a 17px relaxed idle band, a 13px following separation, a bounded catch-up speed, and a real pickup leash. An exceptional large teleport/resume is the only case that snaps him back into view.
+- **Does not abandon player:** Bingsu fetches only actual existing dropped logs, maximum two. He visits the built rack only while his owner is nearby. Otherwise he follows while carrying and hands the logs off when there's bag space. Unequipping, full storage, and a saturated pickup array conserve every carried log.
+- **Old save compatibility:** No change to run-save or permanent Ash keys, Bingsu's `up.dog` ownership bit, 40-Ash purchase, inventory, wood count, or current pet equipment state. The restored dog sprite starts on the same ground line and derives its gait as transient animation state. The next patch handles the new inventory-based pet/axe equipment UI.
+- **Regression coverage:** Patch #49 tests validate the world sprite's bounding box, left/right mirroring, actual gait stepping, idle stance, stable following during player direction changes, pickup and camp leashes, conservation of wood on unequip and v1 checkpoint restoration.
+
+
 ## Patch #48: real fence-corner torches, clean night lighting, Log Storage TAKE
 
 - **Fix unexplained lights:** The camp-upgrade renderer previously cut two unearned light holes into the night mask at stage 6 and added three invisible quarter-way "lights" across the fenced interior. Those are removed. Night-mask openings now come only from real, visibly burning Campfire, handheld torch or **built, active physical fence torches**. The fence glow stays pale/cool compared with the campfire.

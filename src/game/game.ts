@@ -1372,7 +1372,9 @@ function purchaseShopUpgrade51(g:any,meta:any,id:string):boolean {
   if(id==="dog")meta.petEquipped="dog";
   g.upConfirm=null;
   saveMeta(meta);
-  toast(g,u.name.toUpperCase()+" UNLOCKED.");
+  toast(g,id==="legacy"
+    ? "CAMP LEGACY LV"+meta.up[id]+" ACTIVE ON YOUR NEXT RUN."
+    : u.name.toUpperCase()+" UNLOCKED.");
   return true;
 }
 function shopRows(g:any,meta:any) {

@@ -163,9 +163,9 @@ describe("Patch #51: Bingsu is SHE, no collar, authentic white Dogo Argentino",(
  it("pet is a large portrait card with a distinct buy button and exact 40 Ash",()=>{
   const g=world(),m=meta();g.shopTab=1;m.ash=40;
   const v=render(g,m);
-  expect(g.zones.some((z:any)=>z.x===31&&z.y===52&&z.w===73&&z.h===66))
+  expect(g.zones.some((z:any)=>z.x===31&&z.y===52&&z.w===128&&z.h===66))
    .toBe(true);
-  expect(v.pixels.some(p=>p.ink==="#fafaf4")).toBe(true);
+  expect(v.pixels.some(p=>p.ink==="#fffdf6")).toBe(true);
   tap(g,55,64);
   expect(m.ash).toBe(40);expect(m.up.dog).toBeUndefined();
   render(g,m);
@@ -181,7 +181,7 @@ describe("Patch #51: Bingsu is SHE, no collar, authentic white Dogo Argentino",(
  it("her portrait and world sprite are entirely collar-free, with white neck",()=>{
   const v=canvas();
   drawBingsuPortrait(v.ctx,40,20);
-  expect(v.pixels.some(p=>p.ink==="#f8f8f1")).toBe(true);
+  expect(v.pixels.some(p=>p.ink==="#f2f0e9")).toBe(true);
   expect(v.pixels.some(p=>p.ink==="#191f22")).toBe(true); // new wide Dogo nostrils
   for(const red of ["#a95745","#d47e63","#e2c47b","#b2644e"])
     expect(v.pixels.some(p=>p.ink===red)).toBe(false);

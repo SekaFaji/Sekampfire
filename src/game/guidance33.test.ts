@@ -59,25 +59,19 @@ describe("Patch #33 Grooty firefly wayfinding",()=>{
    state.guideStoredTen=true;state.stored=5;
    expect(guideTarget(state,meta())?.x).toBe(EXPANSION_MARKER_X);
  });
- it("shows building-tab and upgrade-row fireflies inside actual Build menu",()=>{
+ it("guides to actual Log Storage and its physical Upgrade popup button",()=>{
    const state=g(),m=meta();
    state.guideLevel=1;state.builtPile=true;state.guideStoredTen=true;
    state.fenceLeft=true;state.fenceRight=true;state.campExpansion=1;
    state.player.wood=15;state.stored=15;
    let target=guideTarget(state,m);
-   expect(target).toMatchObject({space:"screen",x:300,y:29});
-   state.menu="build";state.buildTab=0;
-   state.zones=[];
-   drawMenu(canvas().ctx,state,m);
-   target=guideTarget(state,m);
-   expect(target).toMatchObject({space:"menu",menu:"build",tab:1,row:2});
-   const tab=guideMenuPosition(state,target!);
-   expect(tab?.x).toBe(state.menuRect.x+198);
-   state.buildTab=1;
+   expect(target).toMatchObject({space:"world",x:PILE_X});
+   state.player.x=PILE_X;state.menu="station";state.stationId="pile";
    state.zones=[];drawMenu(canvas().ctx,state,m);
    target=guideTarget(state,m);
+   expect(target).toMatchObject({space:"menu",menu:"station",row:1});
    const row=guideMenuPosition(state,target!);
-   expect(row?.y).toBe(state.menuRect.y+34+30-5);
+   expect(row).toEqual({x:207,y:113});
    const fx=canvas(),zones=state.zones.length;
    drawScreenFireflies(fx.ctx,state,target);
    expect(fx.shapes.length).toBeGreaterThan(8);

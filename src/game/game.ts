@@ -244,7 +244,7 @@ function startRunEngine(g: any, meta: any) {
   if (meta.up.flint) { g.fireLit = true; g.everLit = true; g.fuel = 40; g.firestarter = 0; g.player.wood = 2; }
   else { g.firestarter = 1; }
   g.thermometerTemp = localTemperature(g);
-  toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a tree. Then light the fire pit.");
+  toast(g, meta.up.flint ? "The old flint sparks to life. Don't let it die." : "The evenings are cold. Chop a pine tree. Then light the fire pit.");
   toast(g, "Grooty can show you how to claim your camp with two log posts.");
 }
 
@@ -563,11 +563,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
         if (p.wood > 0) {
           const move = Math.min(p.wood, pcap - g.stored);
           if (move <= 0) cb.toast("The wood pile is full.");
-          else { g.stored += move; p.wood -= move; cb.toast(`Stored ${move} wood on the pile.`); }
+          else { g.stored += move; p.wood -= move; cb.toast(`Stored ${move} pine logs on the pile.`); }
         } else if (g.stored > 0) {
           const take = Math.min(g.stored, cap - p.wood);
           if (take <= 0) cb.toast("You cannot carry any more.");
-          else { p.wood += take; g.stored -= take; cb.toast(`Took ${take} wood from the pile.`); }
+          else { p.wood += take; g.stored -= take; cb.toast(`Took ${take} pine logs from storage.`); }
         } else cb.toast("The pile is empty.");
       } else if (tree) {
         p.chopTree = tree;
@@ -637,7 +637,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         g.chips.push({ x: ft.x + (Math.random() * 30 - 15), y: ft.y - 4, vx: Math.random() * 60 - 30, vy: -(Math.random() * 40 + 10), life: 0.5 });
       }
       g.shake = Math.max(g.shake, 0.15);
-      cb.toast(`Tree felled. ${w} wood on the ground.`);
+      cb.toast(`Pine tree felled. ${w} pine logs dropped.`);
       g.falling.splice(i, 1);
     }
   }

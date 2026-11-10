@@ -39,8 +39,8 @@ export const GUIDE_LEVELS: Level[] = [
   ] },
 ];
 
-/** The completed levels are run-local. Building legacy upgrades can eventually
- * satisfy objectives from the restored structure state, without persisting levels. */
+/** The tutorial missions are run-local. Building legacy upgrades can eventually
+ * satisfy objectives from restored structures without changing save keys. */
 export function guideProgress(g: any) {
   const index = Math.max(0, Math.min(GUIDE_LEVELS.length, Math.floor(g.guideLevel || 0)));
   if (index === GUIDE_LEVELS.length) return { index, level: null, done: 0, total: 0, next: null };
@@ -59,8 +59,8 @@ export function advanceGuide(g: any, notify: (message: string) => void) {
     climbed++;
   }
   if (climbed) {
-    if (g.guideLevel === GUIDE_LEVELS.length) notify("GROOTY: ALL LESSONS DONE! PREPARE FOR THE LONG NIGHT.");
-    else notify("GROOTY: WELL DONE! LEVEL " + (g.guideLevel + 1) + " - " + GUIDE_LEVELS[g.guideLevel].title);
+    if (g.guideLevel === GUIDE_LEVELS.length) notify("GROOTY: ALL MISSIONS COMPLETE! PREPARE FOR THE LONG NIGHT.");
+    else notify("GROOTY: WELL DONE! MISSION " + (g.guideLevel + 1) + " - " + GUIDE_LEVELS[g.guideLevel].title);
   }
 }
 
@@ -116,11 +116,11 @@ export function drawGuideDialog(ctx: any, g: any, close: () => void) {
   drawTextC(ctx,"X",278,18,"#ffdfb0");
   g.zones.push({x:268,y:13,w:21,h:16,onDown:close});
   if (!p.level) {
-    drawTextC(ctx,"ALL FIVE LESSONS COMPLETE!",160,63,"#ffdf9d");
+    drawTextC(ctx,"ALL FIVE MISSIONS COMPLETE!",160,63,"#ffdf9d");
     drawTextC(ctx,"YOU KNOW HOW TO BUILD AND SURVIVE.",160,81,"#cad7db");
     drawTextC(ctx,"NOW PREPARE FOR THE LONG NIGHT.",160,99,"#b6d2e1");
   } else {
-    drawText(ctx,"LEVEL " + (p.index+1) + " - " + p.level.title,32,39,"#ffdf9d");
+    drawText(ctx,"MISSION " + (p.index+1) + " - " + p.level.title,32,39,"#ffdf9d");
     drawText(ctx,p.level.greeting,32,51,"#a7ceb3");
     p.level.goals.forEach((goal,i)=>{
       drawText(ctx,(goal.met(g)?"[X] ":"[ ] ")+goal.label,32,65+i*9,
@@ -131,6 +131,6 @@ export function drawGuideDialog(ctx: any, g: any, close: () => void) {
       drawText(ctx,"GROOTY SAYS:",34,137,"#f4d295");
       drawText(ctx,p.next.hint,34,147,"#c6dbe3");
     }
-    drawText(ctx,p.done+" / "+p.total+" GOALS COMPLETE",32,122,"#bbc9d3");
+    drawText(ctx,p.done+" / "+p.total+" TASKS COMPLETE",32,122,"#bbc9d3");
   }
 }

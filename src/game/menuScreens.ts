@@ -3,7 +3,7 @@ import { drawTutorialArt, TUTORIAL_PAGES } from "./tutorial";
 import { drawBingsuShopProfile } from "./bingsu";
 
 function frame(ctx: any, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = "rgba(8,12,26,0.94)";
+  ctx.fillStyle = "rgba(8,12,26,0.75)";
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = "#bb945d";
   ctx.fillRect(x, y, w, 1);
@@ -13,7 +13,7 @@ function frame(ctx: any, x: number, y: number, w: number, h: number) {
 }
 function action(ctx: any, g: any, x: number, y: number, w: number, label: string,
                 click: () => void, enabled = true, selected = false) {
-  ctx.fillStyle = enabled ? (selected ? "#76502b" : "#273a4c") : "#212b38";
+  ctx.fillStyle = enabled ? (selected ? "rgba(118,80,43,0.79)" : "rgba(39,58,76,0.61)") : "rgba(33,43,56,0.53)";
   ctx.fillRect(x, y, w, 16);
   ctx.fillStyle = enabled ? "#bb945d" : "#4c5a69";
   ctx.fillRect(x, y, w, 1);

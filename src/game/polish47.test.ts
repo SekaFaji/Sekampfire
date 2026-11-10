@@ -181,16 +181,17 @@ describe("Patch #47: physical, seven-dawn fence torches",()=>{
     expect(g.fenceTorches.left).toBe(0);
     expect(messages.some(s=>s.includes("LEFT FENCE TORCH BURNED OUT"))).toBe(true);
   });
-  it("moves the eastern torch with the expanded fence, keeping the actual boundary",()=>{
+  it("keeps the original east corner torch when a new outer fence post is built",()=>{
     const g=run();g.player.x=EAST_POST_X;g.player.wood=2;
     buildFenceTorch(g,"right");
     expect(torchPostX(g,"right")).toBe(EAST_POST_X);
     g.campExpansion=1;
-    expect(torchPostX(g,"right")).toBeGreaterThan(EXPANSION_MARKER_X);
-    expect(fenceTorchLights(g)).toEqual([{x:torchPostX(g,"right"),y:112,side:"right"}]);
-    expect(nearestFenceTorchPost(g)).toBeNull();
-    g.player.x=torchPostX(g,"right");
-    expect(nearestFenceTorchPost(g)).toBe("right");
+    expect(torchPostX(g,"right")).toBe(EAST_POST_X); // old corner is permanent
+    expect(torchPostX(g,"outer")).toBeGreaterThan(EXPANSION_MARKER_X);
+    expect(fenceTorchLights(g)).toEqual([{x:EAST_POST_X,y:112,side:"right"}]);
+    g.player.x=torchPostX(g,"outer");
+    expect(nearestFenceTorchPost(g)).toBe("outer");
+    expect(activeFenceTorch(g,"outer")).toBe(false);
   });
   it("draws smaller pale torch flames only when active and keeps the v1 save safe",()=>{
     const g=run(),p=canvas();g.player.x=WEST_POST_X;g.player.wood=2;
@@ -201,11 +202,12 @@ describe("Patch #47: physical, seven-dawn fence torches",()=>{
     expect(p.rects.some(r=>r.color==="#87afb0")).toBe(true);
     const snap=captureRunSnapshot(g);
     expect(snap.version).toBe(1);
-    expect(snap.state.fenceTorches).toEqual({left:7,right:0});
-    expect(normalizeFenceTorches({left:999,right:-42})).toEqual({left:7,right:0});
+    expect(snap.state.fenceTorches).toEqual({left:7,right:0,outer:0});
+    expect(normalizeFenceTorches({left:999,right:-42})).toEqual({left:7,right:0,outer:0});
     const restored=createEngine();restored.resumeData=snap.state;
     titleActions(restored,meta())[0].act();
     expect(restored.fenceTorches.left).toBe(7);
     expect(restored.fenceTorches.right).toBe(0);
+    expect(restored.fenceTorches.outer).toBe(0);
   });
 });

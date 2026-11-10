@@ -1,5 +1,14 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #46 implemented (2026-11-10)
+
+**Intentional interaction:** The user chose explicit first-press selection rather than automatic station popups. Moving near a completed station leaves the scenery clean; pressing ACT once selects that station and reveals a small pair (or Workbench trio) of round, partly translucent original pixel-art buttons. They drift a few native pixels vertically. ACT again immediately performs the primary left action. Tapping the actual circles selects the other action, with upgrades continuing to use two-press confirmation. Moving away or entering a detailed menu dismisses selection.
+
+**HUD polish:** Run Ash belongs under the top-right MENU, not in an odd separate strip below the Weight plaque. The same panel uses a stacked ASH label and value; the player still sees the unchanged actual WEIGHT in kg.
+
+**Next device verification:** Check target size and legibility of the gently moving circles on phone landscape screens, especially when the weather darkens the scene. Confirm a second ACT works with touch and that no actions fire while station controls are hidden. Persistent saves and the balance remain unchanged.
+
+
 ## Patch #45 implemented (2026-11-10)
 
 **World-first interactions:** Walking close to a built Campfire, Workbench or Log Storage automatically reveals small original pixel-art action buttons above that object. The first (left) action is also available immediately with ACT; the right arrow upgrades with the familiar two-press confirmation, and the Workbench additionally exposes Plans. The previous generic station modal is no longer part of the normal interaction route, although crafting and construction still open their real detailed lists.

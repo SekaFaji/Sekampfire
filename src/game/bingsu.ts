@@ -100,11 +100,12 @@ export function drawBingsuShopProfile(ctx:any,meta:any):void {
   ctx.fillRect(30,151,260,1);
   drawBingsuPortrait(ctx,35,80);
   drawText(ctx,"BINGSU - DOGO ARGENTINO",100,80,"#f6dfae");
-  drawText(ctx,BINGSU.personality,100,93,"#e0d5bc");
-  drawText(ctx,BINGSU.temperament,100,103,"#bfd3c7");
-  drawText(ctx,BINGSU.loyalty,100,113,"#bfd3c7");
-  drawText(ctx,BINGSU.ability,100,126,"#e3bb88");
+  drawText(ctx,BINGSU.personality,100,92,"#e0d5bc");
+  drawText(ctx,BINGSU.affection,100,101,"#bfd3c7");
+  drawText(ctx,BINGSU.temperament,100,110,"#bfd3c7");
+  drawText(ctx,BINGSU.loyalty,100,119,"#bfd3c7");
+  drawText(ctx,BINGSU.ability,100,130,"#e3bb88");
   const owned=!!meta?.up?.dog;
-  drawText(ctx,owned?"BOND: FOREVER":"A COMPANION WORTH EARNING",100,139,
+  drawText(ctx,owned?"BOND: FOREVER":"A COMPANION WORTH EARNING",100,141,
     owned?"#a5deaa":"#bec4bd");
 }

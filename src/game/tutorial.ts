@@ -18,8 +18,8 @@ export const TUTORIAL_PAGES = [
     "YOUR STARTING FLINT LIGHTS IT.",
     "ADD WOOD BEFORE FUEL RUNS OUT."
   ], art: "fire" },
-  { title: "CHOP AND COLLECT WOOD", lines: [
-    "FELL TREES AND PICK UP LOGS.",
+  { title: "CHOP AND COLLECT PINE LOGS", lines: [
+    "FELL PINE TREES AND PICK UP LOGS.",
     "YOUR STARTING PACK HOLDS FIVE.",
     "BRING WOOD BACK TO CAMP."
   ], art: "chop" },

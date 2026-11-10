@@ -34,7 +34,7 @@ describe("Patch #26 run-scoped tutorial",()=>{
       "FIRST CAMP","LOG STORAGE","TOOLS OF THE TRADE","A WARMER HOME","THE HOMESTEAD"
     ]);
     const g=running();
-    expect(guideProgress(g).next?.label).toBe("CHOP ONE TREE");
+    expect(guideProgress(g).next?.label).toBe("CHOP ONE PINE TREE");
     g.guideChops=1;
     expect(guideProgress(g).next?.label).toBe("BUILD THE LEFT FENCE POST");
     g.fenceLeft=true;

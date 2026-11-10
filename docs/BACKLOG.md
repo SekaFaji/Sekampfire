@@ -3,6 +3,10 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #40: MMO-style native backpack/equipment window, interactive 5x4 slot grid and item inspector, original icons, HUD/keyboard/Pause inventory access, canonical Pine Logs stack, legacy wood adapter, separate slot-count and weight capacities, crafted gear and version-one run migration. Android visual QA pending.
+- [ ] #41: smaller square quick slots, actual inventory assignment and crafted Torch; retain existing Ember until real item ownership is established.
+- [ ] #42: Build only from physical camp sites and Workbench, station-local ACCESS/UPGRADE popups, confirmation and updated Grooty wayfinding.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #39: four compact top HUD panels (Warmth/Fuel, smaller local °C | weather instrument, interim INV wood carry / Run Ash, Day/Season/Menu). One thermometer smoothly follows nearby fire heat without changing existing Cold survival mechanics. Android layout QA pending.
 - [ ] Next #40: actual MMO-style inventory slots/stacking, Pine Logs/Pine Trees, equipment categories, inventory UI opened from HUD; replace temporary wood-based INV capacity readout with actual slots.
 - [ ] Next #41: shrink two quick slots to square pixel-art equipment sockets and assign real usable inventory items.

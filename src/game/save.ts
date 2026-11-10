@@ -2,6 +2,7 @@ import { META_KEY, LEGACY_KEYS, UPGRADES } from "./config";
 import { stationIds } from "./campProgress";
 import { clamp } from "./math";
 import { cleanLogCollection } from "./museum";
+import { snapshotInventory } from "./inventory";
 
 function saveMeta(m: any) { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) { } }
 function safeCount(v: any): number {
@@ -67,6 +68,7 @@ function captureRunSnapshot(g: any): any {
     t:t.t,dir:t.dir
   }));
   state.crafts = { ...g.crafts };
+  state.inventory = snapshotInventory(g); // canonical item stacks, optional in legacy v1 saves
   // Optional run-local quick slot assignments. Never trust arbitrary IDs,
   // future item ownership or raw objects from saved checkpoints.
   state.quickSlots = [0,1].map(i=>g.quickSlots?.[i]==="ember"?"ember":null);

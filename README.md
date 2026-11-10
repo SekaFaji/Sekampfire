@@ -2,6 +2,15 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #40: MMO-style inventory and Pine Logs
+
+- **Inventory window:** tap the INV panel at the top of the run, press I, or use Menu > Inventory. An original pixel-art backpack window has Backpack and Equipment tabs, 5x4 selectable slot grid, crisp log/axe/boot/pack item icons, quantities, descriptions and item weight. The open inventory blocks all gameplay underneath; X/Back/I/outside tap closes it.
+- **Actual item stacks:** the starting material is Pine Logs harvested from Pine Trees. A stack of logs occupies one item slot. The backpack starts with 5 unlocked slots; the crafted Timber Pack and permanent Big Backpack each add 5 (up to 15 initially). The HUD INV display now means occupied/unlocked slots.
+- **Weight is separate:** each Pine Log weighs 1. The old 5/13/21 log carrying limits remain, alongside unchanged collecting, wood storage, stoking, building, crafting and dog carrying behavior.
+- **No parallel log counters:** legacy gameplay reads/writes player.wood through a direct accessor onto the real inventory Pine Logs stack. Equipment shows only existing legitimately crafted gear rather than inventing owned items.
+- **Compatible saves:** version-one run snapshots save validated item stacks as well as the legacy wood field; old saves load automatically. Ash economy and achievements are unchanged.
+- Future patches: smaller square quick slots with active item assignments, new resource types, and physical building ACCESS/UPGRADE popups.
+
 ## Patch #39: Four-panel HUD, local temperature and inline weather
 
 - **Four low-profile wooden HUD plaques:** Warmth/Fuel | handcrafted local thermometer (+8°C | WINDY on one line) | INV 0/5 and earned Run Ash | Day/season/Menu. The original 23px HUD band and top minimap remain unchanged; the menu button retains its touch target.

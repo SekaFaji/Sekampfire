@@ -216,6 +216,15 @@ Ambient Celsius responds to actual seasons, time of day and weather transitions.
 - **Next patches accepted:** MMO-style slot-and-stack inventory (Pine Logs and Pine Trees first), selectable item detail, eventual real material/crafting/equipment definitions, short tap to use and long press to assign a small square quick slot, and physical construction. The in-game pause menu must NOT act as a remote Build screen; instead first Workbench/Storage construction happens at physical work sites, craft plans through built Workbench, and built structures expose small local ACCESS and UPGRADE popup with clear upgrade cost/confirmation.
 - Keep each stage separately testable and preserve existing v1 run saves, old permanent items, fire Ember, Grooty fireflies and the Good Dog's wood carrying. Do not present multi-resource inventory or structure popup as already shipped in #39.
 
+### Patch #40: First real inventory (implemented 2026-11-10)
+
+- Run-scoped inventory stores a canonical Pine Logs stack. Existing player.wood access routes directly to the same item stack, preserving wood gathering, Good Dog carrying, camp construction, fire consumption and storage without redundant counters.
+- MMO-style Backpack and Equipment tabs in an original pixel-art modal, opened via HUD INV, keyboard I or Pause > Inventory. The bag displays 20 grid cells, 5 unlocked initially, +5 for crafted Timber Pack and +5 for permanent Big Backpack. Item selection shows quantity, category, description, and weight.
+- One stack of Pine Logs occupies one slot; weight still uses the original 5/13/21 log capacity. The HUD now shows real occupied/unlocked bag slots rather than log carry units.
+- Existing crafted gear appears under Equipment using real ownership data; item interaction is inspection-only for now, not remote item use or duplication.
+- Existing version-one saves migrate wood to Pine Logs automatically. The same save format persists validated inventory slots and the old wood compatibility field.
+- Still to design/build: additional resources and their world spawns, item dragging/equipping, crafted consumable Torch, small square quick slots, and building site ACCESS/UPGRADE UI (no remote building from pause).
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

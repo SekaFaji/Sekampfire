@@ -91,10 +91,11 @@ describe("Patch #41: small square toolbar and craftable Ember Torch",()=>{
   expect(g.pressT).toBe(false);
  });
  it("a crafted torch is equipable directly from the equipment inventory to either socket",()=>{
-  const g=run(),m=meta();g.crafts.torch=true;g.inventoryTab=1;g.inventoryEquipSel=0;
+  const g=run(),m=meta();g.crafts.torch=true;g.inventoryTab=1;
+  g.inventoryGearType="tools";g.inventoryGearChoice="ember_torch";
   g.menu="inventory";g.zones=[];
   const v=ctx();drawInventoryMenu(v.canvas,g,m,()=>{g.menu=null;});
-  const equip=g.zones.filter((z:any)=>z.y===132&&z.h===15);
+  const equip=g.zones.filter((z:any)=>z.y===149&&z.h===15&&z.w===57);
   expect(equip).toHaveLength(2);
   equip[0].onDown();
   expect(g.quickSlots).toEqual(["ember_torch",null]);

@@ -4,6 +4,7 @@ import { px } from "./renderUtils";
 import { stationLevel } from "./campProgress";
 import { campEstablished } from "./campBoundary";
 import { visualSeason } from "./palette";
+import { firstSettlementProgress } from "./campaign43";
 
 /** Grooty is a fixed world NPC, never a harvestable tree or an inventory item. */
 export const GROOTY_X = CX - 92;
@@ -16,7 +17,9 @@ export const GUIDE_LEVELS: Level[] = [
     { id: "right-post", label: "BUILD THE RIGHT FENCE POST", hint: "PLACE ONE LOG AT THE RIGHT CAMP MARKER.", met: g => !!g.fenceRight },
     { id: "light-fire", label: "LIGHT THE CAMPFIRE", hint: "PRESS ACT BESIDE THE FIRE PIT.", met: g => !!g.everLit },
     { id: "feed-fire", label: "FEED ONE LOG TO THE FIRE", hint: "BRING WOOD TO THE LIT FIRE AND PRESS ACT.", met: g => (g.guideStokes || 0) >= 1 },
-    { id: "survive-night", label: "SURVIVE YOUR FIRST NIGHT", hint: "STAY WARM UNTIL THE SUN RISES.", met: g => g.night >= 1 && !g.isNight },
+    { id: "scout-grove", label: "SCOUT THE PINE GROVE AT NIGHT", hint: "AT NIGHT, FOLLOW THE FIREFLIES EAST OF THE FENCE.", met: g => g.scoutVisited === true },
+    { id: "return-home", label: "RETURN TO THE CAMPFIRE", hint: "FOLLOW THE FIREFLIES HOME BEFORE DAWN.", met: g => g.scoutReturned === true },
+    { id: "survive-night", label: "SURVIVE THE NIGHT TO DAWN", hint: "KEEP WARM UNTIL DAWN. TRY AGAIN NEXT NIGHT IF NEEDED.", met: g => g.night >= 1 && !g.isNight && g.scoutReturned === true },
   ] },
   { title: "LOG STORAGE", greeting: "FIRST, MAKE A SAFE PLACE FOR OUR WOOD.", goals: [
     { id: "build-storage", label: "BUILD LOG STORAGE", hint: "CARRY 15 LOGS TO THE PILE SITE AND USE ACT.", met: g => !!g.builtPile },
@@ -60,7 +63,8 @@ export function advanceGuide(g: any, notify: (message: string) => void) {
   }
   if (climbed) {
     if (g.guideLevel === GUIDE_LEVELS.length) notify("GROOTY: ALL MISSIONS COMPLETE! PREPARE FOR THE LONG NIGHT.");
-    else notify("GROOTY: WELL DONE! MISSION " + (g.guideLevel + 1) + " - " + GUIDE_LEVELS[g.guideLevel].title);
+    else if (g.guideLevel <= 3) notify("GROOTY: MILESTONE " + g.guideLevel + "/3 COMPLETE! " + (g.guideLevel===3 ? "CAMP CHALLENGES AWAIT." : "NEXT: " + GUIDE_LEVELS[g.guideLevel].title));
+    else notify("GROOTY: WELL DONE! CAMP CHALLENGE " + (g.guideLevel - 2) + " - " + GUIDE_LEVELS[g.guideLevel].title);
   }
 }
 
@@ -120,9 +124,22 @@ export function drawGuideDialog(ctx: any, g: any, close: () => void) {
     drawTextC(ctx,"YOU KNOW HOW TO BUILD AND SURVIVE.",160,81,"#cad7db");
     drawTextC(ctx,"NOW PREPARE FOR THE LONG NIGHT.",160,99,"#b6d2e1");
   } else {
-    drawText(ctx,"MISSION " + (p.index+1) + " - " + p.level.title,32,39,"#ffdf9d");
-    drawText(ctx,p.level.greeting,32,51,"#a7ceb3");
-    p.level.goals.forEach((goal,i)=>{
+    const campaign = firstSettlementProgress(g);
+    if (campaign.milestone) {
+      drawText(ctx,"LEVEL 1 - FIRST SETTLEMENT",32,33,"#ffdf9d");
+      drawText(ctx,"MILESTONE " + campaign.milestoneNumber + "/3 - " + campaign.milestone.title,32,44,"#efc987");
+      drawText(ctx,p.level.greeting,32,55,"#a7ceb3");
+    } else {
+      drawText(ctx,"CAMP CHALLENGE " + (p.index-2) + " - " + p.level.title,32,39,"#ffdf9d");
+      drawText(ctx,p.level.greeting,32,51,"#a7ceb3");
+    }
+    // Fit up to six objective rows in the original native 320x180 modal.
+    // Keep the next undone step visible instead of allowing eight rows to
+    // collide with the completion count and Grooty hint at the bottom.
+    const pending = p.level.goals.findIndex(goal => !goal.met(g));
+    const start = p.level.goals.length > 6
+      ? Math.max(0, Math.min(p.level.goals.length-6, Math.max(0,pending)-2)) : 0;
+    p.level.goals.slice(start,start+6).forEach((goal,i)=>{
       drawText(ctx,(goal.met(g)?"[X] ":"[ ] ")+goal.label,32,65+i*9,
         goal.met(g)?"#91b99d":"#e6dac3");
     });

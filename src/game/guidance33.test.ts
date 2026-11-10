@@ -43,7 +43,10 @@ describe("Patch #33 Grooty firefly wayfinding",()=>{
    state.fenceLeft=true;
    expect(guideTarget(state,meta())?.x).toBe(EAST_POST_X);
    state.fenceRight=true;
-   expect(guideTarget(state,meta())).toMatchObject({space:"screen",goal:"light-fire"}); // inline fire button
+   expect(guideTarget(state,meta())).toMatchObject({space:"world",x:CX,goal:"light-fire"});
+   state.selectedStation="hearth";
+   expect(guideTarget(state,meta())).toMatchObject({space:"screen",goal:"light-fire"});
+   state.selectedStation=null;
    state.everLit=true;state.guideStokes=0;
    expect(guideProgress(state).next?.id).toBe("feed-fire");
    state.guideStokes=1;state.night=1;state.isNight=false;

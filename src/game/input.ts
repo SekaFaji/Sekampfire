@@ -14,7 +14,7 @@ export function createInputHandlers(controllers: {
   startRun: (...args: any[]) => any;
   goEndless: (...args: any[]) => any;
   returnToMainMenu: (...args: any[]) => any;
-  bankLevelOne: (...args: any[]) => any;
+  bankLevelOne?: (...args: any[]) => any;
 }) {
   const { audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu, bankLevelOne } = controllers;
 // ============ input ============
@@ -68,7 +68,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     else if (g.menu === "help") { if ((g.helpPage || 0) >= 6) closeMenu(g); else g.helpPage = (g.helpPage || 0) + 1; }
     else if (g.menu === "privacy" || g.menu === "credits") closeMenu(g);
     else if (g.ui === "title") activateTitleItem(g, meta, g.titleSel);
-    else if (g.ui === "levelComplete") bankLevelOne(g,meta);
+    else if (g.ui === "levelComplete") bankLevelOne?.(g,meta);
     else if (g.ui === "levelBanked") returnToMainMenu(g);
     else if (g.ui === "dead") startRun(g, meta);
     else if (g.ui === "win") goEndless(g);

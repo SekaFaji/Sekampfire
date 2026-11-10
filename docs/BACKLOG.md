@@ -1,5 +1,15 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #43 - First Settlement milestone foundation
+- [x] Introduce three named Level 1 milestones in Grooty's dialogue while retaining old run-local five-group tutorial completion and all legacy save keys.
+- [x] Require a physical ACT conversation with Grooty as the first mission.
+- [x] Add a visible Pine Grove landmark beyond the east camp fence, night-only visit, physical return home, dawn completion and a retry path for missed nights. Guide fireflies navigate out and back.
+- [x] Persist scouting and conversation flags in the v1 run save; completed legacy guide groups remain completed.
+- [x] Prevent a long milestone checklist from colliding with the guide modal's hint/status area.
+- [ ] Android and actual gameplay QA: night scout survival timing, Grove marker readability, 320x180 dialogue scrolling and checkpoint resume on a device.
+- [ ] Next #44: real campaign level completion, clear banked/run Ash summary, permanent unlocks and Level 2 entry. Existing additional cabin Camp Challenges are retained during the transition and their destination needs explicit design before replacement.
+
+
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes

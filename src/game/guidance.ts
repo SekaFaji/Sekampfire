@@ -6,7 +6,7 @@ import { stationCost, stationLevel } from "./campProgress";
 import { stationCraftCost } from "./campProgress";
 import { clamp } from "./math";
 import { STATION_ACTIONS } from "./stationPopup";
-import { nearbyStation, stationBubbleCenter, type NearbyStation, type StationAction } from "./proximity45";
+import { selectedStation, stationBubbleCenter, type NearbyStation, type StationAction } from "./proximity45";
 
 export type FireflyTarget = {
   space: "world" | "screen" | "menu";
@@ -30,7 +30,7 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   const ui = (menu: "build"|"bench"|"station",tab:number,row:number):FireflyTarget =>
     ({space:"menu",x:0,y:0,menu,tab,row,goal});
   const bubble = (station:NearbyStation,action:StationAction):FireflyTarget|null => {
-    if(g.menu || nearbyStation(g)!==station)return null;
+    if(g.menu || selectedStation(g)!==station)return null;
     const center=stationBubbleCenter(g,station,action);
     return center?{space:"screen",x:center.x,y:center.y,goal}:null;
   };

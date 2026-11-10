@@ -96,17 +96,17 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     tabs[1].onDown();expect(g.shopTab).toBe(1);
     tabs[2].onDown();expect(g.shopTab).toBe(2);
   });
-  it("separates Build structures/upgrades and Craft tools/supplies", () => {
+  it("keeps Workbench building plans separate from local station upgrades and crafting tabs", () => {
     const g=createEngine(),m=meta();
     g.builtBench=true;g.builtPile=true;g.menu="build";
     g.buildTab=0;
     expect(buildRows(g,m)).toHaveLength(2);
     expect(buildRows(g,m)[1].label).toBe("BUILD LOG MUSEUM");
     g.buildTab=1;
-    expect(buildRows(g,m)).toHaveLength(3);
+    expect(buildRows(g,m)).toHaveLength(2); // no remote upgrade tab
     g.menu="bench";g.craftTab=0;
     expect(benchRows(g,m)).toHaveLength(3);
     g.craftTab=1;
-    expect(benchRows(g,m)).toHaveLength(5); // new Ember Torch under Supplies
+    expect(benchRows(g,m)).toHaveLength(4); // Torch is present; upgrades are physical
   });
 });

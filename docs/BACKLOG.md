@@ -1,5 +1,23 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #51 - illustrated Ash cards and Bingsu female Dogo portrait
+- [x] Replace plain Shop rows with a native 3-by-2 illustrated six-card Upgrades grid. Original pixel icons for all six current permanent upgrades.
+- [x] Give Bingsu a separate personal Pets card with her real portrait and accurate 40-Ash ownership.
+- [x] Keep three Shop tabs (Upgrades, Pets, Coming Soon) and close button without overlap.
+- [x] Selecting an upgrade never spends Ash. Show a separate bottom details panel, current level, next level, actual benefits and visible BUY action.
+- [x] Spend only banked Ash, with live-price/ownership/cost revalidation. Keep original upgrade costs, persistent purchase keys and progression benefits. Unaffordable/maxed cards can still be viewed, not purchased.
+- [x] Update text to use she/her for Bingsu; remove her red collar from both the in-world sprite and Shop portrait. Better Dogo Argentino broad white head, heavy chest and short folded ears, without enlarging her world scale.
+- [x] Retain Bingsu equipment controls solely in Inventory and keep two-log cargo/motion behavior unchanged.
+- [x] Add native touch/keyboard/card visual/buy/cost and female pet art regression tests.
+- [ ] Review precise pixel scale, icon clarity, portrait likeness, transparency, and BUY tap comfort on Android landscape.
+- [ ] Review all six cards at low Ash balances and multi-level Warm Blood upgrades on a real phone.
+
+## Upcoming approved Patch #52 - Wood types and fuel
+- [ ] Introduce real wood species data (start with Pine Logs) and randomized 5-20 fuel addition when each log burns, keeping existing item-stack compatibility.
+- [ ] Preserve weather/fuel-drain rules, normal material costs and Museum collectible ownership. Review earliest night balance and clarify optional kindling boost.
+- [ ] Add deterministic tests for species rolls, edge values and save consistency without changing old currency or wood inventory unexpectedly.
+
+
 ## Patch #50 - Inventory and Equipment
 - [x] Keep the native 20-slot backpack on the left with no changes to carried logs or weight capacity.
 - [x] Always display real AXE and PET equipment sockets on the right, with icons, equipped status, owned choices and a dedicated EQUIP/UNEQUIP action.

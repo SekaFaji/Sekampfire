@@ -160,20 +160,20 @@ describe("Patch #41: Bingsu the Dogo Argentino",()=>{
  it("shows original detailed pet portrait, name, and truthful two-log ability",()=>{
   const v=ctx(),m:any=meta();m.up.dog=1;
   drawBingsuShopProfile(v.canvas,m);
-  expect(v.rects.some(r=>r.color==="#f3f2ec")).toBe(true);
-  expect(v.rects.some(r=>r.color==="#a95745")).toBe(true);
+  expect(v.rects.some(r=>r.color==="#fafaf4")).toBe(true);
+  expect(v.rects.some(r=>r.color==="#a95745")).toBe(false); // she wears no collar
   expect(v.rects.every(r=>r.x>=30&&r.x+r.w<=290&&r.y>=73&&r.y+r.h<=152)).toBe(true);
   expect(BINGSU.ability).toContain("2 PINE LOGS");
   const shop=ctx(),g=run();g.shopTab=1;
   drawShopTabs(shop.canvas,g,m,shopRows(g,m),()=>{g.menu=null;});
-  expect(shop.rects.some(r=>r.color==="#f3f2ec")).toBe(true);
+  expect(shop.rects.some(r=>r.color==="#fafaf4")).toBe(true);
  });
- it("draws a compact white Dogo with mirrored head, collar and two real carried logs",()=>{
+ it("draws a compact collar-free white Dogo with mirrored head and two real carried logs",()=>{
   const g=run();g.dog={x:800,y:g.player.y,wood:2,dir:1,phase:"walk",motion:70,gait:0.8};
   const v=ctx();drawDog(v.canvas,g);
   expect(v.rects.some(r=>r.color==="#e9ede8")).toBe(true);
   expect(v.rects.some(r=>r.color==="#faf9ef")).toBe(true);
-  expect(v.rects.some(r=>r.color==="#b2644e")).toBe(true);
+  expect(v.rects.some(r=>r.color==="#b2644e")).toBe(false); // remove red collar from world sprite
   expect(v.rects.filter(r=>r.color==="#553824")).toHaveLength(2);
   const x0=Math.min(...v.rects.map(r=>r.x)),x1=Math.max(...v.rects.map(r=>r.x+r.w));
   const y0=Math.min(...v.rects.map(r=>r.y)),y1=Math.max(...v.rects.map(r=>r.y+r.h));

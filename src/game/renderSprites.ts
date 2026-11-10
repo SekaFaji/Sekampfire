@@ -288,7 +288,7 @@ function drawPlayer(ctx: any, g: any) {
   }
 }
 
-/** Compact Bingsu world art. His shop portrait remains intentionally large,
+/** Compact Bingsu world art. Her shop portrait remains intentionally large,
  * but the in-world dog is scaled to a believable size beside the player.
  * The gait is driven by actual companion travel, not global frame toggles. */
 function drawDog(ctx:any,g:any):void {

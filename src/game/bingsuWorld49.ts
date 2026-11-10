@@ -1,6 +1,6 @@
 /** Original low-resolution world sprite for Bingsu, the white Dogo Argentino.
  * One world pixel = one pixel rectangle. Mirroring the SAME artwork guarantees
- * legs, collar and muzzle face the direction of travel, without duplicating
+ * legs, ears and muzzle face the direction of travel, without duplicating
  * inconsistent left/right drawings or stretching a bitmap.
  *
  * World silhouette: about 23 x 15 pixels including the animated tail/logs;
@@ -27,7 +27,7 @@ export function drawBingsuWorldSprite(ctx:any,d:any,animT=0):void {
     :(Math.sin(time*2.0)>0.92?-1:0);
   const tail= Math.sin(time*(walk?9:3.5))>0.35?-1:0;
   const coat="#e9ede8",light="#faf9ef",shade="#b4c2c2";
-  const ink="#53595a",paw="#8d9a99",collar="#b2644e";
+  const ink="#53595a",paw="#8d9a99";
 
   const px=(dx:number,dy:number,w:number,h:number,color:string)=>{
     if(w<=0 || h<=0)return;
@@ -36,7 +36,7 @@ export function drawBingsuWorldSprite(ctx:any,d:any,animT=0):void {
     ctx.fillStyle=color;
     ctx.fillRect(x+left,y+dy,w,h);
   };
-  // Quiet ground shadow remains attached to his planted paws.
+  // Quiet ground shadow remains attached to her planted paws.
   px(-8,-1,18,1,"rgba(19,24,33,0.25)");
 
   // Far legs are shaded behind the torso, planted without sliding on idle.
@@ -64,11 +64,11 @@ export function drawBingsuWorldSprite(ctx:any,d:any,animT=0):void {
   px(-7,-1-rightLift,3,1,shade);
   px(4,-1-leftLift,3,1,shade);
 
-  // The copper collar is narrow and anchored at the forward chest.
-  px(4,-10+bodyLift,1,5,collar);
-  px(4,-6+bodyLift,1,2,"#e3b76b");
+  // Her powerful neck is entirely white. No collar, tag, or harness.
+  px(4,-10+bodyLift,2,5,coat);
+  px(4,-10+bodyLift,1,3,light);
 
-  // Broad square head and distinct Dogo cheek at a much smaller scale.
+  // A square Dogo Argentino jaw, white muscular cheek and short muzzle.
   px(5,-12+bodyLift,5,7,shade);
   px(5,-12+bodyLift,5,5,coat);
   px(6,-12+bodyLift,3,2,light);
@@ -83,7 +83,7 @@ export function drawBingsuWorldSprite(ctx:any,d:any,animT=0):void {
   px(10,-7+bodyLift,2,1,light);
   px(11,-7+bodyLift,1,2,"#333a3b");
 
-  // Genuine one/two Pine Logs ride on his BACK instead of enlarging the dog.
+  // Genuine one/two Pine Logs ride on her BACK instead of enlarging her.
   const cargo=Math.max(0,Math.min(2,Math.floor(Number(d.wood)||0)));
   for(let i=0;i<cargo;i++){
     px(-5+i*4,-13+bodyLift,4,2,"#553824");

@@ -1337,40 +1337,71 @@ function benchRows(g: any, meta: any) {
   return g.craftTab === 1 ? recipes.slice(3) : recipes.slice(0,3);
 }
 
-function shopRows(g: any, meta: any) {
-  if (g.shopTab === 2) return [];
-  return UPGRADES.filter((u: any) => g.shopTab === 1 ? u.id === "dog" : u.id !== "dog").map((u: any) => {
-    const lvl = meta.up[u.id] || 0;
-    const maxed = lvl >= u.max;
-    const cost = maxed ? 0 : u.costs[lvl];
-    const confirm = g.upConfirm === u.id;
-    const pet = u.id === "dog";
-    const enabled = (pet && maxed) || (!maxed && meta.ash >= cost);
-    return {
-      label: u.name.toUpperCase() + (u.max > 1 ? " " + lvl + "/" + u.max : ""),
-      right: maxed ? "OWNED" : confirm ? "BUY?" : cost + " ASH",
-      desc: pet && maxed ? "OWNED. EQUIP OR UNEQUIP IN INVENTORY."
-        : maxed ? u.desc : confirm ? "PRESS AGAIN TO CONFIRM" : u.desc,
-      h: 15,
-      enabled,
-      onDown: () => {
-        if (maxed) {
-          if (pet) toast(g,"BINGSU IS OWNED. EQUIP OR UNEQUIP HIM IN INVENTORY.");
-          else toast(g, u.name.toUpperCase() + " is already yours.");
-          return;
-        }
-        if (meta.ash < cost) { toast(g, "Not enough ash."); return; }
-        if (g.upConfirm !== u.id) { g.upConfirm = u.id; return; }
-        g.upConfirm = null;
-        meta.ash -= cost;
-        meta.up[u.id] = lvl + 1;
-        if(u.id==="axe") {meta.axeEquipped="grandpas_axe";g.equippedAxe="grandpas_axe";}
-        if (pet) meta.petEquipped = "dog";
-        saveMeta(meta);
-        toast(g, u.name.toUpperCase() + " unlocked.");
-      },
-    };
-  });
+/** Single authoritative Ash purchase. Unlike the old row's two-tap
+ * confirmation, the new visible BUY button is a distinct intentional tap.
+ * Recompute live balance and level so stale rendered rows cannot double buy,
+ * skip prices, or bypass the genuine ownership cap. */
+function purchaseShopUpgrade51(g:any,meta:any,id:string):boolean {
+  const u=UPGRADES.find((entry:any)=>entry.id===id);
+  if(!u || !meta?.up)return false;
+  const level=Math.max(0,Math.floor(Number(meta.up[id])||0));
+  if(level>=u.max){
+    toast(g,id==="dog"?"BINGSU IS OWNED. EQUIP HER FROM INVENTORY."
+      :u.name.toUpperCase()+" IS ALREADY MAX LEVEL.");
+    return false;
+  }
+  const price=u.costs[level];
+  if(!Number.isFinite(price)||price<0)return false;
+  const banked=Number(meta.ash)||0;
+  if(!Number.isFinite(banked)||banked<price){
+    toast(g,"NOT ENOUGH BANKED ASH.");
+    return false;
+  }
+  meta.ash=banked-price;
+  meta.up[id]=level+1;
+  if(id==="axe"){
+    meta.axeEquipped="grandpas_axe";
+    g.equippedAxe="grandpas_axe";
+  }
+  if(id==="dog")meta.petEquipped="dog";
+  g.upConfirm=null;
+  saveMeta(meta);
+  toast(g,u.name.toUpperCase()+" UNLOCKED.");
+  return true;
+}
+function shopRows(g:any,meta:any) {
+  if(g.shopTab===2)return [];
+  return UPGRADES.filter((u:any)=>g.shopTab===1?u.id==="dog":u.id!=="dog")
+    .map((u:any)=>{
+      const lvl=Math.max(0,Math.floor(Number(meta?.up?.[u.id])||0));
+      const maxed=lvl>=u.max;
+      const cost=maxed?0:u.costs[lvl];
+      const canBuy=!maxed && Number(meta?.ash)>=cost;
+      const confirm=g.upConfirm===u.id;
+      return {
+        id:u.id,level:lvl,max:u.max,maxed,cost,canBuy,
+        label:u.name.toUpperCase()+(u.max>1?" "+lvl+"/"+u.max:""),
+        right:maxed?"OWNED":confirm?"BUY?":cost+" ASH",
+        desc:u.id==="dog" && maxed?"OWNED. EQUIP OR UNEQUIP IN INVENTORY."
+          :maxed?u.desc:confirm?"PRESS AGAIN TO CONFIRM":u.desc,
+        h:15,enabled:(u.id==="dog"&&maxed)||canBuy,
+        // New card UI uses ONLY buy(), never this old action. Preserve
+        // historical tests and external callers who intentionally confirm
+        // twice on the legacy row, while both paths buy from one shared
+        // transactional function.
+        onDown:()=>{
+          if(maxed){
+            if(u.id==="dog")toast(g,"BINGSU IS OWNED. EQUIP HER IN INVENTORY.");
+            else toast(g,u.name.toUpperCase()+" IS ALREADY YOURS.");
+            return;
+          }
+          if(!canBuy){toast(g,"NOT ENOUGH BANKED ASH.");return;}
+          if(g.upConfirm!==u.id){g.upConfirm=u.id;return;}
+          purchaseShopUpgrade51(g,meta,u.id);
+        },
+        buy:()=>purchaseShopUpgrade51(g,meta,u.id),
+      };
+    });
 }
 
 function menuRows(g: any, meta: any): any[] {
@@ -1389,6 +1420,7 @@ function moveSel(g: any, meta: any, dir: number) {
   const rows = menuRows(g, meta);
   if (!rows.length) return;
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
+  if (g.menu === "shop") g.upConfirm = null;
   if (g.menu === "bench") g.craftConfirm = null;
   if (g.menu === "pause") g.endRunConfirm = false;
   if (g.menu === "build" || g.menu === "bench" || g.menu === "station") g.buildConfirm = null;
@@ -1398,7 +1430,8 @@ function activateSel(g: any, meta: any) {
   const rows = menuRows(g, meta);
   if (!rows.length) return;
   g.menuSel = clamp(g.menuSel, 0, rows.length - 1);
-  rows[g.menuSel].onDown();
+  if(g.menu==="shop")rows[g.menuSel].buy?.();
+  else rows[g.menuSel].onDown();
 }
 
 function doBuildAction(g: any, meta: any) {

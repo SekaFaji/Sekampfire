@@ -1,5 +1,16 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #51 implemented (2026-11-10)
+
+**Permanent Ash Shop should feel like collectibles, not Settings.** Six upgrade cards now occupy two rows with original miniature pixel art, clear selection outlines, owned level and next Ash price. The separate bottom details inspector tells the player what the selected upgrade actually does, while its clearly differentiated BUY button is the ONLY purchase control on the new UI. Buying uses a live re-check of banked Ash, cap and genuine config price; selecting or browsing never spends. The Pet tab remains a larger portrait card for Bingsu and the third tab is explicitly inert.
+
+**Bingsu is SHE and collar-free.** Her breed is Dogo Argentino: mostly solid white short coat, square strong jaw and muzzle, muscular neck/chest, short folded ears and dark nose. The new Pets portrait uses those characteristics without any red collar or tag. The actual in-world sprite has no colored collar either, retaining the small post-#49 proportions and her real two-Pine-Log carrying mechanics. Text says she/her, not he/him.
+
+**Keep old economics.** Banked Ash only, unchanged seven price definitions, unchanged permanent meta and pet equip state. The new view splits card selection from buying, avoids a separate accidental confirm click, but retains compatibility with older unit tests and code still calling the legacy two-confirm `shopRows.onDown`. Keyboard selection and Enter/Space perform the same live-priced purchase action as the separate BUY button, with disabled items inert.
+
+**Next Patch #52:** Data-driven Pine fuel with a random 5-20 per-log burn value rolled at time of use (not stored per-log), species extensibility and play-tested first-night balancing.
+
+
 ## Patch #50 implemented - Equipment is explicit (2026-11-10)
 
 **Unified backpack and two equipment sockets:** Replace the old Backpack-vs-Equipment tabs with a left 5-by-4 item grid and always-visible right Axe/Pet sockets. Select an owned item and press the distinct Equip/Unequip button. Other genuinely crafted items remain in the Equipment pane's TOOLS mode, especially the existing Ember Torch to Quick Slot 1/2 controls. Future inventory expansions can add more typed equipment sockets using the same ownership and equip validation instead of creating fake inventory item stacks.

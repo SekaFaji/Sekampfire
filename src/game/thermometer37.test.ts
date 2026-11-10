@@ -121,20 +121,21 @@ describe("Patch #37: living outside thermometer",()=>{
     expect(high!.w).toBeGreaterThan(low!.w);
   });
 
-  it("replaces the crowded third Cold bar, wood and Ash text without removing their underlying gameplay",()=>{
+  it("keeps personal Cold invisible but displays real carried wood and Run Ash in the third panel",()=>{
     const g=world(),m=meta();
     g.player.warmth=74;g.fuel=49;g.fireLit=true;
     g.thermometerTemp=11;g.ashEarned=6;g.player.wood=5;g.cold=80;
     const a=pixels();drawCampHUD(a.ctx,g,m);
     g.player.wood=0;g.ashEarned=99;g.cold=12;
     const b=pixels();drawCampHUD(b.ctx,g,m);
-    expect(a.marks).toEqual(b.marks); // no wood / Ash / Cold readings in HUD
-    expect(a.marks.some(r=>r.x===114&&r.y===17&&r.w===105&&r.h===23)).toBe(true);
+    expect(a.marks).not.toEqual(b.marks); // inventory and Ash now have their own plaque
+    expect(a.marks.some(r=>r.x===108&&r.y===17&&r.w===85&&r.h===23)).toBe(true);
+    expect(a.marks.some(r=>r.x===195&&r.y===17&&r.w===38&&r.h===23)).toBe(true);
     const left=a.marks.filter(r=>r.x>=3&&r.x+r.w<=112&&r.y>=17&&r.y<40);
     expect(left.some(r=>r.y===22&&r.color==="#bc554a")).toBe(true);
     expect(left.some(r=>r.y===33&&r.color==="#c77732")).toBe(true);
     expect(left.some(r=>r.color==="#9ccfe3")).toBe(false);
-    expect(g.cold).toBe(12); // still runs independently from outside temp
+    expect(g.cold).toBe(12); // still runs independently from player-local air temperature
     expect(pauseRows(g,m).some((r:any)=>r.label==="END RUN"&&r.right==="+99 ASH")).toBe(true);
   });
 });

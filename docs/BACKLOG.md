@@ -3,6 +3,11 @@
 This is a tracked product backlog; **not completed merely because it is documented**. Keep source-verified implementation and phone-tested behaviour separate. Prioritize these after Clean Foundation is confirmed stable.
 
 ## Priority 0 - user-approved unfinished features / fixes
+- [x] Patch #39: four compact top HUD panels (Warmth/Fuel, smaller local °C | weather instrument, interim INV wood carry / Run Ash, Day/Season/Menu). One thermometer smoothly follows nearby fire heat without changing existing Cold survival mechanics. Android layout QA pending.
+- [ ] Next #40: actual MMO-style inventory slots/stacking, Pine Logs/Pine Trees, equipment categories, inventory UI opened from HUD; replace temporary wood-based INV capacity readout with actual slots.
+- [ ] Next #41: shrink two quick slots to square pixel-art equipment sockets and assign real usable inventory items.
+- [ ] Next #42: remove BUILD from Pause, construct only at world sites / crafting station, implement physical ACCESS/UPGRADE popups with confirmation, and retarget Grooty guidance.
+## Priority 0 - user-approved unfinished features / fixes
 - [x] Patch #38: wider, polished thermometer; state-driven settlement minimap with fences, expansion, actual building sites and completed stations; two run-saved configurable quick slots replacing BUILD/TORCH, long-press assignment for existing Fire Ember, Build via pause menu, re-targeted Grooty guidance. Device visual QA pending.
 - [ ] Next: real multi-resource inventory, Pine Logs/Pine Trees, collectible/craftable Ember Torch item and additional assignable active tools. Only existing Fire Ember action is assignable in #38.
 ## Priority 0 - user-approved unfinished features / fixes

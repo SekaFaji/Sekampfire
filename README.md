@@ -2,6 +2,14 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #39: Four-panel HUD, local temperature and inline weather
+
+- **Four low-profile wooden HUD plaques:** Warmth/Fuel | handcrafted local thermometer (+8°C | WINDY on one line) | INV 0/5 and earned Run Ash | Day/season/Menu. The original 23px HUD band and top minimap remain unchanged; the menu button retains its touch target.
+- **Temperature + weather together:** weather labels now appear inline with the Celsius reading, never below it or beside DAY. The detailed brass-and-glass thermometer is redrawn to fit the smaller center panel while preserving its animated liquid, engraved ticks and subtle glints.
+- **One local-air thermometer:** outside season/time/weather still determine world air, but standing near a lit fire now raises the air temperature around the character. Heat falls with real world distance and fuel; readings settle smoothly. This does not change the existing Warmth, Cold exposure or weather-balancing rules.
+- **Compact inventory/Ash panel:** INV temporarily reports **actual wood carried / existing carrying capacity**, not invented slot occupancy. The next inventory patch will replace the wood-only calculation with the real MMO-style inventory slots and items. ASH displays earned Run Ash without banking it; banked Ash, save format and rewards are unchanged.
+- The planned subsequent steps are proper item inventory/Pine Logs, smaller square quick slots, and physical crafting-station construction with ACCESS/UPGRADE building popups. These remain separate patches.
+
 ## Patch #38: Longer thermometer, living settlement minimap and toolbar foundation
 
 - **Thermometer polish:** extend the original brass/glass thermometer's scale, liquid tube, graduations, glint range and end cap to occupy almost all 105 pixels of the existing central panel. Air temperature, Warmth and Cold gameplay remain unchanged.

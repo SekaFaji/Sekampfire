@@ -207,6 +207,15 @@ Ambient Celsius responds to actual seasons, time of day and weather transitions.
 - **Now supported:** the legacy **Fire Ember** action, unlocked through lighting the campfire. It still draws real fire fuel and creates a timed ember light. This is an interim gameplay action, **not** a new inventory item or a promise that other tools already exist. Slot assignment persists only within the active run; no permanent inventory item ownership is invented.
 - **Next design:** introduce explicit Pine Logs stacks and tree types, crafted active tools (including an actual Torch item), durable inventory/equipment categories, more toolbar candidates, equipped gear slots and save migration. Review intended slot persistence across runs after the item ownership model is established.
 
+### Patch #39 implementation and next agreed UX direction (2026-11-10)
+
+- **Four HUD plaques within the original top-row footprint:** Warmth/Fuel, smaller handcrafted local-air thermometer, Inventory/Ash, and Day/Season/Menu.
+- **Temperature and weather share ONE line** (example `+8°C | WINDY`), not two stacked labels. Remove WINDY/RAIN from the Day panel entirely.
+- One thermometer is enough: its value is the **air around the player**. Ambient outside temperature is still computed from weather, time and season; being near a lit fire increases local air warmth based on proximity/fuel, smoothly easing back outside. Clothing reduces personal Cold exposure but does not heat air. Retain existing Warmth and Fuel bars.
+- **Temporary readout:** until the true bag exists, `INV 0/5` reflects existing real carried wood count and capacity, explicitly not fabricated inventory slots. The approved eventual meaning is **occupied inventory slots / available inventory slots**, with carrying weight shown separately inside Inventory. Run Ash is visible as `ASH X` beside this compact counter.
+- **Next patches accepted:** MMO-style slot-and-stack inventory (Pine Logs and Pine Trees first), selectable item detail, eventual real material/crafting/equipment definitions, short tap to use and long press to assign a small square quick slot, and physical construction. The in-game pause menu must NOT act as a remote Build screen; instead first Workbench/Storage construction happens at physical work sites, craft plans through built Workbench, and built structures expose small local ACCESS and UPGRADE popup with clear upgrade cost/confirmation.
+- Keep each stage separately testable and preserve existing v1 run saves, old permanent items, fire Ember, Grooty fireflies and the Good Dog's wood carrying. Do not present multi-resource inventory or structure popup as already shipped in #39.
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

@@ -26,10 +26,10 @@ function game() {
   return g;
 }
 describe("Patch #29 native-resolution real-game HUD",()=>{
-  it("uses three compact wooden panels below a separate wide minimap",()=>{
+  it("uses four compact wooden panels below the original wide minimap",()=>{
     const g=game(),v=canvas();
     drawCampHUD(v.ctx,g,meta());
-    for(const shape of [[3,17,109,23],[114,17,105,23],[221,17,97,23]]) {
+    for(const shape of [[3,17,103,23],[108,17,85,23],[195,17,38,23],[235,17,83,23]]) {
       expect(v.rects.some(r=>r.x===shape[0]&&r.y===shape[1]&&r.w===shape[2]&&r.h===shape[3])).toBe(true);
     }
     // Every primary HUD panel ends before the y=43 notification strip.

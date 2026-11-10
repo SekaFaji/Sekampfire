@@ -177,7 +177,7 @@ describe("Patch #46: selected, floating camp buttons and stacked Ash",()=>{
     const g=run(),m=meta(),v=canvas();
     g.ashEarned=1276;
     drawCampHUD(v.ctx,g,m);
-    expect(ASH_PANEL_RECT).toEqual({x:284,y:41,w:32,h:22});
+    expect(ASH_PANEL_RECT).toEqual({x:284,y:40,w:32,h:14});
     // MENU x=284..316 and y=21..37, so this has the same left/right edges.
     expect(ASH_PANEL_RECT.y).toBeGreaterThan(37);
     expect(ASH_PANEL_RECT.x+ASH_PANEL_RECT.w).toBe(316);

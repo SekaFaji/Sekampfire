@@ -139,7 +139,8 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     expect(performStationAction(g,m,"pile","primary")).toBe(true);
     expect(g.stored).toBe(5);
     expect(g.player.wood).toBe(0);
-    expect(performStationAction(g,m,"pile","primary")).toBe(true);
+    // TAKE is explicitly separate from the default ACT / left STORE.
+    expect(performStationAction(g,m,"pile","take")).toBe(true);
     expect(g.player.wood).toBe(5);
     expect(g.stored).toBe(0);
     g.builtBench=true;g.player.x=BENCH_X;

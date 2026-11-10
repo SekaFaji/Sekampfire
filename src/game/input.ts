@@ -61,6 +61,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + 1) % titleActions(g, meta).length;
   }
   if (k === "e" || k === "enter" || k === " ") {
+    if (g.menu === "inventory") return; // item selection is read-only; no hidden ACT
     if (isList) activateSel(g, meta);
     else if (g.menu === "museum" || g.menu === "guide" || g.menu === "endlessNightInfo") closeMenu(g);
     else if (g.menu === "help") { if ((g.helpPage || 0) >= 6) closeMenu(g); else g.helpPage = (g.helpPage || 0) + 1; }
@@ -80,7 +81,6 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     else {g.menu="inventory";g.inventoryTab=0;g.inventorySel=0;g.inventoryFrom="run";g.keys.act=false;}
     return;
   }
-  if (g.menu === "inventory" && (k==="enter"||k==="e"||k===" "))return;
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
   if ((k==="1"||k==="2") && g.ui==="run" && !g.menu) useQuickSlot(g,k==="1"?0:1);
   // B is a gameplay Build shortcut, never a way to accidentally dismiss

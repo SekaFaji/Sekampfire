@@ -79,7 +79,7 @@ describe("Patch #51: Ash Shop six compact pixel-art cards",()=>{
   expect(SHOP_DETAILS51.y).toBeGreaterThan(
    SHOP_CARD51.y+SHOP_CARD51.h*2+SHOP_CARD51.rowGap-1);
   expect(v.pixels.every(r=>r.x>=24&&r.y>=8&&r.x+r.w<=296&&r.y+r.h<=172)).toBe(true);
-  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(7);
+  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // 7 upgrade icons plus Bingsu
   expect(Object.values(SHOP_CARD_BENEFIT51).every(s=>s.length>10)).toBe(true);
  });
  it("tapping a card ONLY selects details and cannot spend banked or run Ash",()=>{

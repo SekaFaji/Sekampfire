@@ -222,20 +222,22 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     // Bingsu has one personal featured card with her authentic Dogo portrait.
     if(rows.length){
       const chosen=(g.menuSel||0)===0;
-      shopBox51(ctx,31,52,73,66,"rgba(26,45,52,0.64)",
+      // Portrait now has a photo-grounded full-body pose, not a frontal
+      // square dog head. Wider dedicated card still ends before details.
+      shopBox51(ctx,31,52,128,66,"rgba(26,45,52,0.64)",
         chosen?"#eac487":"#61798b");
-      drawBingsuPortrait(ctx,40,52);
-      g.zones.push({x:31,y:52,w:73,h:66,onDown:()=>{
+      drawBingsuPortrait(ctx,33,52);
+      g.zones.push({x:31,y:52,w:128,h:66,onDown:()=>{
         g.menuSel=0;g.upConfirm=null;
       }});
-      drawText(ctx,"BINGSU",112,57,"#f9e8c7");
-      drawText(ctx,"DOGO ARGENTINO",112,68,"#bed2cd");
-      drawText(ctx,BINGSU.personality,112,79,"#e6d9ba");
-      drawText(ctx,BINGSU.affection,112,88,"#e6d9ba");
-      drawText(ctx,BINGSU.temperament,112,97,"#e6d9ba");
-      drawText(ctx,"FEARLESS FOR HER PERSON.",112,106,"#e6d9ba");
-      drawText(ctx,rows[0].maxed?"OWNED - EQUIP IN INVENTORY":"UNLOCK HER WITH ASH",
-        112,114,rows[0].maxed?"#a7dcb8":"#e6c792");
+      drawText(ctx,"BINGSU",165,56,"#f9e8c7");
+      drawText(ctx,"DOGO ARGENTINO",165,66,"#bed2cd");
+      drawText(ctx,"SWEET, CALM & LOVING",165,77,"#e6d9ba");
+      drawText(ctx,"ALWAYS READY FOR HUGS",165,86,"#e6d9ba");
+      drawText(ctx,"RARELY BARKS. STUBBORN",165,95,"#e6d9ba");
+      drawText(ctx,"FEARLESSLY LOYAL",165,104,"#e6d9ba");
+      drawText(ctx,rows[0].maxed?"OWNED - EQUIP IN BAG":"UNLOCK WITH ASH",
+        165,113,rows[0].maxed?"#a7dcb8":"#e6c792");
       g.menuSel=0;
       drawShopDetails51(ctx,g,meta,rows);
     }else{

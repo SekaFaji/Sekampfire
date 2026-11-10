@@ -1,5 +1,6 @@
 import { drawText, drawTextC, textW } from "./font";
 import { drawTutorialArt, TUTORIAL_PAGES } from "./tutorial";
+import { drawBingsuShopProfile } from "./bingsu";
 
 function frame(ctx: any, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = "rgba(8,12,26,0.94)";
@@ -103,6 +104,7 @@ export function drawShopTabs(ctx: any, g: any, meta: any, rows: any[], close: ()
       g.zones.push({x:28,y,w:264,h:15,onDown:()=>{g.menuSel=index;rows[index].onDown();}});
     }
   }
+  if (tab === 1) drawBingsuShopProfile(ctx, meta);
   drawTextC(ctx, tab === 1 ? "PETS ARE PERMANENT. EQUIP ONE AT A TIME."
     : "ASH IS BANKED BY ENDING A RUN",160,158,"#acbad0");
 }

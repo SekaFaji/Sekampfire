@@ -15,9 +15,9 @@ export const BINGSU = {
   ability:"FETCHES UP TO 2 PINE LOGS.",
 } as const;
 
-/** Compact illustrated head-and-chest portrait, three-quarter view.
- * No full-body pixel polygon reconstruction. The game-world sprite is
- * intentionally a separate renderer and remains exactly unchanged. */
+/** Approved illustrated head-and-chest portrait with a slightly wider crop
+ * showing more of her neck and shoulders. Only the unlock art is reframed;
+ * her in-world companion and two-log retrieval remain unchanged. */
 export { BINGSU_PORTRAIT55 } from "./bingsuPortrait55";
 import { drawBingsuPortrait55 } from "./bingsuPortrait55";
 export function drawBingsuPortrait(ctx:any,x:number,y:number):void {

@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #56: show more of Bingsu's approved Pet unlock portrait
+
+- **Zoomed OUT, not redrawn:** The player liked Patch #55's gentle Dogo Argentino portrait but pointed out that the in-game image was cropped too tightly. This patch uses a wider view of the **same approved pixel illustration**, showing more of Bingsu's muscular white neck, upper chest and shoulders while preserving the face, natural ears, black nose, soft expression and entirely collar-free appearance.
+- **Fits the existing Shop:** The art is now 94x68 native pixels instead of 90x68; the existing 100x68 Pet card at (31,50) already has sufficient room. The text column, tabs, close button, details inspector and actual 40-Ash BUY button are NOT moved or resized. Selecting the portrait still does not spend Ash.
+- **Pixel-perfect local rendering:** The expanded crop is encoded in the existing bingsuPortrait55.ts indexed-palette Canvas renderer with a verified 44-color/68-row image, still synchronous and offline-compatible. No new images are loaded at runtime and no new UI system, save fields or source dependencies are introduced.
+- **Nothing else changes:** The already-approved in-world Bingsu sprite, following/fetching two real Pine Logs, her ownership/equipped state, personality, unlocked pet abilities and all other game systems are unchanged.
+- **QA:** Tests now validate the 94x68 portrait bounds, new head/chest pixel colors, full unbroken rows, fit inside the unchanged menu, collar-free palette and saved 40-Ash pet purchase. The static crop has been visually checked at native pixel scale; deployed landscape phone testing remains outstanding.
+
+
 ## Patch #55: Bingsu's approved head-and-chest unlock portrait
 
 - **Replaced the rejected full-body portrait with a true 3/4 head-and-chest close-up.** The Pets Shop now uses an artistically shaded 90x68 native-pixel white Dogo Argentino portrait: Bingsu faces slightly left, with a broad black nose, gentle dark eyes, natural folded ears, strong jaw, smooth white neck and upper chest. No awkward rectangular full-body anatomy, legs, tail, collar, angry expression or generic puppy eyes. The image uses an original inspected color-indexed raster rather than the rejected polygon-based dog.

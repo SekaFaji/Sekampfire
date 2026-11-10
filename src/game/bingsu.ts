@@ -11,7 +11,7 @@ export const BINGSU = {
   personality:"SWEET, CALM AND LOVING.",
   affection:"ALWAYS READY FOR A HUG.",
   temperament:"RARELY BARKS. A BIT STUBBORN.",
-  loyalty:"SHE'D FIGHT TO THE END FOR YOU.",
+  loyalty:"SHE'D FIGHT TO THE DEATH FOR YOU.",
   ability:"FETCHES UP TO 2 PINE LOGS.",
 } as const;
 

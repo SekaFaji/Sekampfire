@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #51: pixel-art Ash Shop cards, explicit BUY and Bingsu art correction
+
+- **Actual Ash upgrade cards:** Six permanent upgrades are now illustrated with six original native-pixel icons, laid out in a balanced three-column, two-row grid. The Pets tab has Bingsu as a separate, larger portrait card, and the neutral Coming Soon tab remains. All three header tabs and the close button retain nonoverlapping hit zones, with the same 320x180 world canvas and translucent sky-visible overlays.
+- **Select, inspect, then BUY:** Tapping a card *only* selects it; the bottom detail panel shows the owned level, real next level and the verified permanent benefit. One distinct bottom-right BUY button spends **banked Ash** using current balance, current level, real config cost and max-level cap. Insufficient or maximum-level items can still be inspected but cannot be bought. Selecting a card, switching tabs or closing Shop never spends currency. Keyboard Up/Down selects and Enter/Space buys the selected upgrade.
+- **Unchanged prices and ownership:** Warm Blood remains 12/26/45 Ash, Old Flint 14, Big Backpack 16, Grandpa's Axe 20, Blueprints 22, Everwarm Scarf 30, and Bingsu 40. The purchase routine refreshes live values before spending, prevents duplicate/stale purchases, saves the same permanent meta keys, and preserves Bingsu's Inventory-only equip/unequip introduced in #50. Earned Run Ash cannot be spent until banked.
+- **Bingsu is a girl:** Her permanent profile, Pets Shop portrait and in-world artwork now represent a **female Dogo Argentino**. Her coat and muscular neck are entirely white, with **no red collar, tag, or harness**. The portrait has a stronger square jaw, broad chest, natural folded ears, short muzzle and black nose instead of a generic puppy silhouette. Visible text uses **she/her**. Her #49 following, smooth animation, real two-log retrieval and ownership are unchanged.
+- **Regression tests:** Patch #51 verifies native card geometry, pixel icons, mobile touch selection without spending, disabled buy targets for insufficient Ash/owned levels, precise per-level purchases, no accidental use of Run Ash, keyboard selection, true 40-Ash Bingsu purchase, collar-free portrait/world pixels, and safe menu close/tab targets. Android landscape art review remains to be done.
+
+
 ## Patch #50: backpack plus real Axe and Pet equipment
 
 - **One wide inventory, two simultaneously visible regions:** the existing 20 backpack item slots remain on the left, with the same 5/10/15 unlocked slot progression and 5/13/21 kg carrying limits. The right side permanently shows two genuine equipment sockets for **AXE** and **PET**. Selecting either displays only gear actually owned, its ability, and a separate **EQUIP/UNEQUIP** action; no need to switch to an obsolete full-screen Equipment tab. Ineligible gear cannot be equipped.

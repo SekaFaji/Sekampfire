@@ -2,7 +2,7 @@
  * Every shop item keeps its original UPGRADES ID, cap and cost in config.ts.
  * No emoji, offscreen scaled image, extra Ash resource or invented effect.
  */
-export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog";
+export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog"|"legacy";
 export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
   blood:"WARM BLOOD",
   flint:"OLD FLINT",
@@ -10,7 +10,8 @@ export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
   axe:"GRANDPA AXE",
   blue:"BLUEPRINTS",
   scarf:"WARM SCARF",
-  dog:"BINGSU"
+  dog:"BINGSU",
+  legacy:"CAMP LEGACY"
 };
 export const SHOP_CARD_BENEFIT51:Record<ShopId51,string>={
   blood:"COLD DRAINS WARMTH MORE SLOWLY.",
@@ -19,7 +20,8 @@ export const SHOP_CARD_BENEFIT51:Record<ShopId51,string>={
   axe:"PERMANENT STRONGER CHOPPING AXE.",
   blue:"ALL BUILDINGS COST 20 PERCENT LESS.",
   scarf:"EMBER TORCH LASTS 50S, NOT 30S.",
-  dog:"SHE FETCHES UP TO TWO REAL PINE LOGS."
+  dog:"SHE FETCHES UP TO TWO REAL PINE LOGS.",
+  legacy:"START FUTURE RUNS WITH BUILT STRUCTURES."
 };
 export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{
   const p=(a:number,b:number,w:number,h:number,c:string)=>{
@@ -54,6 +56,14 @@ export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{
     p(3,2,7,4,"#8cb2ae");p(2,4,9,4,"#c5dcce");
     p(2,6,4,7,"#7ca7a4");p(5,8,3,4,"#a6c7be");
     p(3,10,1,3,"#dbe9d7");p(5,12,1,1,"#dbe9d7");
+  }else if(id==="legacy"){
+    // Small wooden homestead with two clear palisade posts and a roof.
+    p(1,5,2,9,"#62432f");p(10,5,2,9,"#62432f");
+    p(1,3,2,10,"#bb9161");p(10,3,2,10,"#bb9161");
+    p(3,7,7,6,"#7b5637");p(4,8,5,5,"#ad8255");
+    p(2,6,9,2,"#5b3c2c");p(4,3,5,3,"#b88b57");
+    p(5,1,3,3,"#d7aa70");p(5,9,2,4,"#453629");
+    p(3,13,7,1,"#9ba68f");
   }else if(id==="dog"){
     p(1,5,8,5,"#cdd8d6");p(2,4,8,5,"#f7f6ed");
     p(8,2,4,6,"#e9ede8");p(9,1,2,3,"#b5c3c3");

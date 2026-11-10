@@ -113,7 +113,7 @@ export function drawGuideShortcut(ctx: any, g: any) {
 
 export function drawGuideDialog(ctx: any, g: any, close: () => void) {
   const p = guideProgress(g), x=22, y=8, w=276, h=162;
-  ctx.fillStyle="rgba(9,16,26,0.97)";ctx.fillRect(x,y,w,h);
+  ctx.fillStyle="rgba(9,16,26,0.76)";ctx.fillRect(x,y,w,h);
   ctx.fillStyle="#b38a54";
   ctx.fillRect(x,y,w,1);ctx.fillRect(x,y+h-1,w,1);ctx.fillRect(x,y,1,h);ctx.fillRect(x+w-1,y,1,h);
   drawText(ctx,"GROOTY - YOUR CAMP GUIDE",32,16,"#f5d69a");

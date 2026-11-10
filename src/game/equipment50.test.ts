@@ -132,6 +132,17 @@ describe("Patch #50: one genuinely equipped axe and permanent Stick",()=>{
   expect(revised.equippedAxe).toBe("stick");
   expect(captureRunSnapshot(revised)?.state.equippedAxe).toBe("stick");
  });
+ it("crafting weaker gear does not override an equipped permanent Grandpa's Axe",()=>{
+  const g=run(),m=meta();
+  m.up.axe=1;g.equippedAxe="grandpas_axe";
+  g.menu="bench";g.builtBench=true;g.player.wood=5;g.craftTab=0;
+  const recipe=benchRows(g,m).find((r:any)=>r.label==="WOOD AXE");
+  expect(recipe).toBeDefined();
+  recipe!.onDown();recipe!.onDown();
+  expect(g.crafts.maul).toBe(true);
+  expect(g.equippedAxe).toBe("grandpas_axe");
+  expect(choppingSeconds(g,m)).toBe(.55);
+ });
  it("crafting Wood Axe and buying Grandpa's Axe auto-equips like old progression",()=>{
   const g=run(),m=meta();g.menu="bench";g.builtBench=true;
   g.player.wood=5;g.craftTab=0;

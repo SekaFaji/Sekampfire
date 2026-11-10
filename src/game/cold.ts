@@ -2,6 +2,8 @@ import { CX } from "./config";
 import { clamp } from "./math";
 import { visualSeason } from "./palette";
 import { weatherIntensity } from "./weather";
+import { localTemperature } from "./thermometer";
+import { protectedByFenceTorches } from "./fenceTorches47";
 
 /** Cold represents environmental exposure (0-100), NOT a second life bar.
  * It replaces the weather-specific warmth drain additions in game.ts. */
@@ -60,12 +62,20 @@ export function advanceCold(g: any, dt: number): void {
   g.cold = clamp(current + (target - current) * (1 - Math.exp(-elapsed / COLD_RESPONSE_SECONDS)), 0, 100);
 }
 
-/** One and only weather-dependent source of ambient warmth loss.
- * Ash Warm Blood, embers/torch and existing cabin protection keep their
- * historical effects. Fire heat-soak recovery remains separate. */
+/** Colder REAL local air directly raises warmth loss on top of the existing
+ * Cold exposure meter. The bounded factor makes freezing nights threatening
+ * without doubling the historical weather damage indiscriminately.
+ * Fence torches block drain only in their lit, claimed safe area; they never
+ * create the fire's replenishing heat-soak effect. */
+export function airTemperatureDrainFactor(g:any):number {
+  const degrees=localTemperature(g); // genuine local Celsius, not damped HUD text
+  return 1 + clamp((8-degrees)*0.022,0,0.72);
+}
 export function coldWarmthDrain(g: any, meta: any): number {
+  if(protectedByFenceTorches(g))return 0;
   const cold = clamp(Number.isFinite(g.cold) ? g.cold : coldTarget(g), 0, 100);
   let drain = 0.35 + cold * 0.045 + (Number(g.depth) || 0) * 0.15;
+  drain *= airTemperatureDrainFactor(g);
   drain *= 1 - 0.15 * clamp(Number(meta?.up?.blood) || 0, 0, 3);
   if (g.player.torchT > 0) drain *= 0.5;
   if (g.stage >= 6 && Math.abs(g.player.x - CX) < 44) drain *= 0.35;

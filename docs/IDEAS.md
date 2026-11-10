@@ -1,5 +1,12 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #43 implementation note (2026-11-10)
+
+**Implemented as a campaign foundation, not a complete campaign conversion:** the first three existing Grooty groups now display as the three named milestones of Level 1, The First Settlement. The other two old cabin groups remain Camp Challenges for compatibility until the completion/unlock flow is built. A physical talk-to-Grooty mission and a night-only Pine Grove outing with a return-to-fire and dawn requirement are now live. The new landmark is east of the initial fence; its target uses real player coordinates and Grooty's existing firefly guidance. The trip can be attempted on a later night without losing the camp. Optional flags extend the unchanged v1 checkpoint.
+
+**Not implemented by #43:** Level 1 end-of-run banking/unlock, new Level 2, permanent camp preservation, revised Ash rewards or altered station/equipment economy. The proposed exact mission thresholds in later levels are still open. Android QA is pending.
+
+
 Last updated: 2026-11-09
 
 > **Planning document, not a feature-completion report.** This file records brainstorms, proposed gameplay and decisions to avoid losing them between patches. The live implementation is documented in the source, README and [BACKLOG.md](BACKLOG.md). Do not treat anything here as already shipped unless explicitly marked **Current**. Confirm remaining rules before implementing them.

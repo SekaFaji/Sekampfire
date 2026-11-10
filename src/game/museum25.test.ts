@@ -76,6 +76,9 @@ describe("real log collection discoveries",()=>{
   });
   it("gives provisional rarity rolls without duplicates or modifying wood inventory",()=>{
     const m=meta();discoverLog(m);
+    // The museum must exist before any special rarity can be found.
+    expect(discoverLog(m,()=>0)).toBeNull();
+    m.museumBuilt=true;
     expect(discoverLog(m,()=>0.99)).toBeNull();
     let n=0;expect(discoverLog(m,()=>[0.01,0.1][n++])).toBe("twisted");
     n=0;expect(discoverLog(m,()=>[0.01,0.92][n++])).toBe("hand");

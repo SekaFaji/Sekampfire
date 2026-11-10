@@ -1323,7 +1323,10 @@ function benchRows(g: any, meta: any) {
         g.player.wood -= fromCarried;
         g.stored -= realCost - fromCarried;
         g.crafts[c.id] = true;
-        if(c.id==="maul") g.equippedAxe="wood_axe"; // preserve first-craft behavior
+        // Keep an already-equipped permanent Grandpa's Axe: crafting a
+        // weaker Wood Axe should never silently downgrade the player.
+        if(c.id==="maul" && g.equippedAxe!=="grandpas_axe")
+          g.equippedAxe="wood_axe";
         toast(g, c.name.toUpperCase() + " crafted.");
       },
     };

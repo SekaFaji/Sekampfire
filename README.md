@@ -1,5 +1,13 @@
 # Sekampfire
 
+## Patch #54: Bingsu's actual Dogo Argentino reference-based Pets portrait
+
+- **Replaced the Pet Shop picture, not the world sprite.** The old 54x65 front-facing pixel head made Bingsu look like a squashed white puppy. The player supplied a real side/three-quarter adult Dogo Argentino photograph. The Pets Shop now displays an original **124x65 full-body left-facing pixel portrait**, with a gentle adult face, folded natural ears, strong neck and shoulders, deep chest, long athletic torso, tucked abdomen, tall legs, natural lowered tail and broad black nose. No red collar, harness, fluff, angry expression or generic emoji.
+- **Give her art room to breathe:** Enlarged the Pet Shop portrait frame to 128x66 in the existing 320x180 Shop. The story, pet name, breed and owned/unlocked information now sit in a separate right column. The bottom details panel, genuine 40-Ash BUY button, tabs, exit, Bingsu ownership and Inventory equip controls remain unchanged.
+- **Real code assets, not a fake screenshot:** The new art is a locally drawn, native-resolution pixel illustration using scanline polygons and soft white shading. No reference photograph is embedded or fetched at runtime. The familiar small side-view in-world dog renderer and two-log fetching, animation, save and pet lore remain untouched.
+- **QA:** Dedicated tests cover 124x65 pixel bounds, actual side-facing head and black nose, long white back and planted front/rear paws, collar-free palette, realistic Pet Shop portrait hit zone, preserved 40-Ash purchase, safe overall screen bounds, legacy portrait helper and unmodified world-sprite behavior. Real Android visual review is still recommended.
+
+
 ## Patch #53: Camp Legacy - permanent Ash foundations, Bingsu's personality and art
 
 - **Camp Legacy (NEW permanent Ash upgrade):** four sequential upgrade levels, each purchased from the current banked-Ash Shop. Level 1 (35 Ash) prebuilds **Log Storage** for future runs; Level 2 (60 Ash) also prebuilds **Workbench**; Level 3 (95 Ash) also restores both **Fence Posts**; Level 4 (140 Ash) also unlocks the **Eastern Camp Expansion** at run start. Total investment across all four levels is 330 banked Ash. The Shop's Legacy card shows the **next actual benefit** and the real next-level cost.

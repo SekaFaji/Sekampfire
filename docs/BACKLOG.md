@@ -1,5 +1,16 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #54 - Bingsu Pets Shop likeness against user-supplied photo
+- [x] Replace the small frontal portrait with a larger original 124x65 pixel-art whole-body three-quarter-side study of a female Dogo Argentino.
+- [x] Correct the adult proportions: broad head, natural hanging ears, deep chest, longer lean back, distinct waist tuck, tall legs, natural tail and wide black nose with calm expression.
+- [x] Separate the 128x66 pet picture frame from the pet description without overlapping the Shop close, tabs, details or actual BUY button.
+- [x] Preserve Bingsu's established personality and genuine two-log fetch skill, and **do not touch** her in-world animated sprite.
+- [x] Preserve exact 40-Ash ownership purchase, permanent equip controls, all inventory and existing v1 saves.
+- [x] Add source-grounded pixel geometry, silhouette, body/feet, touch/price and color regressions.
+- [ ] Compare the updated unlock image directly with the user-supplied Bingsu reference on the actual Android landscape device; adjust the likeness and colors from that review.
+- [ ] After photo likeness is accepted, continue planned playable Level 2 missions without touching Bingsu's agreed in-world sprite.
+
+
 ## Patch #53 - permanent Camp Legacy and Bingsu adult Dogo profile
 - [x] Add four increasingly useful banked-Ash Legacy levels (35, 60, 95, 140 Ash): prebuilt Storage, Workbench, Fence Posts and Eastern Expansion for future runs.
 - [x] Preserve real resources: no free stored wood, carried wood, lit torches, fuel, run Ash, station upgrade levels, crafts, Museum entries or fake mission completion.

@@ -14,8 +14,9 @@ export function createInputHandlers(controllers: {
   startRun: (...args: any[]) => any;
   goEndless: (...args: any[]) => any;
   returnToMainMenu: (...args: any[]) => any;
+  bankLevelOne?: (...args: any[]) => any;
 }) {
-  const { audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu } = controllers;
+  const { audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu, bankLevelOne } = controllers;
 // ============ input ============
 function handleKey(g: any, meta: any, k: string, down: boolean) {
   if (down && g.menu === "help" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
@@ -67,11 +68,13 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     else if (g.menu === "help") { if ((g.helpPage || 0) >= 6) closeMenu(g); else g.helpPage = (g.helpPage || 0) + 1; }
     else if (g.menu === "privacy" || g.menu === "credits") closeMenu(g);
     else if (g.ui === "title") activateTitleItem(g, meta, g.titleSel);
+    else if (g.ui === "levelComplete") bankLevelOne?.(g,meta);
+    else if (g.ui === "levelBanked") returnToMainMenu(g);
     else if (g.ui === "dead") startRun(g, meta);
     else if (g.ui === "win") goEndless(g);
     else if (g.ui === "run") { g.pressE = true; g.keys.act = true; }
   }
-  if (k === "m" && !g.menu && (g.ui === "dead" || g.ui === "win")) {
+  if (k === "m" && !g.menu && (g.ui === "dead" || g.ui === "win" || g.ui === "levelBanked")) {
     returnToMainMenu(g);
     return;
   }
@@ -91,7 +94,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     if (g.menu === "pause") { g.menu = null; g.keys.act = false; }
     else if (!g.menu) { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; }
   }
-  if (k === "u" && !g.menu && (g.ui === "title" || g.ui === "dead" || g.ui === "win")) { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; }
+  if (k === "u" && !g.menu && (g.ui === "title" || g.ui === "dead" || g.ui === "win" || g.ui === "levelBanked")) { g.menu = "shop"; g.shopTab = 0; g.menuSel = 0; }
   if (k === "f" && g.fsToggle) g.fsToggle();
 }
 

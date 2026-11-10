@@ -74,21 +74,33 @@ function App() {
     const cb = {
       toast: (text: string) => toast(g, text),
       end: (kind: string, stats: any) => {
-        // A pending victory is not banked. Terminal banking is idempotent.
+        // A level only unlocks after its explicit bank action, never when the
+        // reward popup first appears. The receipt is persisted with the Ash
+        // balance BEFORE clearing the pending run checkpoint.
         if (g.ashBanked) return;
+        if (kind === "campaign" && (!g.levelCompletePending || g.campaignLevel !== 1)) return;
+        const m = metaRef.current;
+        const alreadyBanked = kind === "campaign" && typeof g.campaignRunId === "string"
+          && g.campaignRunId.length > 0 && m.lastBankedRunId === g.campaignRunId;
+        if (!alreadyBanked) {
+          const ash = Number.isFinite(stats.ash) ? Math.max(0, Math.floor(stats.ash)) : 0;
+          m.ash = (m.ash || 0) + ash;
+          m.totalAsh = (m.totalAsh || 0) + ash;
+          m.best = Math.max(m.best || 0, stats.nights);
+          m.runs = (m.runs || 0) + 1;
+          if (kind === "won" || g.won) m.wonEver = true;
+          if (kind === "campaign") {
+            m.maxCampaignLevel = Math.max(m.maxCampaignLevel || 1, 2);
+            if (g.campaignRunId) m.lastBankedRunId = g.campaignRunId;
+          }
+          saveMeta(m);
+        }
         g.ashBanked = true;
         clearRunSnapshot();
-        const m = metaRef.current;
-        m.ash = (m.ash || 0) + stats.ash;
-        m.totalAsh = (m.totalAsh || 0) + stats.ash;
-        m.best = Math.max(m.best || 0, stats.nights);
-        m.runs = (m.runs || 0) + 1;
-        if (kind === "won" || g.won) m.wonEver = true;
-        saveMeta(m);
         g.lastResult = { ...stats, kind };
         g.menu = null;
         g.settingsFrom = null;
-        g.ui = kind === "won" ? "win" : "dead";
+        g.ui = kind === "campaign" ? "levelBanked" : kind === "won" ? "win" : "dead";
       },
     };
     // let in-canvas menus end the run (pause menu "END RUN")

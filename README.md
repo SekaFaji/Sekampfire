@@ -1,5 +1,15 @@
 # Sekampfire
 
+## Patch #44: Level 1 completion, verified Ash sources, and Level 2 unlock
+
+- **Real Level 1 ending:** newly started campaign runs use the first three Grooty milestones as **The First Settlement**. Completing the Workbench milestone freezes the run at a dedicated completion screen, without starting the old cabin lessons or Long Night automatically. Already-saved pre-#44 runs retain their legacy five-group/cabin/Long Night path.
+- **Actual Ash rewards:** the result screen itemizes Ash from survived dawns, aurora nights, completed structures and station upgrades. The same real award logic is now recorded through one bounded ledger; previously earned but untracked Ash is labeled **Earlier Run Ash**. No invented completion bonus or altered prices.
+- **Intentional banking:** **BANK ASH + FINISH LEVEL** deposits exactly the pending Ash, ends the run, preserves permanent purchases/collections, unlocks Level 2, and shows a banked confirmation with replay, Shop and Main Menu. Neither opening the completion screen nor merely winning a milestone banks Ash.
+- **Level 2 status:** the permanent unlock is saved and displayed on the title and confirmation screens. Level 2 gameplay is **not yet implemented** and is explicitly labeled Coming Soon until its missions/Ash-preserved structures are developed.
+- **Safe saves:** unchanged `sekampfire-run-v1`/meta keys with optional campaign fields, validated Ash ledger, pending Level 1 choice and a stored run receipt to prevent double payment after reload. Browser refresh resumes the unbanked completion screen.
+- **Controls/tests:** touch and Enter bank the pending reward; banked screen supports replay, Shop, Main Menu, and keyboard M. Regression coverage includes source accounting, older saves, pending snapshots, bank callback and display geometry. On-device QA remains outstanding.
+
+
 ## Patch #43: First Settlement milestone foundation and night scouting
 
 - **Level 1 foundation:** Grooty's first three existing run-local teaching groups are now presented as the three milestones of **The First Settlement**: Establish & Explore, Log Storage and The Workbench. The two existing later cabin lessons remain explicitly labeled **Camp Challenges** during the transition; they have not been silently converted into separate campaign levels.

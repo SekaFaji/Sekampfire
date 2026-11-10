@@ -1,5 +1,6 @@
 import { W } from "./config";
 import { tickQuickSlotHolds, useQuickSlot } from "./quickSlots";
+import { navigateEquipment50, activateEquipment50, chooseEquipmentCategory50 } from "./inventoryMenu";
 
 /** In-canvas keyboard and pointer controls; callbacks are injected to avoid
  * a cycle between the input adapter and the gameplay/menus module.
@@ -33,12 +34,20 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   // settings/build row selector. These keys never leak into movement.
   if (g.menu === "inventory" && down && ["arrowleft","arrowright","arrowup","arrowdown","a","d","w","s"].includes(k)) {
     const dx=k==="arrowleft"||k==="a"?-1:k==="arrowright"||k==="d"?1:0;
-    const dy=k==="arrowup"||k==="w"?-5:k==="arrowdown"||k==="s"?5:0;
-    const current=g.inventoryTab===1?(g.inventoryEquipSel||0):(g.inventorySel||0);
-    const cap=g.inventoryTab===1?20:Math.min(20,5+(g.crafts?.pack?5:0)+(meta?.up?.pack?5:0));
-    const next=Math.max(0,Math.min(cap-1,current+dx+dy));
-    if(g.inventoryTab===1)g.inventoryEquipSel=next;
-    else g.inventorySel=next;
+    const dy=k==="arrowup"||k==="w"?-1:k==="arrowdown"||k==="s"?1:0;
+    if(g.inventoryTab===1){
+      navigateEquipment50(g,meta,dx,dy);
+      return;
+    }
+    const current=g.inventorySel||0;
+    const cap=Math.min(20,5+(g.crafts?.pack?5:0)+(meta?.up?.pack?5:0));
+    // Right from the last backpack column enters the always-visible
+    // equipment pane; it no longer requires switching an old modal tab.
+    if(dx>0 && current%5===4){
+      chooseEquipmentCategory50(g,meta,"axe");
+      return;
+    }
+    g.inventorySel=Math.max(0,Math.min(cap-1,current+dx+dy*5));
     return;
   }
   if (g.menu === "audio" && down && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
@@ -62,7 +71,10 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + 1) % titleActions(g, meta).length;
   }
   if (k === "e" || k === "enter" || k === " ") {
-    if (g.menu === "inventory") return; // item selection is read-only; no hidden ACT
+    if (g.menu === "inventory") {
+      if(g.inventoryTab===1)activateEquipment50(g,meta);
+      return; // never swing/chop while a modal is open
+    }
     if (isList) activateSel(g, meta);
     else if (g.menu === "museum" || g.menu === "guide" || g.menu === "endlessNightInfo") closeMenu(g);
     else if (g.menu === "help") { if ((g.helpPage || 0) >= 6) closeMenu(g); else g.helpPage = (g.helpPage || 0) + 1; }

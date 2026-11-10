@@ -105,7 +105,7 @@ export function drawShopTabs(ctx: any, g: any, meta: any, rows: any[], close: ()
     }
   }
   if (tab === 1) drawBingsuShopProfile(ctx, meta);
-  drawTextC(ctx, tab === 1 ? "PETS ARE PERMANENT. EQUIP ONE AT A TIME."
+  drawTextC(ctx, tab === 1 ? "PETS ARE PERMANENT. EQUIP IN INVENTORY."
     : "ASH IS BANKED BY ENDING A RUN",160,158,"#acbad0");
 }
 

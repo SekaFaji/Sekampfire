@@ -83,11 +83,8 @@ describe("permanent pet ownership and equip management",()=>{
     const meta=loadMeta();
     expect(meta.up.dog).toBe(1);expect(activePet(meta)).toBe("dog");
     const g=createEngine();g.shopTab=1;
-    expect(shopRows(g,meta)[0].right).toBe("EQUIPPED");
-    shopRows(g,meta)[0].onDown();
-    expect(activePet(meta)).toBeNull();
-    expect(loadMeta().petEquipped).toBeNull();
-    shopRows(g,meta)[0].onDown();
+    expect(shopRows(g,meta)[0].right).toBe("OWNED");
+    shopRows(g,meta)[0].onDown(); // purchased pets are no longer equipped here
     expect(activePet(meta)).toBe("dog");
     expect(loadMeta().up.dog).toBe(1);
   });

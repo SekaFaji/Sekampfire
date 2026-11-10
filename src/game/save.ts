@@ -24,6 +24,7 @@ function loadMeta(): any {
           best: safeCount(m.best), runs: safeCount(m.runs),
           wonEver: !!m.wonEver, up,
           petEquipped: m.petEquipped === null ? null : up.dog ? "dog" : null,
+          axeEquipped: up.axe ? (m.axeEquipped==="stick"?"stick":"grandpas_axe") : "stick",
           museumBuilt: m.museumBuilt === true, collection: cleanLogCollection(m.collection),
           guideFx: m.guideFx !== false,
           maxCampaignLevel: m.maxCampaignLevel === 2 ? 2 : 1,
@@ -32,7 +33,7 @@ function loadMeta(): any {
       }
     }
   } catch (e) { /* Corrupted local saves should never prevent the game starting. */ }
-  return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null,
+  return { ash: 0, totalAsh: 0, best: 0, runs: 0, wonEver: false, up: {}, petEquipped:null, axeEquipped:"stick",
     museumBuilt:false, collection:cleanLogCollection(null), guideFx:true,
     maxCampaignLevel:1, lastBankedRunId:null };
 }
@@ -82,6 +83,8 @@ function captureRunSnapshot(g: any): any {
     t:t.t,dir:t.dir
   }));
   state.crafts = { ...g.crafts };
+  state.equippedAxe = ["stick","wood_axe","grandpas_axe"].includes(g.equippedAxe)
+    ? g.equippedAxe : "stick";
   state.inventory = snapshotInventory(g); // canonical item stacks, optional in legacy v1 saves
   // Optional run-local quick slot assignments. Never trust arbitrary IDs,
   // future item ownership or raw objects from saved checkpoints.

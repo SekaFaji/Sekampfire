@@ -1,5 +1,18 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #50 implemented - Equipment is explicit (2026-11-10)
+
+**Unified backpack and two equipment sockets:** Replace the old Backpack-vs-Equipment tabs with a left 5-by-4 item grid and always-visible right Axe/Pet sockets. Select an owned item and press the distinct Equip/Unequip button. Other genuinely crafted items remain in the Equipment pane's TOOLS mode, especially the existing Ember Torch to Quick Slot 1/2 controls. Future inventory expansions can add more typed equipment sockets using the same ownership and equip validation instead of creating fake inventory item stacks.
+
+**Wood Stick never disappears:** `stick` is an always-owned equipment option, not a dropped or craftable backpack item. If an equipped axe is removed, Stick becomes active. No more cumulative chopping from both crafted Wood Axe and permanent Grandpa's Axe. Stick takes 1 second per hit, Wood Axe 0.70, Grandpa's Axe 0.55; gameplay chopping time and visible tool tier use exactly the same selected ID.
+
+**Permanent vs run-local gear:** The craft flag `crafts.maul` still owns Wood Axe for just the run; `up.axe` permanently owns Grandpa's Axe; `up.dog` permanently owns Bingsu. The *new* run-local `equippedAxe` selection goes in the old v1 checkpoint, validated on load against owned gear. The permanent `axeEquipped` is only Stick or Grandpa's Axe, never run-local craft. Older checkpoints without an axe selection migrate to their formerly strongest active axe. Existing owners of Bingsu stay equipped unless they deliberately unequipped him. Pet equip persists in the existing `petEquipped` field.
+
+**The Shop unlocks, Inventory equips:** Pets Shop no longer toggles Bingsu directly, preventing contradictory states. It continues to sell him for 40 banked Ash and show his profile. The new inventory slots control pet equipment, while a future Patch #51 improves card layouts and the separate BUY action.
+
+**Future equipment:** Boots and backpacks currently have passive craft/upgrade bonuses and remain usable/visible in Other Gear. Do not silently revoke their effects in this Axe/Pet-specific patch. Future explicit boots and pack slots are a separate approved balance decision. Preserve source-of-truth logs and real quick slots.
+
+
 ## Patch #49 implemented - Bingsu rebuilt (2026-11-10)
 
 **World sprite vs portrait:** The old Bingsu sprite was overlarge compared with the 25-pixel player, with a two-frame global-timer leg shuffle. Replace the live sprite with a compact ~23x15 pixel Dogo Argentino side silhouette, mirrored exactly for both directions. Keep the larger Shop portrait intact because it is an illustration, not the world sprite. New gait advances from real traveled distance; resting paws do not slide, and both feet share the player's exact ground line.

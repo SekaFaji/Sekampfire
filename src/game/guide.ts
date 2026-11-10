@@ -22,20 +22,20 @@ export const GUIDE_LEVELS: Level[] = [
     { id: "build-storage", label: "BUILD LOG STORAGE", hint: "CARRY 15 LOGS TO THE PILE SITE AND USE ACT.", met: g => !!g.builtPile },
     { id: "store-ten", label: "STORE 10 LOGS", hint: "TAKE LOGS TO THE FINISHED PILE AND PRESS ACT.", met: g => !!g.guideStoredTen || g.stored >= 10 },
     { id: "expand", label: "EXPAND YOUR CAMP FOR 5 LOGS", hint: "FIND THE EAST FENCE MARKER AND PRESS ACT.", met: g => campEstablished(g) && g.campExpansion >= 1 },
-    { id: "upgrade-storage", label: "UPGRADE STORAGE TO LV1", hint: "OPEN BUILD, THEN UPGRADES.", met: g => stationLevel(g, "pile") >= 1 },
+    { id: "upgrade-storage", label: "UPGRADE STORAGE TO LV1", hint: "PRESS ACT AT STORAGE, THEN UPGRADE.", met: g => stationLevel(g, "pile") >= 1 },
   ] },
   { title: "TOOLS OF THE TRADE", greeting: "SMART CAMPERS BUILD SMARTER TOOLS.", goals: [
     { id: "build-workbench", label: "BUILD THE WORKBENCH", hint: "ADD 15 LOGS TO THE WORKBENCH SITE.", met: g => !!g.builtBench },
     { id: "craft-pack", label: "CRAFT THE TIMBER PACK", hint: "VISIT THE BENCH, THEN CRAFT > TOOLS.", met: g => !!g.crafts?.pack },
   ] },
   { title: "A WARMER HOME", greeting: "NOW LET US MAKE THIS CAMP COSY.", goals: [
-    { id: "build-shelter", label: "BUILD WOOD RING AND LOG BENCH", hint: "OPEN BUILD > STRUCTURES.", met: g => g.stage >= 2 },
-    { id: "upgrade-fireplace", label: "UPGRADE FIREPLACE TO LV1", hint: "OPEN BUILD > UPGRADES.", met: g => stationLevel(g, "hearth") >= 1 },
+    { id: "build-shelter", label: "BUILD WOOD RING AND LOG BENCH", hint: "VISIT THE WORKBENCH FOR BUILD PLANS.", met: g => g.stage >= 2 },
+    { id: "upgrade-fireplace", label: "UPGRADE FIREPLACE TO LV1", hint: "PRESS ACT AT FIREPLACE, THEN UPGRADE.", met: g => stationLevel(g, "hearth") >= 1 },
   ] },
   { title: "THE HOMESTEAD", greeting: "A REAL HOME WILL WEATHER THE WINTER.", goals: [
-    { id: "build-cabin", label: "BUILD THROUGH CABIN WALLS", hint: "KEEP BUILDING SHELTER UNDER STRUCTURES.", met: g => g.stage >= 5 },
+    { id: "build-cabin", label: "BUILD THROUGH CABIN WALLS", hint: "VISIT THE WORKBENCH FOR BUILD PLANS.", met: g => g.stage >= 5 },
     { id: "upgrade-all", label: "ALL THREE STATIONS TO LV1", hint: "UPGRADE FIREPLACE, BENCH AND STORAGE.", met: g => ["hearth","bench","pile"].every(id => stationLevel(g, id as "hearth" | "bench" | "pile") >= 1) },
-    { id: "finish-cabin", label: "COMPLETE CABIN AND HEARTH", hint: "FINISH THE LAST STRUCTURE IN BUILD.", met: g => g.stage >= 6 },
+    { id: "finish-cabin", label: "COMPLETE CABIN AND HEARTH", hint: "FINISH THE LAST WORKBENCH BUILD PLAN.", met: g => g.stage >= 6 },
   ] },
 ];
 

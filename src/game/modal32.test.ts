@@ -65,7 +65,7 @@ describe("Patch #32 active modal input isolation",()=>{
     const g=createEngine(),m=meta();
     g.ui="run";g.menu="guide";
     handleKey(g,m,"b",true);expect(g.menu).toBe("guide");
-    g.menu=null;handleKey(g,m,"b",true);expect(g.menu).toBe("build");
+    g.menu=null;handleKey(g,m,"b",true);expect(g.menu).toBeNull(); // remote BUILD removed
   });
   it("menu changes invalidate stale hit zones until the next rendered frame",()=>{
     const g=createEngine(),m=meta();g.ui="title";g.menu="endlessNightInfo";

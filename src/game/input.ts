@@ -51,7 +51,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     if (k === "e" || k === " ") { g.keys.act = false; g.chopBlocked = false; }
     return;
   }
-  const isList = ["bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause", "toolbar", "quickslot"].includes(g.menu);
+  const isList = ["station", "bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause", "toolbar", "quickslot"].includes(g.menu);
   if (k === "arrowup" || k === "w") {
     if (isList) moveSel(g, meta, -1);
     else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + titleActions(g, meta).length - 1) % titleActions(g, meta).length;
@@ -83,13 +83,6 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   }
   if (k === "t" && g.ui === "run" && !g.menu) g.pressT = true;
   if ((k==="1"||k==="2") && g.ui==="run" && !g.menu) useQuickSlot(g,k==="1"?0:1);
-  // B is a gameplay Build shortcut, never a way to accidentally dismiss
-  // an open dialog or switch from one menu into another.
-  if (k === "b" && g.ui === "run" && !g.menu) {
-    g.menu = "build";
-    g.menuSel = 0;
-    g.keys.act = false;
-  }
   if (k === "escape") {
     if (g.menu) closeMenu(g);
     else if (g.ui === "run" && !g.over) { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEngine, benchRows, buildRows, titleActions, closeMenu } from "./game";
+import { createEngine, benchRows, buildRows, stationRows, titleActions, closeMenu } from "./game";
 import { pileCap } from "./rules";
 import {
   stationLevel, stationCost, purchaseStation, canCompleteCabin,
@@ -27,14 +27,15 @@ describe("real station upgrade progression", () => {
     blocked.onDown();
     expect(g.player.wood+g.stored).toBe(before);
     expect(g.stage).toBe(5);
-    g.buildTab=1;
     for(const [index,id,cost] of [[0,"hearth",10],[1,"bench",10],[2,"pile",12]] as const) {
-      let row=buildRows(g,meta)[index];
-      expect(row.label).toContain("LV0");
+      g.stationId=id;g.menu="station";
+      let row=stationRows(g,meta)[1];
+      expect(row.label).toBe("UPGRADE");
+      expect(stationLevel(g,id)).toBe(0);
       row.onDown();
       expect(g.buildConfirm).toBe(id);
       expect(g.player.wood+g.stored).toBe(before - (index===0?0:index===1?10:20));
-      row=buildRows(g,meta)[index];
+      row=stationRows(g,meta)[1];
       expect(row.right).toBe("CONFIRM?");
       row.onDown();
       expect(stationLevel(g,id)).toBe(1);
@@ -83,7 +84,7 @@ describe("real station upgrade progression", () => {
   });
   it("unlocks workbench recipes by tier, preserves confirmation and discounts on level two", () => {
     const g=camp(); g.menu="bench";g.craftTab=1;
-    expect(benchRows(g,meta)).toHaveLength(5); // added crafted Ember Torch
+    expect(benchRows(g,meta)).toHaveLength(4); // Torch included; Bench upgrade now only at station
     expect(benchRows(g,meta)[1].right).toBe("BENCH LV1");
     expect(benchRows(g,meta)[2].right).toBe("BENCH LV2");
     const wood=g.player.wood+g.stored;

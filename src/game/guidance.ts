@@ -4,13 +4,14 @@ import { guideProgress } from "./guide";
 import { stationCost, stationLevel } from "./campProgress";
 import { stationCraftCost } from "./campProgress";
 import { clamp } from "./math";
+import { STATION_ACTIONS } from "./stationPopup";
 
 export type FireflyTarget = {
   space: "world" | "screen" | "menu";
   x: number;
   y: number;
   goal: string;
-  menu?: "build" | "bench" | "pause";
+  menu?: "build" | "bench" | "station";
   tab?: number;
   row?: number;
 };
@@ -24,7 +25,7 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   if (!next) return null;
   const goal = next.id;
   const world = (x:number,y=114):FireflyTarget => ({space:"world",x,y,goal});
-  const ui = (menu: "build"|"bench"|"pause",tab:number,row:number):FireflyTarget =>
+  const ui = (menu: "build"|"bench"|"station",tab:number,row:number):FireflyTarget =>
     ({space:"menu",x:0,y:0,menu,tab,row,goal});
   const resources = (treesOnly=false):FireflyTarget|null => {
     const p = g.player;
@@ -43,19 +44,21 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   const wood = Number(g.player?.wood)||0;
   const stock = wood + (Number(g.stored)||0);
   const missingWood = (cost:number) => stock < cost;
-  const build = (tab:number,row:number):FireflyTarget => {
-    if (g.menu==="build") return ui("build",tab,row);
-    if (g.menu==="pause") return ui("pause",0,3); // BUILD row in pause menu
-    return {space:"screen",x:300,y:29,goal}; // menu button replaces BUILD chrome
+  const build = (_tab:number,row:number):FireflyTarget => {
+    if(g.menu==="build") return ui("build",0,row);
+    if(g.menu==="station" && g.stationId==="bench")return ui("station",0,2);
+    // Camp plans may be accessed ONLY from the finished physical Workbench.
+    return world(BENCH_X,116);
   };
   const craft = ():FireflyTarget => {
     if (g.menu==="bench") return ui("bench",0,0);
-    return world(BENCH_X,116); // ACT opens the actual workbench
+    if (g.menu==="station"&&g.stationId==="bench")return ui("station",0,0);
+    return world(BENCH_X,116);
   };
   const improvement = (station:"hearth"|"bench"|"pile"):FireflyTarget|null => {
     if (missingWood(stationCost(g,station))) return resources();
-    const row = station==="hearth"?0:station==="bench"?1:2;
-    return build(1,row);
+    if(g.menu==="station"&&g.stationId===station)return ui("station",0,1);
+    return world(station==="hearth"?CX:station==="bench"?BENCH_X:PILE_X,116);
   };
   // Keep a live modal free of glow unless it contains the next actual step.
   // This prevents false guides over Settings, Grooty or the Museum.
@@ -101,19 +104,19 @@ export function guideTarget(g: any, meta: any): FireflyTarget | null {
   return target;
 }
 
-/** Resolve a menu-tab or row marker from the actual modal bounds created by
- * the game's menu renderer. No hard-coded screen y that could break when
- * STRUCTURES has more rows than UPGRADES. */
+/** Locate fireflies over the REAL local station buttons or next plans row.
+ * Every marker represents a working interaction, not the removed Pause Build. */
 export function guideMenuPosition(g:any,target:FireflyTarget):{x:number;y:number}|null {
   if (target.space!=="menu" || g.menu!==target.menu || !g.menuRect) return null;
   const r=g.menuRect;
-  if(target.menu==="pause") {
-    // Plain pause list has no tab bar, unlike BUILD and WORKBENCH.
-    return {x:r.x+11,y:r.y+16+(target.row||0)*15+3};
+  if(target.menu==="station"){
+    const button=(target.row===1?STATION_ACTIONS.upgrade
+      :target.row===2?STATION_ACTIONS.plans:STATION_ACTIONS.access);
+    return {x:button.x+button.w/2,y:button.y+button.h/2};
   }
-  const currentTab=target.menu==="build"?g.buildTab:g.craftTab;
-  if (currentTab!==target.tab) {
-    return {x:r.x+7+(target.tab||0)*129+62, y:r.y+10};
+  if(target.menu==="build") return {x:r.x+11,y:r.y+16+(target.row||0)*15+3};
+  if(g.craftTab!==target.tab){
+    return {x:r.x+7+(target.tab||0)*129+62,y:r.y+10};
   }
   return {x:r.x+11,y:r.y+34+(target.row||0)*15-5};
 }

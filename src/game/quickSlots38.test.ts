@@ -145,14 +145,11 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   handlePointer(g,"up",4,310,95);
   expect(g.pright).toBe(false);
  });
- it("pause menu keeps the old End Run confirmation and introduces Build and Toolbar access",()=>{
+ it("pause menu preserves End Run and the toolbar without remote Build",()=>{
   const g=run(),m=meta();g.ashEarned=19;
   expect(pauseRows(g,m)[2].right).toBe("+19 ASH");
+  expect(pauseRows(g,m).some((row:any)=>row.label==="BUILD")).toBe(false);
   pauseRows(g,m)[3].onDown();
-  expect(g.menu).toBe("build");
-  closeMenu(g);
-  expect(g.menu).toBe("pause");
-  pauseRows(g,m)[4].onDown();
   expect(g.menu).toBe("toolbar");
   toolbarRows(g)[1].onDown();
   expect(g.menu).toBe("quickslot");
@@ -187,15 +184,15 @@ describe("Patch #38 - two usable quick-access slots",()=>{
   titleActions(safe,m)[0].act();
   expect(safe.quickSlots).toEqual([null,null]);
  });
- it("keeps Grooty pointing to the actual Menu and Build row after removing bottom Build",()=>{
+ it("keeps Grooty pointing to the real Storage station Upgrade button",()=>{
   const g=run(),m=meta();g.guideLevel=1;g.builtPile=true;g.guideStoredTen=true;g.campExpansion=1;g.fenceLeft=true;g.fenceRight=true;g.player.wood=50;g.stored=10;
   let target=guideTarget(g,m);
-  expect(target).toMatchObject({space:"screen",x:300,y:29});
-  g.menu="pause";g.zones=[];drawMenu(canvas().ctx,g,m);
+  expect(target).toMatchObject({space:"world",x:PILE_X});
+  g.menu="station";g.stationId="pile";g.zones=[];drawMenu(canvas().ctx,g,m);
   target=guideTarget(g,m);
-  expect(target).toMatchObject({space:"menu",menu:"pause",row:3});
+  expect(target).toMatchObject({space:"menu",menu:"station",row:1});
   const pos=guideMenuPosition(g,target!);
-  expect(pos?.y).toBe(g.menuRect.y+16+3*15+3);
+  expect(pos).toEqual({x:207,y:113});
  });
  it("keeps the central ACT zone and two water-side tool sockets non-overlapping",()=>{
   const g=run();g.zones=[];drawRunChrome(canvas().ctx,g);

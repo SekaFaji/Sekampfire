@@ -792,7 +792,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const chosenStation=selectedStation(g);
   if(chosenStation==="hearth") g.actionLabel=g.fireLit?"FEED":"LIGHT";
   else if(chosenStation==="bench") g.actionLabel="CRAFT";
-  else if(chosenStation==="pile") g.actionLabel=p.wood>0?"STORE":"TAKE";
+  else if(chosenStation==="pile") g.actionLabel="STORE";
 
   if (g.stored >= 10) g.guideStoredTen = true;
   // Scouting is measured after real movement and before objective completion.
@@ -1048,9 +1048,11 @@ function accessHearth(g:any):void {
     g.fuel=Math.min(100,g.fuel+stationStokeGain(g));
   }else toast(g,"BRING PINE LOGS TO STOKE THE FIRE.");
 }
-function accessStorage(g:any,meta:any):void {
+function accessStorage(g:any,meta:any,direction?:"store"|"take"):void {
   const p=g.player,capacity=pileCap(g);
-  if(p.wood>0){
+  const move=direction||(p.wood>0?"store":"take");
+  if(move==="store"){
+    if(p.wood<=0){toast(g,"BRING PINE LOGS TO STORE.");return;}
     const add=Math.min(p.wood,capacity-g.stored);
     if(add<=0)toast(g,"THE LOG STORAGE IS FULL.");
     else{
@@ -1058,7 +1060,7 @@ function accessStorage(g:any,meta:any):void {
       toast(g,"Stored "+add+" pine logs on the pile.");
     }
   }else if(g.stored>0){
-    const take=Math.min(g.stored,carryCap(g,meta)-p.wood);
+    const take=Math.min(g.stored,Math.max(0,carryCap(g,meta)-p.wood));
     if(take<=0)toast(g,"YOU CANNOT CARRY ANY MORE.");
     else{
       p.wood+=take;g.stored-=take;
@@ -1071,7 +1073,16 @@ function accessStorage(g:any,meta:any):void {
  * authoritative station actions. No generic ACCESS/UPGRADE popup is opened. */
 function performStationAction(g:any,meta:any,id:NearbyStation,action:StationAction):boolean {
   if(g.ui!=="run" || g.over || g.menu || selectedStation(g)!==id) return false;
+  if(action==="take" && id!=="pile" || action==="plans" && id!=="bench")return false;
   g.stationId=id;
+  // Log storage deliberately has TWO different transfer directions now.
+  // ACT/the left button always STORES; the middle TAKE button only TAKES.
+  // Reuse the exact carrying and storage capacity rules from accessStorage.
+  if(id==="pile" && (action==="primary"||action==="take")){
+    g.pressE=false;g.keys.act=false;g.buildConfirm=null;
+    accessStorage(g,meta,action==="take"?"take":"store");
+    return true;
+  }
   const rowIndex=action==="primary"?0:action==="upgrade"?1:2;
   const row=stationRows(g,meta)[rowIndex];
   if(!row || row.enabled===false) {
@@ -2303,8 +2314,11 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
       const lbl = "FIREPLACE";
       drawTextO(ctx, lbl, CX - 9, 118 - bob, "#ffe9a0", "#060a18");
     } else if (nearPile2 && selectedStation(g)!=="pile") {
-      const lbl = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : "STORAGE";
-      drawTextO(ctx, lbl, PILE_X - 7, 120 - bob, "#ffe9a0", "#060a18");
+      const lbl = !g.builtPile
+        ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS")
+        : "STORAGE "+g.stored+"/"+pileCap(g);
+      // Center the actual current log count over its physical building.
+      drawTextO(ctx, lbl, PILE_X - Math.floor(textW(lbl)/2), 120 - bob, "#ffe9a0", "#060a18");
     } else if (tr) drawTextO(ctx, "CHOP", tr.x - 7, tr.y - 40 - bob, "#ffe9a0", "#060a18");
   }
   // Fireflies are composited in world coordinates after real trees, buildings

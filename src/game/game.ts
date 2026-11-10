@@ -1345,8 +1345,8 @@ function shopRows(g: any, meta: any) {
     const enabled = (pet && maxed) || (!maxed && meta.ash >= cost);
     return {
       label: u.name.toUpperCase() + (u.max > 1 ? " " + lvl + "/" + u.max : ""),
-      right: pet && maxed ? equipped ? "EQUIPPED" : "EQUIP" : maxed ? "OWNED" : confirm ? "BUY?" : cost + " ASH",
-      desc: pet && maxed ? (equipped ? "FOLLOWS YOU; TAP TO UNEQUIP" : "TAP TO EQUIP (2 LOGS)")
+      right: maxed ? "OWNED" : confirm ? "BUY?" : cost + " ASH",
+      desc: pet && maxed ? "OWNED. EQUIP OR UNEQUIP IN INVENTORY."
         : maxed ? u.desc : confirm ? "PRESS AGAIN TO CONFIRM" : u.desc,
       h: 15,
       enabled,

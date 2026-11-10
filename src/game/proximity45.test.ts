@@ -95,7 +95,7 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
   });
   it("first ACT reveals fire circles, second lights, and later ACT feeds",()=>{
     const g=run(),m=meta();
-    g.player.x=CX;g.fireLit=false;g.firestarter=1;
+    g.player.x=CX;g.fireLit=false;g.firestarter=1;g.player.wood=1;
     handleKey(g,m,"e",true);
     update(g,m,0.02,{toast:vi.fn(),end:vi.fn()});
     expect(g.fireLit).toBe(false);

@@ -1,5 +1,20 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #47 implemented (2026-11-10)
+
+**Ash button, not a weird label:** Small single-line ASH directly under MENU is a tap target for the existing permanent-upgrades Shop. The button displays current Run Ash as before, but purchases can only consume already banked Ash. The former two-line Ash plaque is superseded; the rest of the top HUD retains Weight and temperature.
+
+**No Toolbar menu row:** The user wants that extra navigation removed. The two on-screen quick sockets and their genuine hold-to-assign/equipment behavior remain in place.
+
+**Climate-driven Warmth:** Colder genuine local air directly increases Warmth loss, bounded to avoid unplayable early winters. The existing Cold exposure, rain, clothing, indoor/campfire heat, and Warm Blood are preserved, rather than replacing the cold model.
+
+**Real Museum gate:** Only Ordinary can appear before the Museum. Special shapes and rarities are locked until the real permanent Museum is constructed. We never erase old collection flags, including discoveries made under previous builds.
+
+**Fence-post torches:** Each of the real two posts can host a crafted torch requiring two carried Pine Logs. Seven *dawns* of active life per torch; rebuilding an expired torch costs another two logs. The visible cool pale flame casts a smaller and less orange light than the Campfire. One post protects Warmth in its nearby claimed radius, while both simultaneously burning stop Warmth drain inside the claimed fence. Outside the fence the cold rules apply normally. The torch protects against loss but does not generate heat recovery. Expanding the camp moves the east torch along with its new outer fence post.
+
+**Transparency:** Reduce opaque frames across the game HUD, Shop, quick-slot icons, backpack, inventory, Grooty's guide and pause, but retain enough charcoal tint for legibility. Device QA needs comparison in sunny summer and blizzard midnight.
+
+
 ## Patch #46 implemented (2026-11-10)
 
 **Intentional interaction:** The user chose explicit first-press selection rather than automatic station popups. Moving near a completed station leaves the scenery clean; pressing ACT once selects that station and reveals a small pair (or Workbench trio) of round, partly translucent original pixel-art buttons. They drift a few native pixels vertically. ACT again immediately performs the primary left action. Tapping the actual circles selects the other action, with upgrades continuing to use two-press confirmation. Moving away or entering a detailed menu dismisses selection.

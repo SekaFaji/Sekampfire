@@ -306,7 +306,8 @@ export function drawInventoryMenu(ctx:any,g:any,meta:any,close:()=>void):void{
     }});
   }
   const bagSelected=inventorySelection({...g,inventoryTab:0},meta);
-  if(bagSelected)drawText(ctx,fit(ITEM_DEFINITIONS[bagSelected.id].name,123),
+  if(bagSelected)drawText(ctx,fit(bagSelected.id==="pine_log"
+      ?"PINE LOGS: 5-20 FUEL":ITEM_DEFINITIONS[bagSelected.id].name,123),
     29,149,"#e4d3ad");
   else drawText(ctx,"SELECT A SLOT",29,149,"#9fb3b7");
   const weight=carriedWeight(g),limit=carriedWeightLimit(g,meta);

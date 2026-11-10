@@ -45,7 +45,7 @@ export const ITEM_DEFINITIONS: Record<ItemId, ItemDef> = {
   },
   ember_torch: {
     id:"ember_torch",name:"EMBER TORCH",category:"tool",weight:0,maxStack:1,sprite:"camp",
-    description:["REUSABLE HANDHELD TORCH.", "IGNITE FROM A LIT CAMPFIRE.", "ASSIGN TO QUICK SLOT 1 OR 2."]
+    description:["REUSABLE HANDHELD TORCH.", "IGNITE FROM A LIT CAMPFIRE."]
   },
   ember_lantern: {
     id:"ember_lantern",name:"EMBER LANTERN",category:"tool",weight:0,maxStack:1,sprite:"camp",

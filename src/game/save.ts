@@ -71,7 +71,8 @@ function captureRunSnapshot(g: any): any {
   state.inventory = snapshotInventory(g); // canonical item stacks, optional in legacy v1 saves
   // Optional run-local quick slot assignments. Never trust arbitrary IDs,
   // future item ownership or raw objects from saved checkpoints.
-  state.quickSlots = [0,1].map(i=>g.quickSlots?.[i]==="ember"?"ember":null);
+  state.quickSlots = [0,1].map(i=>g.quickSlots?.[i]==="ember"?"ember"
+    :g.quickSlots?.[i]==="ember_torch" && g.crafts?.torch===true?"ember_torch":null);
   if (g.dog && Number.isFinite(g.dog.x)) {
     state.dog = {x:clamp(g.dog.x,10,1590),dir:g.dog.dir===-1?-1:1,
       wood:Math.max(0,Math.min(2,Math.floor(g.dog.wood||0)))};

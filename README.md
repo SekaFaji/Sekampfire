@@ -43,9 +43,9 @@
 - **Rich, real-world minimap:** show the camera footprint, Grooty, both individual fence posts, completed and extended palisade, future expansion marker, unfinished workbench/storage sites, constructed workbench/storage, shelter stages, permanent Museum, forest and campfire. All indicators use actual run coordinates and state; no new map buttons or additional HUD height.
 - **Two quick slots** replace the permanent BUILD and TORCH water-side buttons while keeping ACT and movement arrows unchanged. Both start empty; **hold a socket for half a second** to open its assignment menu, **tap** to use its assigned action. New one-pixel equipment socket art sits over the river.
 - The only supported active action so far is the **existing Fire Ember**, learned once the campfire has been lit. It still uses the real campfire fuel and duration rules. It is *not* presented as a manufactured inventory torch or an invented extra resource; further active tools will be added with the proper inventory patch.
-- **Build has moved to MENU > BUILD**, with the existing B keyboard shortcut preserved. MENU > TOOLBAR gives an accessible way to configure both slots without a long hold. Outside clicks/X/Back navigate between the new submenus safely.
+- **Historical #38 behavior (superseded in #42):** BUILD was briefly available under Menu or the B shortcut. It is now accessible only through the physical Workbench. MENU > TOOLBAR still configures both quick slots.
 - Run snapshots persist a validated two-slot array in the unchanged version-one format; older runs start with empty slots. Long presses do not trigger the corresponding quick-slot action, and moving a finger off the socket cancels the press.
-- Grooty's fireflies now show the actual MENU button and the BUILD row when an upgrade or structure is needed. The separate inventory, Pine Logs naming and extra usable items remain planned.
+- **Historical #38 guide path (superseded in #42):** Grooty now points at the actual physical station and popup actions instead of the old Menu > Build row.
 
 ## Patch #37: Handcrafted living thermometer HUD
 
@@ -136,8 +136,8 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 - **Ash clarity:** Run Ash is earned during the current run; Banked Ash is persistent Shop currency. Banked Ash stays safe through future runs.
 - **Shop:** **Upgrades / Pets / Coming Soon** with the close button above the three tabs. Owned Good Dog remains on the original `up.dog` permanent save key and can be equipped/unequipped through Pets.
 - **Dog:** follows the player, carries at most **2 actual dropped logs**, deposits them in wood storage or hands them to the player, and never creates wood from nothing. Cargo and position persist with run checkpoints.
-- **BUILD / CRAFT:** Build uses **Structures / Upgrades** tabs; the workbench uses **Tools / Supplies**.
-- **Permanent Log Museum:** build once under **BUILD > Structures** for 20 wood, then visit from Build or the physical camp building. The small display building appears in later runs; its collection is permanent.
+- **BUILD / CRAFT:** Approach the completed Workbench and press ACT. Choose **ACCESS** for Tools / Supplies recipes or **BUILD PLANS** for structures. Each completed station has its own physical **UPGRADE** button.
+- **Permanent Log Museum:** build it once under the Workbench **BUILD PLANS** menu for 20 Pine Logs after expanding the camp, then visit the physical Museum. The small display building appears in later runs; its collection is permanent.
 - **Four original log collectibles:** Ordinary (common), Twisted (uncommon), Hand (rare) and Figure-8 (legendary). The first felled tree grants the common discovery; later unique finds use provisional odds for playtesting. They are separate from ordinary firewood and cannot be accidentally burned.
 - Future run tiers, a later Long Night, and a new Ash-from-firewood formula remain **undecided**, not secretly implemented.
 
@@ -146,10 +146,10 @@ A cozy survival pixel-art game built with Canvas 2D, React and TypeScript. Gathe
 - **Aurora:** a 20% chance at ordinary nightfall. Glowing sky bands render above nighttime darkness; aurora survival still earns the existing Ash bonus.
 - **Shooting Star Parade:** a separate rarer sky event which spawns repeated meteor streaks through the night. Nighttime skies remain purely cosmetic except for the existing Aurora bonus.
 - **Wood Axe:** crafted axe now uses a brown carved wooden wedge and bindings; Grandpa's Axe remains metallic.
-- **Camp improvements:** the **BUILD** button now includes **Fireplace, Workbench and Log Storage**, each upgradeable twice with wood. The first selection arms a confirmation; tapping again pays wood.
+- **Camp improvements:** approach the physical **Fireplace, Workbench or Log Storage** and choose **UPGRADE** from its station popup. Each supports two Pine Log-funded tiers and a second confirmation press.
 - **First-tier requirement:** improve all three stations to level 1 before the final **Cabin and Hearth** stage. Level 2 upgrades are optional.
 - Fireplace tiers strengthen warmth near the campfire and reduce fuel burn. Log storage tiers provide 20 and then 20 more capacity beyond the previous limit. Workbench tiers unlock the **Kindling Bundle** and **Ember Lantern** recipes; a mastered workbench reduces future craft prices by 2 wood.
-- The workbench upgrade is also available inside the workbench menu. Built stations change sprite appearances as they improve.
+- The Workbench upgrade is available through its physical station popup, **not** the crafting list. Built stations change sprite appearances as they improve.
 - These are **run-scoped**, not permanent Ash upgrades. Existing saved runs use the same v1 checkpoint key; absent station levels load as zero.
 
 ## Development (Windows, macOS or Linux)

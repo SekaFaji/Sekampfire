@@ -23,10 +23,10 @@ import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog 
 import { trackNightScout, drawScoutGrove } from "./campaign43";
 import { grantRunAsh, validatedAshLedger, ashSummary, beginFirstSettlementCompletion, drawCampaignResult, unlockedCampaignLevel } from "./campaign44";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
-import { drawCampHUD, drawCampMinimap, HUD_RECTS, ASH_PANEL_RECT, hudAshReadout } from "./hud";
+import { drawCampHUD, drawCampMinimap, ASH_PANEL_RECT } from "./hud";
 import { FENCE_TORCH_LIGHT_RADIUS, normalizeFenceTorches, nearestFenceTorchPost,
   activeFenceTorch, buildFenceTorch, advanceFenceTorchDawn, fenceTorchLights, drawFenceTorches,
-  torchPostX } from "./fenceTorches47";
+  } from "./fenceTorches47";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
 import { drawStationPopup } from "./stationPopup";
@@ -1776,15 +1776,6 @@ function drawRunChrome(ctx: any, g: any) {
   // Compact one-line Ash BUTTON directly below MENU: opens the banked-Ash
   // Shop during a run, without depositing pending Run Ash.
   const ash=ASH_PANEL_RECT;
-  const ashLabel=hudAshReadout(g);
-  const compact=textW(ashLabel)<=ash.w-4?ashLabel:
-    "A "+ashLabel.slice(4);
-  const label=textW(compact)<=ash.w-4?compact:"A"+Math.floor((Number(g.ashEarned)||0)/1000)+"K";
-  if(g.ashTapFx>0){
-    ctx.fillStyle="rgba(243,214,167,0.25)";
-    ctx.fillRect(ash.x+1,ash.y+1,ash.w-2,ash.h-2);
-  }
-  drawTextC(ctx,label,ash.x+ash.w/2,ash.y+4,"#f4debf");
   g.zones.push({x:ash.x,y:ash.y,w:ash.w,h:ash.h,onDown:()=>{
     g.ashTapFx=0.25;
     g.menu="shop";g.shopTab=0;g.menuSel=0;

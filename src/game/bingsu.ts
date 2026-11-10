@@ -15,14 +15,13 @@ export const BINGSU = {
   ability:"FETCHES UP TO 2 PINE LOGS.",
 } as const;
 
-/** Bingsu's Pet Shop image is now a full-body native-pixel illustration,
- * with proportions taken directly from the user's supplied photograph. The
- * compact world companion sprite is a different renderer and stays intact.
- */
-export { BINGSU_PORTRAIT54 } from "./bingsuPortrait54";
-import { drawBingsuPortrait54 } from "./bingsuPortrait54";
+/** Compact illustrated head-and-chest portrait, three-quarter view.
+ * No full-body pixel polygon reconstruction. The game-world sprite is
+ * intentionally a separate renderer and remains exactly unchanged. */
+export { BINGSU_PORTRAIT55 } from "./bingsuPortrait55";
+import { drawBingsuPortrait55 } from "./bingsuPortrait55";
 export function drawBingsuPortrait(ctx:any,x:number,y:number):void {
-  drawBingsuPortrait54(ctx,x,y);
+  drawBingsuPortrait55(ctx,x,y);
 }
 
 export function drawBingsuShopProfile(ctx:any,meta:any):void {
@@ -31,15 +30,15 @@ export function drawBingsuShopProfile(ctx:any,meta:any):void {
   ctx.fillStyle="#a2855f";
   ctx.fillRect(30,73,260,1);
   ctx.fillRect(30,151,260,1);
-  // Wide full-body portrait has its own shallow, photo-like landscape frame.
-  drawBingsuPortrait(ctx,34,80);
-  drawText(ctx,"BINGSU - DOGO ARGENTINO",165,80,"#f6dfae");
-  drawText(ctx,"SWEET, CALM & LOVING.",165,92,"#e0d5bc");
-  drawText(ctx,"ALWAYS READY FOR HUGS.",165,101,"#bfd3c7");
-  drawText(ctx,"QUIET, A BIT STUBBORN.",165,110,"#bfd3c7");
-  drawText(ctx,"FEARLESSLY LOYAL.",165,119,"#bfd3c7");
-  drawText(ctx,BINGSU.ability,165,130,"#e3bb88");
+  // Character close-up stays inside the original 260x79 profile panel.
+  drawBingsuPortrait(ctx,34,78);
+  drawText(ctx,"BINGSU - DOGO ARGENTINO",130,80,"#f6dfae");
+  drawText(ctx,BINGSU.personality,130,92,"#e0d5bc");
+  drawText(ctx,BINGSU.affection,130,101,"#bfd3c7");
+  drawText(ctx,BINGSU.temperament,130,110,"#bfd3c7");
+  drawText(ctx,"FEARLESSLY LOYAL.",130,119,"#bfd3c7");
+  drawText(ctx,BINGSU.ability,130,130,"#e3bb88");
   const owned=!!meta?.up?.dog;
-  drawText(ctx,owned?"BOND: FOREVER":"A COMPANION TO LOVE",165,141,
+  drawText(ctx,owned?"BOND: FOREVER":"A COMPANION TO LOVE",130,141,
     owned?"#a5deaa":"#bec4bd");
 }

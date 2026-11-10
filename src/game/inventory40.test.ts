@@ -9,6 +9,7 @@ import {
   availableInventorySlots,carriedWeight,carriedWeightLimit,inventoryEquipment
 } from "./inventory";
 import {BAG_GRID,INVENTORY_MODAL,drawInventoryMenu,drawInventoryItemIcon,inventorySelection} from "./inventoryMenu";
+import {BACKPACK_BUTTON45} from "./proximity45";
 
 let local:Map<string,string>;
 beforeEach(()=>{
@@ -58,10 +59,10 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
  });
  it("provides genuine occupied-slot counts distinct from the existing carried weight cap",()=>{
    const g=run(),m=meta();
-   expect(hudInventoryReadout(g,m)).toBe("INV 0/5");
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 0/5KG");
    expect(availableInventorySlots(g,m)).toBe(5);
    g.player.wood=5;
-   expect(hudInventoryReadout(g,m)).toBe("INV 1/5");
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 5/5KG");
    expect(occupiedInventorySlots(g)).toBe(1);
    expect(carriedWeight(g)).toBe(5);
    expect(carriedWeightLimit(g,m)).toBe(5);
@@ -71,7 +72,7 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    (m.up as any).pack=1;
    expect(availableInventorySlots(g,m)).toBe(15);
    expect(carriedWeightLimit(g,m)).toBe(21);
-   expect(hudInventoryReadout(g,m)).toBe("INV 1/15");
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 5/21KG");
  });
  it("supports old version-one checkpoint migration, stable round-trip and rejecting corrupted stacks",()=>{
    const g=run(),m=meta();g.player.wood=4;
@@ -140,12 +141,12 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    const icon=canvas();drawInventoryItemIcon(icon.ctx,"pine_log",0,0);
    expect(icon.rects.every(r=>r.x>=0&&r.y>=0&&r.x+r.w<=12&&r.y+r.h<=12)).toBe(true);
  });
- it("opens from HUD and ignores the old game controls beneath its modal",()=>{
+ it("opens from dedicated bottom-right BAG and ignores underlying controls beneath its modal",()=>{
    const g=run(),m=meta();g.zones=[];
    drawRunChrome(canvas().ctx,g);
-   const inv=g.zones.find((z:any)=>z.x===195&&z.y===17&&z.w===38&&z.h===23);
+   const inv=g.zones.find((z:any)=>z.x===BACKPACK_BUTTON45.x && z.y===BACKPACK_BUTTON45.y && z.w===BACKPACK_BUTTON45.w && z.h===BACKPACK_BUTTON45.h);
    expect(inv).toBeDefined();
-   handlePointer(g,"down",1,208,28);
+   handlePointer(g,"down",1,BACKPACK_BUTTON45.x+10,BACKPACK_BUTTON45.y+10);
    expect(g.menu).toBe("inventory");
    expect(g.keys.act).toBe(false);
    g.zones=[];drawMenu(canvas().ctx,g,m);
@@ -160,7 +161,7 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    handlePointer(g,"down",4,15,175); // outside dismisses inventory
    expect(g.menu).toBeNull();
  });
- it("supports equipment tab, keyboard item navigation, back and pause-menu entry",()=>{
+ it("supports equipment tab, keyboard item navigation, back and direct I shortcut",()=>{
    const g=run(),m=meta();
    g.menu="inventory";g.inventoryFrom="run";g.crafts.pack=true;
    g.zones=[];drawMenu(canvas().ctx,g,m);
@@ -175,13 +176,7 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    expect(g.pressE).toBe(false);
    handleKey(g,m,"escape",true);
    expect(g.menu).toBeNull();
-   const open=pauseRows(g,m).find((r:any)=>r.label==="INVENTORY");
-   expect(open).toBeTruthy();g.menu="pause";open!.onDown();
-   expect(g.menu).toBe("inventory");
-   expect(g.inventoryFrom).toBe("pause");
-   closeMenu(g);
-   expect(g.menu).toBe("pause");
-   g.menu=null;
+   expect(pauseRows(g,m).some((r:any)=>r.label==="INVENTORY")).toBe(false);
    handleKey(g,m,"i",true);
    expect(g.menu).toBe("inventory");
    handleKey(g,m,"i",true);

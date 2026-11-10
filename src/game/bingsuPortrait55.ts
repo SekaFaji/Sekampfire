@@ -77,13 +77,34 @@ const PIXELS55=[
   "NNNNLIIIIIGHLNNSCmroonnnnmiecopomnnmmmnnnmmjiiffcXWXhiijaXZcWWXZbccklkkllllllkjZWXXXXaXebBSMLE",
   "GLGFLFLHHHHHGLLLDoqonnnomjeaboqpmnmmmnnnnnnjiiheeaWWgjiicYYZXWXdcbcllllllllljifYWXXWWWWhdBSGGT",
 ] as readonly string[];
-export function drawBingsuPortrait55(ctx:any,x:number,y:number):void {
+/** Draw the approved image at native size by default, or fit it into a
+ * smaller frame with nearest-neighbor sampling. Both axes share practically
+ * the same scale factor at the Shop's 86x62 size, keeping Bingsu's head
+ * natural rather than stretching or cropping it. No canvas transforms,
+ * smoothing, generated art or new asset loading. */
+export function drawBingsuPortrait55(
+  ctx:any,x:number,y:number,
+  width:number=BINGSU_PORTRAIT55.w,
+  height:number=BINGSU_PORTRAIT55.h
+):void {
   const ox=Math.round(x),oy=Math.round(y);
-  for(let j=0;j<BINGSU_PORTRAIT55.h;j++){
-    const row=PIXELS55[j];
-    for(let i=0;i<BINGSU_PORTRAIT55.w;){
-      const key=row[i];let end=i+1;
-      while(end<BINGSU_PORTRAIT55.w&&row[end]===key)end++;
+  const targetW=Math.max(1,Math.round(width));
+  const targetH=Math.max(1,Math.round(height));
+  for(let j=0;j<targetH;j++){
+    const sourceY=Math.min(BINGSU_PORTRAIT55.h-1,
+      Math.floor((j+0.5)*BINGSU_PORTRAIT55.h/targetH));
+    const row=PIXELS55[sourceY];
+    for(let i=0;i<targetW;){
+      const sourceX=Math.min(BINGSU_PORTRAIT55.w-1,
+        Math.floor((i+0.5)*BINGSU_PORTRAIT55.w/targetW));
+      const key=row[sourceX];
+      let end=i+1;
+      while(end<targetW){
+        const nextX=Math.min(BINGSU_PORTRAIT55.w-1,
+          Math.floor((end+0.5)*BINGSU_PORTRAIT55.w/targetW));
+        if(row[nextX]!==key)break;
+        end++;
+      }
       ctx.fillStyle=BINGSU_PALETTE55[CHARS55.indexOf(key)];
       ctx.fillRect(ox+i,oy+j,end-i,1);
       i=end;

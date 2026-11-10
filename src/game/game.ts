@@ -21,7 +21,9 @@ import { activePet, updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
-import { drawCampHUD, drawCampMinimap } from "./hud";
+import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
+import { installInventory } from "./inventory";
+import { drawInventoryMenu } from "./inventoryMenu";
 import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { localTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
@@ -36,6 +38,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   // callbacks. These are attached once by the React shell.
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  installInventory(g,null,0);
   g.cb = cb; g.fsToggle = fsToggle;
   g.museumBuilt = !!meta?.museumBuilt;
   const n = (key: string, lo: number, hi: number, fallback: number) =>
@@ -115,6 +118,9 @@ function resumeRun(g: any, data: any, meta?: any) {
     }));
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
+  // Import sanitized canonical Pine Logs from new runs, or upgrade older
+  // wood-only checkpoints without modifying their version-one save key.
+  installInventory(g,data.inventory,finiteRange(data.player.wood,0,26,0));
   g.cold = n("cold", 0, 100, coldTarget(g));
   g.quickSlots = normalizeQuickSlots(data.quickSlots);
   // The instrument is display-only. Its reading is derived from the
@@ -162,7 +168,7 @@ function toast(g: any, text: string) {
 
 // ============ engine ============
 function createEngine(): any {
-  return {
+  const state:any = {
     animT: 0, time: 10, isNight: false, night: 0, thermometerTemp: 11, weather: "clear", aurora: false,
     weatherBlend: 1, previousWeather: "clear", scenerySeed: 777, resumeData: null,
     nightSkyEvent: "none", paradeTimer: 0,
@@ -171,6 +177,7 @@ function createEngine(): any {
     dog: null, stored: 0, stokeCd: 0, heatSoak: 0, cold: 14, dampness: 0, camX: CX - W / 2, shake: 0,
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     quickSlots: [null, null], quickSlotIndex:0, quickSlotFrom:"run", buildFromPause:false,
+    inventory:null, inventoryTab:0, inventorySel:0, inventoryEquipSel:0, inventoryFrom:"run",
     fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
@@ -188,6 +195,8 @@ function createEngine(): any {
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
     crafts: {} as any, eventCd: 6,
   };
+  installInventory(state,null,0);
+  return state;
 }
 
 function genScenery(g: any, seed: number) {
@@ -227,6 +236,7 @@ function spawnTrees(g: any, count: number) {
 function startRunEngine(g: any, meta: any) {
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  installInventory(g,null,0);
   g.cb = cb; g.fsToggle = fsToggle;
   g.museumBuilt = !!meta.museumBuilt;
   genScenery(g, Math.floor(Math.random() * 1e9));
@@ -259,6 +269,7 @@ function goEndless(g: any) {
 function setupTitleScene(g: any) {
   const cb = g.cb, fsToggle = g.fsToggle;
   Object.assign(g, createEngine());
+  installInventory(g,null,0);
   g.cb = cb; g.fsToggle = fsToggle;
   genScenery(g, 777);
   spawnTrees(g, 26);
@@ -967,6 +978,13 @@ function closeMenu(g: any) {
   g.craftConfirm = null;
   g.buildConfirm = null;
   g.endRunConfirm = false;
+  if (g.menu === "inventory") {
+    g.menu = g.inventoryFrom === "pause" ? "pause" : null;
+    g.inventoryFrom = "run";
+    g.menuSel = 0;
+    g.keys.act = false;
+    return;
+  }
   if (g.menu === "quickslot") {
     g.menu = g.quickSlotFrom === "toolbar" ? "toolbar" : null;
     g.menuSel = 0;
@@ -1030,6 +1048,10 @@ function pauseRows(g: any, meta: any) {
     {
       label: "TOOLBAR", right: "", desc: "SET UP TWO QUICK ACCESS SLOTS", h:15, enabled:true,
       onDown: () => { g.menu="toolbar";g.menuSel=0;g.keys.act=false; },
+    },
+    {
+      label: "INVENTORY", right: "", desc: "BACKPACK AND EQUIPMENT", h:15, enabled:true,
+      onDown: () => { g.menu="inventory";g.inventoryFrom="pause";g.inventoryTab=0;g.keys.act=false; },
     },
   ];
 }
@@ -1508,7 +1530,9 @@ function drawMenu(ctx: any, g: any, meta: any) {
   }
   ctx.fillStyle = "rgba(4,6,16,0.5)";
   ctx.fillRect(0, 0, W, H);
-  if (g.menu === "bench") {
+  if (g.menu === "inventory") {
+    drawInventoryMenu(ctx,g,meta,()=>closeMenu(g));
+  } else if (g.menu === "bench") {
     drawListMenu(ctx, g, "WORKBENCH", "WOOD " + g.player.wood + " + PILE " + g.stored, benchRows(g, meta));
   } else if (g.menu === "shop") {
     drawShopTabs(ctx, g, meta, shopRows(g, meta), () => closeMenu(g));
@@ -1584,6 +1608,14 @@ function drawRunChrome(ctx: any, g: any) {
   // Located immediately below the minimap, away from the world and river controls.
   uiButton(ctx, g, 284, 21, 32, 16, "MENU", {
     onDown: () => { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; },
+  });
+  // The new currency plaque is also a real inventory toggle. It is
+  // registered only during an unpaused run, so it cannot capture taps
+  // beneath any menu or interfere with the existing main Menu button.
+  g.zones.push({
+    x:HUD_RECTS.resources.x,y:HUD_RECTS.resources.y,
+    w:HUD_RECTS.resources.w,h:HUD_RECTS.resources.h,
+    onDown:()=>{g.menu="inventory";g.inventoryFrom="run";g.inventoryTab=0;g.inventorySel=0;g.keys.act=false;}
   });
 }
 

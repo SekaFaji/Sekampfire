@@ -1,5 +1,14 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #44 implemented (2026-11-10)
+
+**Level 1 completion and genuine Ash rewards:** New campaign runs stop at the end of the third First Settlement milestone and open an unbanked Level 1 completion choice. The pending reward accurately separates real dawn, aurora, station and structure Ash awards. Older unclassified saved earnings appear as Earlier Run Ash. Only an explicit **BANK ASH + FINISH LEVEL** action transfers Run Ash to permanent Banked Ash, closes the run and records Level 2 unlocked. A validated saved run receipt helps prevent duplicate bank deposits after reload. Replays reset the physical camp while purchased Ash upgrades and Museum collections persist.
+
+**Compatibility:** Older checkpoints without the opt-in `campaignLevel` field remain on their existing tutorial/cabin/finite Long Night behavior. The new campaign ending does not silently alter their progression. The result/pending state uses optional v1 checkpoint fields rather than an invalidating migration.
+
+**Next:** Level 2 is permanently unlocked but not yet playable; it is explicitly marked Coming Soon, not a fabricated chapter. Its milestones, Ash farming introduction, in-game Shop access and permanent starting buildings/fence remain proposed, requiring a separate balanced implementation. Phone UX and resume testing are still pending.
+
+
 ## Patch #43 implementation note (2026-11-10)
 
 **Implemented as a campaign foundation, not a complete campaign conversion:** the first three existing Grooty groups now display as the three named milestones of Level 1, The First Settlement. The other two old cabin groups remain Camp Challenges for compatibility until the completion/unlock flow is built. A physical talk-to-Grooty mission and a night-only Pine Grove outing with a return-to-fire and dawn requirement are now live. The new landmark is east of the initial fence; its target uses real player coordinates and Grooty's existing firefly guidance. The trip can be attempted on a later night without losing the camp. Optional flags extend the unchanged v1 checkpoint.

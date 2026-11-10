@@ -1,5 +1,5 @@
 /** Native pixel icons and verified benefits for permanent Ash cards.
- * Every shop item keeps its original UPGRADES ID, cap and cost in config.ts.
+ * Every Shop item uses its real UPGRADES ID, cap and price in config.ts.
  * No emoji, offscreen scaled image, extra Ash resource or invented effect.
  */
 export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog"|"legacy";

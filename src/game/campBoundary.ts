@@ -174,8 +174,12 @@ export function drawCampFence(ctx:any,g:any){
   }
   const {west,east}=campClaimBounds(g);
   drawPalisade(ctx,g,west,east);
-  if (g.campExpansion < 1) {
-    // Place the expansion stake beyond the established eastern boundary.
+  if (g.campExpansion >= 1) {
+    // Keep the ORIGINAL eastern corner visibly standing after expansion.
+    // It is still a real torch-building point, not an invisible old marker.
+    drawPost(ctx,EAST_POST_X,147,true);
+  } else {
+    // The new outer corner is available only after this stake is claimed.
     drawPost(ctx,EXPANSION_MARKER_X,147,false);
   }
 }

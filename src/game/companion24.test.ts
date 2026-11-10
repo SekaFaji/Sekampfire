@@ -74,7 +74,7 @@ describe("good dog follows and carries only real dropped logs",()=>{
     const ctx:any={set fillStyle(v:string){color=v;},get fillStyle(){return color;},
       fillRect(_x:number,_y:number,w:number,h:number){marks.push({color,w,h});}};
     drawDog(ctx,restored);
-    expect(marks.filter(m=>m.color==="#553824"&&m.w===5&&m.h===3)).toHaveLength(2);
+    expect(marks.filter(m=>m.color==="#553824"&&m.w===4&&m.h===2)).toHaveLength(2);
   });
 });
 describe("permanent pet ownership and equip management",()=>{

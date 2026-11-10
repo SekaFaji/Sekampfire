@@ -1,5 +1,22 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #50 - Inventory and Equipment
+- [x] Keep the native 20-slot backpack on the left with no changes to carried logs or weight capacity.
+- [x] Always display real AXE and PET equipment sockets on the right, with icons, equipped status, owned choices and a dedicated EQUIP/UNEQUIP action.
+- [x] Give every player a permanent Wood Stick fallback even when stronger axes are owned; support switching between Stick, crafted Wood Axe and permanent Grandpa's Axe.
+- [x] Drive both chopping animation tier and real chop duration from the actual selected axe instead of multiplying ownership bonuses.
+- [x] Bingsu is purchased in the Pets Shop but equipped/unequipped from Inventory, preserving existing owned state and two-log retrieval.
+- [x] Keep existing crafted Torch Quick Slot 1/2 assignments accessible from the Inventory's OTHER GEAR mode and the two in-run quick-slot controls.
+- [x] Safely migrate older v1 run checkpoints and permanent Ash data, including explicit unequips and crafted gear expiry between runs.
+- [x] Add unit tests for equipment ownership, UI touch/keyboard, saves, pet cargo conservation and chopping.
+- [ ] Validate small-screen 320x180 detail legibility and gear touch targets on Android landscape in light/night/weather conditions.
+- [ ] Review whether future boots/backpack equipment slots should become optional equips, rather than automatic crafted benefits.
+
+## Remaining approved milestones
+- [ ] **Patch #51 - Ash Shop overhaul:** original illustrated upgrade cards with separate selection, details at bottom and one BUY button. Pets become unlock-only, equips stay in Inventory.
+- [ ] **Patch #52 - Variable log fuel:** wood species definitions and random Pine Log burn values 5-20 rolled when used, preserving stacks and balancing first-night difficulty.
+
+
 ## Patch #49 - Bingsu visual and movement reconstruction
 - [x] Rebuild Bingsu's in-world white Dogo Argentino silhouette at realistic small native-pixel proportions compared with the player.
 - [x] Use one mirrored pixel-art sprite for both directions, with stable paws, grounded shadow, gentle breathing, tail wag, and visible two-log carry pose.

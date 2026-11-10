@@ -182,7 +182,7 @@ describe("Patch #51: Bingsu is SHE, no collar, authentic white Dogo Argentino",(
   const v=canvas();
   drawBingsuPortrait(v.ctx,40,20);
   expect(v.pixels.some(p=>p.ink==="#f8f8f1")).toBe(true);
-  expect(v.pixels.some(p=>p.ink==="#252e30")).toBe(true);
+  expect(v.pixels.some(p=>p.ink==="#191f22")).toBe(true); // new wide Dogo nostrils
   for(const red of ["#a95745","#d47e63","#e2c47b","#b2644e"])
     expect(v.pixels.some(p=>p.ink===red)).toBe(false);
   const dog=canvas();

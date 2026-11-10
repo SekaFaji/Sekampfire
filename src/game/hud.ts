@@ -1,7 +1,8 @@
-import { W, WORLD_W, CX, BENCH_X, PILE_X, WEATHER_TEXT } from "./config";
+import { W, WORLD_W, CX, BENCH_X, PILE_X } from "./config";
 import { drawText, textW } from "./font";
 import { clamp } from "./math";
 import { drawLivingThermometer, THERMOMETER_RECT } from "./thermometer";
+import { carryCap } from "./rules";
 import { visualSeason, seasonDay } from "./palette";
 import { WEST_POST_X, EAST_POST_X, EAST_EXPANDED_X, EXPANSION_MARKER_X, campEstablished } from "./campBoundary";
 import { MUSEUM_X } from "./museum";
@@ -169,38 +170,63 @@ function meter(ctx: any, value: number, x: number, y: number, low: string, high:
 
 /** The new source-based layout uses exactly the same data as the old HUD.
  * The panel geometry leaves y=43 onward for notifications and guide access. */
+/** Narrow four-panel layout with no added visual height or scenery occlusion.
+ * The third plaque displays the existing logs/carrying rule until the next
+ * inventory patch introduces item stacks and genuine occupied-slot counts. */
+export const HUD_RECTS = {
+  survival: {x:3,y:17,w:103,h:23},
+  thermometer: THERMOMETER_RECT,
+  resources: {x:195,y:17,w:38,h:23},
+  calendar: {x:235,y:17,w:83,h:23},
+} as const;
+
+export function hudInventoryReadout(g:any,meta:any):string {
+  const capacity = carryCap(g,meta);
+  const carried = clamp(Number(g.player.wood)||0,0,capacity);
+  // Compact for 13/21 without overflowing the narrow wood-frame plaque.
+  return "INV"+(capacity < 10 ? " " : "")+Math.floor(carried)+"/"+capacity;
+}
+export function hudAshReadout(g:any):string {
+  const earned = Math.max(0,Math.floor(Number(g.ashEarned)||0));
+  if(earned<1000) return "ASH "+earned;
+  const compact = earned<10000 ? (earned/1000).toFixed(1)+"K" : Math.floor(earned/1000)+"K";
+  return "ASH "+compact;
+}
+
+/** Four native-resolution wooden panels:
+ * WARMTH/FUEL | +8°C | WINDY glass instrument | INV/ASH | DAY/SEASON/MENU.
+ * Weather is drawn inside the thermometer, never in the calendar panel. */
 export function drawCampHUD(ctx: any, g: any, meta: any) {
-  drawHudFrame(ctx, 3, 17, 109, 23);
-  drawHudFrame(ctx, THERMOMETER_RECT.x, THERMOMETER_RECT.y, THERMOMETER_RECT.w, THERMOMETER_RECT.h);
-  drawHudFrame(ctx, 221, 17, 97, 23);
+  for(const panel of Object.values(HUD_RECTS)){
+    drawHudFrame(ctx,panel.x,panel.y,panel.w,panel.h);
+  }
 
   const warmth = clamp(Number(g.player.warmth) || 0, 0, 100);
   const fuel = g.fireLit ? clamp(Number(g.fuel) || 0, 0, 100) : 0;
-  // Return to two spacious, instantly readable survival meters.
-  drawText(ctx, "WARMTH", 7, 21, "#eee1c7");
-  meter(ctx, warmth, 39, 21, "#bc554a", "#ef8a6b");
-  drawText(ctx, String(Math.round(warmth)), 95, 21, warmth < 25 ? "#ffae8d" : "#e8d5ac");
-  drawText(ctx, "FUEL", 7, 32, "#eee1c7");
-  meter(ctx, fuel, 39, 32, "#c77732", "#ffc267");
-  drawText(ctx, String(Math.round(fuel)), 95, 32, fuel < 25 ? "#ffab7e" : "#e8d5ac");
+  drawText(ctx,"WARMTH",7,21,"#eee1c7");
+  meter(ctx,warmth,39,21,"#bc554a","#ef8a6b");
+  drawText(ctx,String(Math.round(warmth)),94,21,warmth<25?"#ffae8d":"#e8d5ac");
+  drawText(ctx,"FUEL",7,32,"#eee1c7");
+  meter(ctx,fuel,39,32,"#c77732","#ffc267");
+  drawText(ctx,String(Math.round(fuel)),94,32,fuel<25?"#ffab7e":"#e8d5ac");
 
-  // A dedicated instrument replaces the old wood/Ash text block. The
-  // hidden Cold pressure continues to control survival behind the scenes.
-  drawLivingThermometer(ctx, g);
+  drawLivingThermometer(ctx,g);
 
-  const day = (g.isNight ? "NIGHT " + g.night : "DAY " + (g.night + 1));
-  const weather = WEATHER_TEXT[g.weather] || "";
-  drawText(ctx, day, 225, 21, "#f1e2c9");
-  // Only render weather alongside day if both fit before the menu button.
-  if (textW(day) + textW(weather) + 6 <= 53) {
-    drawText(ctx, weather, 225 + textW(day) + 6, 21, "#c4d1d3");
-  }
-  drawText(ctx, visualSeason(g).toUpperCase() + " " + seasonDay(g) + "/7", 225, 32, "#dfc69d");
-  // Special-run labels stay to the right of the 210px maximum status message,
-  // never on top of the wooden panel borders or the central notification.
-  if (g.endlessMode) {
-    drawText(ctx, "E" + Math.floor(g.endlessN || 0), 274, 46, "#b7d4ed");
-  } else if (g.longNightActive && Math.sin(g.animT * 6) > 0) {
-    drawText(ctx, "LONG NIGHT", 274, 46, "#8fd0ff");
+  // Interim HUD summary of ACTUAL log carry capacity, not invented bag
+  // slots. The MMO inventory patch will replace this with real item slots.
+  drawText(ctx,hudInventoryReadout(g,meta),199,21,"#f1e1c3");
+  drawText(ctx,hudAshReadout(g),199,32,"#d8bcf2");
+
+  const day = g.isNight ? "NIGHT "+g.night : "DAY "+(g.night+1);
+  drawText(ctx,day,239,21,"#f1e2c9");
+  const season = visualSeason(g).toUpperCase()+" "+seasonDay(g)+"/7";
+  // On tight native pixels, abbreviate only when a longer season label
+  // would collide with the real MENU button at x=284.
+  const seasonText = textW(season)>43 ? season.slice(0,3)+" "+seasonDay(g)+"/7" : season;
+  drawText(ctx,seasonText,239,32,"#dfc69d");
+  if(g.endlessMode){
+    drawText(ctx,"E"+Math.floor(g.endlessN||0),274,46,"#b7d4ed");
+  }else if(g.longNightActive&&Math.sin(g.animT*6)>0){
+    drawText(ctx,"LONG NIGHT",274,46,"#8fd0ff");
   }
 }

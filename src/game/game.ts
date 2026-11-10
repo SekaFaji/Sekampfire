@@ -23,7 +23,10 @@ import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog 
 import { trackNightScout, drawScoutGrove } from "./campaign43";
 import { grantRunAsh, validatedAshLedger, ashSummary, beginFirstSettlementCompletion, drawCampaignResult, unlockedCampaignLevel } from "./campaign44";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
-import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
+import { drawCampHUD, drawCampMinimap, HUD_RECTS, ASH_PANEL_RECT, hudAshReadout } from "./hud";
+import { FENCE_TORCH_LIGHT_RADIUS, normalizeFenceTorches, nearestFenceTorchPost,
+  activeFenceTorch, buildFenceTorch, advanceFenceTorchDawn, fenceTorchLights, drawFenceTorches,
+  torchPostX } from "./fenceTorches47";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
 import { drawStationPopup } from "./stationPopup";
@@ -156,6 +159,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.fenceRight = data.fenceRight === undefined ? legacyFence : data.fenceRight === true;
   g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
   if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
+  g.fenceTorches = campEstablished(g) ? normalizeFenceTorches(data.fenceTorches)
+    : normalizeFenceTorches(null);
   clearClaimedTrees(g);
   keepFencePostsClear(g);
   if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
@@ -203,6 +208,7 @@ function createEngine(): any {
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
     guideTalked: false, scoutVisited: false, scoutReturned: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
+    fenceTorches: {left:0,right:0},
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     stationId: "hearth", stationFrom: false, selectedStation: null,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
@@ -210,7 +216,8 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, ashTapFx:0,
+    craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
     crafts: {} as any, eventCd: 6,
@@ -443,6 +450,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   }
   if (g.time >= total) {
     g.time = 0; g.isNight = false;
+    const burnedOut=advanceFenceTorchDawn(g);
+    for(const side of burnedOut) cb.toast((side==="left"?"LEFT":"RIGHT")+" FENCE TORCH BURNED OUT. REBUILD IT FOR 2 LOGS.");
     if (g.longNightActive) {
       g.longNightActive = false;
       g.weather = "clear";
@@ -494,6 +503,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearGrooty = Math.abs(p.x - GROOTY_X) < 17;
   const leftPost = !g.fenceLeft && Math.abs(p.x - WEST_POST_X) < 13;
   const rightPost = !g.fenceRight && Math.abs(p.x - EAST_POST_X) < 13;
+  const nearFenceTorchPost = nearestFenceTorchPost(g);
   const nearExpansion = campEstablished(g) && g.campExpansion < 1 &&
     Math.abs(p.x - EXPANSION_MARKER_X) < 14;
   const tree = nearestTree(g, p);
@@ -514,6 +524,15 @@ function update(g: any, meta: any, dt: number, cb: any) {
         if (campEstablished(g)) {
           AUDIO.effect("build");
           g.shake = Math.max(g.shake, 0.08);
+        }
+      } else if (nearFenceTorchPost) {
+        g.keys.act=false;
+        const wasLit=activeFenceTorch(g,nearFenceTorchPost);
+        const result=buildFenceTorch(g,nearFenceTorchPost);
+        cb.toast(result);
+        if(!wasLit && activeFenceTorch(g,nearFenceTorchPost)) {
+          AUDIO.effect("light");
+          g.shake=Math.max(g.shake,0.055);
         }
       } else if (nearExpansion) {
         g.keys.act = false;
@@ -753,6 +772,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // ---- action label ----
   if (p.chopT > 0) g.actionLabel = "CHOP...";
   else if (leftPost || rightPost) g.actionLabel = p.wood > 0 ? "POST 1 LOG" : "GET LOG";
+  else if (nearFenceTorchPost) g.actionLabel = activeFenceTorch(g,nearFenceTorchPost)
+    ? "TORCH ON" : p.wood>=2 ? "TORCH 2 LOG" : "2 LOGS";
   else if (nearExpansion) g.actionLabel = p.wood + g.stored >= EXPANSION_COST ? "EXPAND" : "5 LOGS";
   else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearGrooty) g.actionLabel = "TALK";
@@ -780,6 +801,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
 // ============ ambient update (always runs) ============
 function updateAmbient(g: any, dt: number) {
   tickQuickSlotHolds(g,dt);
+  g.ashTapFx=Math.max(0,(Number(g.ashTapFx)||0)-Math.max(0,dt));
   g.weatherBlend = clamp(g.weatherBlend + dt / 8, 0, 1);
   // Pixel-art instrument settles slowly as weather/day/night/season changes.
   // It is not added to the save format because real weather is authoritative.
@@ -1177,10 +1199,6 @@ function pauseRows(g: any, meta: any) {
         g.endRunConfirm = false;
         if (g.cb && g.cb.end) g.cb.end("retired", { nights: g.night, ash: Math.floor(g.ashEarned) });
       },
-    },
-    {
-      label: "TOOLBAR", right: "", desc: "SET UP TWO QUICK ACCESS SLOTS", h:15, enabled:true,
-      onDown: () => { g.menu="toolbar";g.menuSel=0;g.keys.act=false; },
     },
   ];
 }
@@ -1755,6 +1773,23 @@ function drawRunChrome(ctx: any, g: any) {
   uiButton(ctx, g, 284, 21, 32, 16, "MENU", {
     onDown: () => { g.menu = "pause"; g.menuSel = 0; g.keys.act = false; },
   });
+  // Compact one-line Ash BUTTON directly below MENU: opens the banked-Ash
+  // Shop during a run, without depositing pending Run Ash.
+  const ash=ASH_PANEL_RECT;
+  const ashLabel=hudAshReadout(g);
+  const compact=textW(ashLabel)<=ash.w-4?ashLabel:
+    "A "+ashLabel.slice(4);
+  const label=textW(compact)<=ash.w-4?compact:"A"+Math.floor((Number(g.ashEarned)||0)/1000)+"K";
+  if(g.ashTapFx>0){
+    ctx.fillStyle="rgba(243,214,167,0.25)";
+    ctx.fillRect(ash.x+1,ash.y+1,ash.w-2,ash.h-2);
+  }
+  drawTextC(ctx,label,ash.x+ash.w/2,ash.y+4,"#f4debf");
+  g.zones.push({x:ash.x,y:ash.y,w:ash.w,h:ash.h,onDown:()=>{
+    g.ashTapFx=0.25;
+    g.menu="shop";g.shopTab=0;g.menuSel=0;
+    g.upConfirm=null;g.keys.act=false;g.pressE=false;
+  }});
   // A dedicated physical backpack button keeps Inventory one touch away.
   // The top resources plaque is now a read-only weight/Ash display.
   drawBackpackButton45(ctx,g,()=>{
@@ -2196,6 +2231,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // Cleared camp and palisade sit behind Grooty, structures and player.
   drawCampGround(ctx, g, colors);
   drawCampFence(ctx, g);
+  drawFenceTorches(ctx,g);
   for (const s of g.sparkles) {
     if (s.x < camX - 4 || s.x > camX + W + 4) continue;
     px(ctx, s.x, s.y, 1, 1, colors.name === "winter" ? s.c : colors.speckle);
@@ -2323,6 +2359,8 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   lightR *= 1 - weatherIntensity(g, "blizzard") * 0.25;
   if (lightR > 0) punch(CX - camX, 146, lightR);
   if (g.player.torchT > 0) punch(g.player.x - camX, g.player.y - 12, 38);
+  for(const torch of fenceTorchLights(g))
+    punch(torch.x-camX,torch.y,FENCE_TORCH_LIGHT_RADIUS);
   if (g.stage >= 6) {
     punch(x0 + 28 - camX, 131, 15);
     punch(x0 + 66 - camX, 131, 15);
@@ -2344,6 +2382,23 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     ctx.globalCompositeOperation = "source-over";
   }
 
+  // Fence torches use a faint COOL moonlit halo rather than the firepit's
+  // saturated warm amber. Light punches also reveal the fence behind fog.
+  if(darkA>0.03){
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    for(const torch of fenceTorchLights(g)){
+      const glow=ctx.createRadialGradient(torch.x-camX,torch.y,0,
+        torch.x-camX,torch.y,FENCE_TORCH_LIGHT_RADIUS);
+      glow.addColorStop(0,"rgba(167,207,196,0.19)");
+      glow.addColorStop(0.5,"rgba(137,184,183,0.07)");
+      glow.addColorStop(1,"rgba(128,171,176,0)");
+      ctx.fillStyle=glow;
+      ctx.fillRect(torch.x-camX-FENCE_TORCH_LIGHT_RADIUS,torch.y-FENCE_TORCH_LIGHT_RADIUS,
+        FENCE_TORCH_LIGHT_RADIUS*2,FENCE_TORCH_LIGHT_RADIUS*2);
+    }
+    ctx.restore();
+  }
   ctx.restore();
 
   // Reflect animated world objects (not the solid ground or HUD).

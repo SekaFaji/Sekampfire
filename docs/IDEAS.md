@@ -225,6 +225,14 @@ Ambient Celsius responds to actual seasons, time of day and weather transitions.
 - Existing version-one saves migrate wood to Pine Logs automatically. The same save format persists validated inventory slots and the old wood compatibility field.
 - Still to design/build: additional resources and their world spawns, item dragging/equipping, crafted consumable Torch, small square quick slots, and building site ACCESS/UPGRADE UI (no remote building from pause).
 
+### Patch #41 implemented (2026-11-10)
+
+- **Toolbar:** small 22x22 native square equipment sockets replace the wide text buttons, with Android-size 28x26 touch areas and the same 0.5s hold-to-assign gesture. The main ACT button and movement zones keep their hit areas.
+- **Real Torch:** the new reusable Ember Torch craft appears at the Workbench, costs 3 Pine Logs, and is a genuine owned Equipment item. Assign from its item details into either quick slot or use the picker. Igniting still consumes the existing campfire ember/fuel and uses existing torch rules; no free light or fabricated resources. Previously assigned legacy Ember remains usable in v1 saves.
+- **Bingsu:** rename the existing permanent 40-Ash Good Dog to **Bingsu** (a white Dogo Argentino), including handcrafted pixel-art portrait, stronger in-world white breed silhouette and loyal/fearless companion lore. Pet still follows his owner and carries at most two genuine dropped Pine Logs using the original `up.dog` key; he does not yet have implemented combat defense.
+- **Grooty:** player-visible run tutorial teaching sections are called numbered **MISSIONS** rather than LEVELS or LESSONS, including cabin prerequisite text. This changes presentation only; it does **not** implement the future full campaign Level/Milestone/Mission architecture and does not change any save identifiers or requirements.
+- **Still future:** station-local ACCESS/UPGRADE popups, removing remote Build from Pause, broader item tool variety, dog defense gameplay (after balancing), and the substantial campaign Levels / Milestones / Missions restructure.
+
 ## 4. Inventory, resources and contextual actions
 
 **Agreed direction**

@@ -961,7 +961,7 @@ function accessHearth(g:any):void {
     if(g.firestarter>0){
       g.firestarter--;g.fireLit=true;g.everLit=true;g.fuel=34;
       AUDIO.effect("light");toast(g,"The fire catches. Warm at last.");
-    }else if(p.wood>=3||g.stored>=3){
+    }else if(p.wood+g.stored>=3){
       const fromStore=Math.max(0,3-p.wood);
       p.wood-=3-fromStore;g.stored-=fromStore;
       g.fireLit=true;g.everLit=true;g.fuel=28;

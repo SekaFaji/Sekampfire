@@ -2,6 +2,7 @@ import { drawText, drawTextC, textW } from "./font";
 import { INVENTORY_GRID_SLOTS, ITEM_DEFINITIONS, type ItemId,
   availableInventorySlots, occupiedInventorySlots, carriedWeight,
   carriedWeightLimit, inventoryEquipment } from "./inventory";
+import { assignQuickSlot } from "./quickSlots";
 
 export const INVENTORY_MODAL = {x:18,y:8,w:284,h:164} as const;
 export const BAG_GRID = {x:29,y:53,cols:5,rows:4,size:22,gap:3} as const;
@@ -37,6 +38,14 @@ export function drawInventoryItemIcon(ctx:any,id:ItemId,x:number,y:number,scale=
     p(2,2,8,1,"#ad7b48");
     p(0,7,3,2,"#603e29");
     p(4,4,2,1,"#edbf7d");
+  }else if(id==="ember_torch"){
+    // Flame, hand grip and solid metal collar.
+    p(5,4,3,7,"#755036");
+    p(6,5,1,6,"#bc8457");
+    p(4,3,5,2,"#4d4c45");
+    p(4,2,5,3,"#e8874c");
+    p(5,1,3,3,"#f6c46e");
+    p(6,0,1,3,"#fff0aa");
   }else if(id==="wood_axe"){
     p(5,1,2,10,"#70462d");
     p(6,2,1,8,"#c8935e");
@@ -155,6 +164,16 @@ export function drawInventoryMenu(ctx:any,g:any,meta:any,close:()=>void):void{
     }
     if(g.inventoryTab===0){
       drawText(ctx,"WEIGHT "+item.weight+"/EA",detailsX+7,137,"#b9ab93");
+    }else if(selected.id==="ember_torch"){
+      // Directly assign a REAL owned craft from Equipment to either square
+      // socket without closing Inventory or silently activating the item.
+      drawText(ctx,selected.source,detailsX+7,121,"#dfc390");
+      actionable(ctx,g,detailsX+6,132,55,15,"SLOT 1",()=>{
+        assignQuickSlot(g,0,"ember_torch");
+      },g.quickSlots?.[0]==="ember_torch");
+      actionable(ctx,g,detailsX+65,132,55,15,"SLOT 2",()=>{
+        assignQuickSlot(g,1,"ember_torch");
+      },g.quickSlots?.[1]==="ember_torch");
     }else{
       drawText(ctx,selected.source,detailsX+7,137,"#dfc390");
     }

@@ -185,7 +185,7 @@ export function hudInventoryReadout(g:any,meta:any):string {
   // True occupied stack slots / unlocked backpack slots. The *separate*
   // pine-log carrying weight is displayed inside the inventory modal.
   const spaced = "INV "+used+"/"+capacity;
-  return textW(spaced)<=30?spaced:"INV"+used+"/"+capacity;
+  return textW(spaced)<=32?spaced:"INV"+used+"/"+capacity;
 }
 export function hudAshReadout(g:any):string {
   const earned = Math.max(0,Math.floor(Number(g.ashEarned)||0));

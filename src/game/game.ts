@@ -773,7 +773,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (p.chopT > 0) g.actionLabel = "CHOP...";
   else if (leftPost || rightPost) g.actionLabel = p.wood > 0 ? "POST 1 LOG" : "GET LOG";
   else if (nearFenceTorchPost) g.actionLabel = activeFenceTorch(g,nearFenceTorchPost)
-    ? "TORCH ON" : p.wood>=2 ? "TORCH 2 LOG" : "2 LOGS";
+    ? "TORCH "+g.fenceTorches[nearFenceTorchPost]+"D"
+    : p.wood>=2 ? "TORCH 2 LOG" : "2 LOGS";
   else if (nearExpansion) g.actionLabel = p.wood + g.stored >= EXPANSION_COST ? "EXPAND" : "5 LOGS";
   else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearGrooty) g.actionLabel = "TALK";
@@ -2276,9 +2277,15 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     const rightFence2 = !g.fenceRight && Math.abs(p.x - EAST_POST_X) < 13;
     const expansion2 = campEstablished(g) && g.campExpansion < 1 &&
       Math.abs(p.x - EXPANSION_MARKER_X) < 14;
+    const nearTorch2=nearestFenceTorchPost(g);
     const tr = nearestTree(g, p);
     if (leftFence2 || rightFence2) {
       drawTextO(ctx, "1 LOG", p.x - 10, 112 - bob, "#ffe9a0", "#060a18");
+    } else if (nearTorch2) {
+      const wx=nearTorch2==="left"?campClaimBounds(g).west:campClaimBounds(g).east;
+      const lit=activeFenceTorch(g,nearTorch2);
+      drawTextO(ctx,lit?"TORCH "+g.fenceTorches[nearTorch2]+"D":"2 LOG TORCH",
+        wx-22,105-bob,"#d7e9d9","#060a18");
     } else if (expansion2) {
       drawTextO(ctx, "5 LOGS", p.x - 12, 112 - bob, "#ffe9a0", "#060a18");
     } else if (nearGrooty2) {

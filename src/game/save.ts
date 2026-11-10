@@ -3,6 +3,7 @@ import { stationIds } from "./campProgress";
 import { clamp } from "./math";
 import { cleanLogCollection } from "./museum";
 import { snapshotInventory } from "./inventory";
+import { validatedAshLedger } from "./campaign44";
 
 function saveMeta(m: any) { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) { } }
 function safeCount(v: any): number {
@@ -44,10 +45,11 @@ function clearRunSnapshot() {
   try { localStorage.removeItem(RUN_KEY); } catch (_e) {}
 }
 function captureRunSnapshot(g: any): any {
-  if (g.ui !== "run" || g.over) return null;
+  if ((g.ui !== "run" && g.ui !== "levelComplete") || g.over) return null;
   const keys = ["time","night","isNight","weather","aurora","nightSkyEvent","fuel","fireLit","everLit",
     "firestarter","stage","longNightPending","longNightActive","endlessMode","endlessN",
-    "ashEarned","won","victoryPending","guideLevel","guideChops","guideStokes","guideStoredTen",
+    "ashEarned","ashLedger","campaignLevel","levelCompletePending","won","victoryPending",
+    "guideLevel","guideChops","guideStokes","guideStoredTen",
     "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
     "fenceLeft","fenceRight","campExpansion","heatSoak","cold","dampness"];
@@ -55,6 +57,9 @@ function captureRunSnapshot(g: any): any {
   for (const key of keys) state[key] = g[key];
   // Keep the existing v1 checkpoint key/version. Persist only validated tier
   // numbers; old checkpoints simply load all station levels as zero.
+  state.ashLedger = validatedAshLedger(g.ashLedger);
+  state.campaignLevel = g.campaignLevel === 1 ? 1 : 0;
+  state.levelCompletePending = g.levelCompletePending === true;
   state.campUpgrades = Object.fromEntries(stationIds.map(id => [
     id, Math.min(2, Math.max(0, Math.floor(Number(g.campUpgrades?.[id]) || 0)))
   ]));

@@ -161,18 +161,19 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    handlePointer(g,"down",4,15,175); // outside dismisses inventory
    expect(g.menu).toBeNull();
  });
- it("supports equipment tab, keyboard item navigation, back and direct I shortcut",()=>{
+ it("supports right-side equipment selection, keyboard controls, back and I shortcut",()=>{
    const g=run(),m=meta();
-   g.menu="inventory";g.inventoryFrom="run";g.crafts.pack=true;
+   g.menu="inventory";g.inventoryFrom="run";g.crafts.pack=true;g.crafts.maul=true;
    g.zones=[];drawMenu(canvas().ctx,g,m);
-   handlePointer(g,"down",7,122,35);
+   handlePointer(g,"down",7,176,55); // actual right-side AXE socket
    expect(g.inventoryTab).toBe(1);
+   expect(g.inventoryGearType).toBe("axe");
    handleKey(g,m,"arrowright",true);
-   expect(g.inventoryEquipSel).toBe(1);
+   expect(g.inventoryGearChoice).toBe("wood_axe");
    handleKey(g,m,"arrowleft",true);
-   expect(g.inventoryEquipSel).toBe(0);
+   expect(g.inventoryGearChoice).toBe("stick");
    g.pressE=false;
-   handleKey(g,m,"enter",true);
+   handleKey(g,m,"enter",true); // legitimate equipment action
    expect(g.pressE).toBe(false);
    handleKey(g,m,"escape",true);
    expect(g.menu).toBeNull();

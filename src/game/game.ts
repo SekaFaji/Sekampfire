@@ -2,7 +2,8 @@ import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGH
 import { createInputHandlers } from "./input";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
 import { clamp } from "./math";
-import { carryCap, pileCap, choppingToolTier } from "./rules";
+import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
+import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
@@ -133,6 +134,7 @@ function resumeRun(g: any, data: any, meta?: any) {
     }));
   g.crafts = {};
   for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
+  g.equippedAxe = normalizeEquippedAxe(data.equippedAxe,g,meta);
   // Import sanitized canonical Pine Logs from new runs, or upgrade older
   // wood-only checkpoints without modifying their version-one save key.
   installInventory(g,data.inventory,finiteRange(data.player.wood,0,26,0));
@@ -224,7 +226,7 @@ function createEngine(): any {
     craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
-    crafts: {} as any, eventCd: 6,
+    crafts: {} as any, equippedAxe:"stick",eventCd: 6,
   };
   installInventory(state,null,0);
   return state;
@@ -270,6 +272,7 @@ function startRunEngine(g: any, meta: any) {
   installInventory(g,null,0);
   g.cb = cb; g.fsToggle = fsToggle;
   g.museumBuilt = !!meta.museumBuilt;
+  g.equippedAxe = defaultPermanentAxe(meta);
   g.campaignLevel = 1; // fresh campaigns; old saved runs remain legacy
   genScenery(g, Math.floor(Math.random() * 1e9));
   g.campaignRunId = "lv1-" + g.scenerySeed + "-" + Date.now();
@@ -596,7 +599,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
         else selectStation(g,"pile");
       } else if (tree) {
         p.chopTree = tree;
-        p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
+        p.chopTime = choppingSeconds(g,meta);
         p.chopT = p.chopTime;
       }
     }
@@ -606,7 +609,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.keys.act && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
     if (!nearPit && !nearBench && !nearPile && tree) {
       p.chopTree = tree;
-      p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
+      p.chopTime = choppingSeconds(g,meta);
       p.chopT = p.chopTime;
     }
   }
@@ -1320,6 +1323,7 @@ function benchRows(g: any, meta: any) {
         g.player.wood -= fromCarried;
         g.stored -= realCost - fromCarried;
         g.crafts[c.id] = true;
+        if(c.id==="maul") g.equippedAxe="wood_axe"; // preserve first-craft behavior
         toast(g, c.name.toUpperCase() + " crafted.");
       },
     };
@@ -1348,12 +1352,8 @@ function shopRows(g: any, meta: any) {
       enabled,
       onDown: () => {
         if (maxed) {
-          if (pet) {
-            meta.petEquipped = equipped ? null : "dog";
-            g.upConfirm = null;
-            saveMeta(meta);
-            toast(g, equipped ? "BINGSU WILL REST." : "BINGSU JOINS YOUR CAMP.");
-          } else toast(g, u.name.toUpperCase() + " is already yours.");
+          if (pet) toast(g,"BINGSU IS OWNED. EQUIP OR UNEQUIP HIM IN INVENTORY.");
+          else toast(g, u.name.toUpperCase() + " is already yours.");
           return;
         }
         if (meta.ash < cost) { toast(g, "Not enough ash."); return; }
@@ -1361,6 +1361,7 @@ function shopRows(g: any, meta: any) {
         g.upConfirm = null;
         meta.ash -= cost;
         meta.up[u.id] = lvl + 1;
+        if(u.id==="axe") {meta.axeEquipped="grandpas_axe";g.equippedAxe="grandpas_axe";}
         if (pet) meta.petEquipped = "dog";
         saveMeta(meta);
         toast(g, u.name.toUpperCase() + " unlocked.");

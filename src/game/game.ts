@@ -27,7 +27,7 @@ import { drawCampHUD, drawCampMinimap, HUD_RECTS } from "./hud";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
 import { drawStationPopup } from "./stationPopup";
-import { nearbyStation, drawStationBubbles, drawBackpackButton45, type NearbyStation, type StationAction } from "./proximity45";
+import { nearbyStation, selectedStation, selectStation, dismissStationSelection, drawStationBubbles, drawBackpackButton45, type NearbyStation, type StationAction } from "./proximity45";
 import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { localTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
@@ -204,7 +204,7 @@ function createEngine(): any {
     guideTalked: false, scoutVisited: false, scoutReturned: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
-    stationId: "hearth", stationFrom: false,
+    stationId: "hearth", stationFrom: false, selectedStation: null,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
@@ -497,6 +497,10 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const nearExpansion = campEstablished(g) && g.campExpansion < 1 &&
     Math.abs(p.x - EXPANSION_MARKER_X) < 14;
   const tree = nearestTree(g, p);
+  // Leaving the chosen structure removes its floating controls and any
+  // unfinished upgrade confirmation. Standing near a station alone is inert.
+  if(g.selectedStation && nearbyStation(g)!==g.selectedStation)
+    dismissStationSelection(g);
   if (g.stokeCd > 0) g.stokeCd -= dt;
 
   // ---- context action (single press) ----
@@ -545,9 +549,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
             : `Stacked ${add} logs on the site. ${g.benchLogs}/15.`);
         } else cb.toast("Bring 15 logs here to build the workbench.");
       } else if (nearBench) {
-        performStationAction(g,meta,"bench","primary");
+        if(selectedStation(g)==="bench") performStationAction(g,meta,"bench","primary");
+        else selectStation(g,"bench");
       } else if (nearPit) {
-        performStationAction(g,meta,"hearth","primary");
+        if(selectedStation(g)==="hearth") performStationAction(g,meta,"hearth","primary");
+        else selectStation(g,"hearth");
       } else if (nearPile && !g.builtPile) {
         g.keys.act = false;
         if (g.pileBuildT >= 0) {
@@ -563,7 +569,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
             : `Stacked ${add} logs on the site. ${g.pileLogs}/15.`);
         } else cb.toast("Bring 15 logs here to build the wood pile.");
       } else if (nearPile) {
-        performStationAction(g,meta,"pile","primary");
+        if(selectedStation(g)==="pile") performStationAction(g,meta,"pile","primary");
+        else selectStation(g,"pile");
       } else if (tree) {
         p.chopTree = tree;
         p.chopTime = (meta.up.axe ? 0.6 : 1.0) * (g.crafts.maul ? 0.7 : 1);
@@ -755,6 +762,12 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : "STORAGE";
   else if (tree) g.actionLabel = "CHOP";
   else g.actionLabel = "-";
+  // Once ACT has selected a completed structure, the central control
+  // names its real default action instead of redundantly naming the building.
+  const chosenStation=selectedStation(g);
+  if(chosenStation==="hearth") g.actionLabel=g.fireLit?"FEED":"LIGHT";
+  else if(chosenStation==="bench") g.actionLabel="CRAFT";
+  else if(chosenStation==="pile") g.actionLabel=p.wood>0?"STORE":"TAKE";
 
   if (g.stored >= 10) g.guideStoredTen = true;
   // Scouting is measured after real movement and before objective completion.
@@ -1031,7 +1044,7 @@ function accessStorage(g:any,meta:any):void {
 /** The world-space station buttons and ACT use precisely the same
  * authoritative station actions. No generic ACCESS/UPGRADE popup is opened. */
 function performStationAction(g:any,meta:any,id:NearbyStation,action:StationAction):boolean {
-  if(g.ui!=="run" || g.over || g.menu || nearbyStation(g)!==id) return false;
+  if(g.ui!=="run" || g.over || g.menu || selectedStation(g)!==id) return false;
   g.stationId=id;
   const rowIndex=action==="primary"?0:action==="upgrade"?1:2;
   const row=stationRows(g,meta)[rowIndex];
@@ -1047,6 +1060,7 @@ function performStationAction(g:any,meta:any,id:NearbyStation,action:StationActi
   // Crafting and blueprints are genuine detailed menus; closing them returns
   // to the world, never to the removed station confirmation popup.
   if(g.menu==="bench" || g.menu==="build") g.stationFrom=false;
+  if(g.menu) dismissStationSelection(g);
   return true;
 }
 
@@ -1091,6 +1105,7 @@ function stationRows(g:any,meta:any):any[]{
 
 // close the open menu; settings opened from pause returns to the pause menu
 function closeMenu(g: any) {
+  dismissStationSelection(g);
   g.craftConfirm = null;
   g.buildConfirm = null;
   g.endRunConfirm = false;
@@ -2058,13 +2073,16 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   g.packTier = (meta.up.pack ? 1 : 0) + (g.crafts.pack ? 1 : 0);
   g.toolTier = choppingToolTier(g, meta);
   const inRun = g.ui === "run";
+  // A detailed crafting, inventory or pause menu dismisses the selected
+  // object's transient buttons; closing the menu does not reopen them.
+  if(g.menu && g.selectedStation) dismissStationSelection(g);
   // clear the pending upgrade confirmation once the shop is closed or left
   if (g.menu !== "shop") g.upConfirm = null;
   if (g.menu !== "bench") g.craftConfirm = null;
   // Two-tap station upgrades must survive rendering while the player
   // remains beside that exact station, but expire on departure/menu opening.
   if (g.menu !== "bench" && g.menu !== "build" &&
-      !(inRun && !g.menu && nearbyStation(g)===g.buildConfirm)) g.buildConfirm = null;
+      !(inRun && !g.menu && selectedStation(g)===g.buildConfirm)) g.buildConfirm = null;
   const nightLen = g.longNightActive ? LONG_NIGHT_LEN : NIGHT_LEN;
   const total = DAY_LEN + nightLen;
   const q = clamp(g.time / total, 0, 1);
@@ -2240,14 +2258,14 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
       drawTextO(ctx,"GROOTY",GROOTY_X-10,103-bob,"#ffe9a0","#060a18");
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
-    } else if (nearBench2) {
+    } else if (nearBench2 && selectedStation(g)!=="bench") {
       const lbl = g.builtBench ? "ACCESS" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");
     }
-    else if (nearPit2) {
+    else if (nearPit2 && selectedStation(g)!=="hearth") {
       const lbl = "FIREPLACE";
       drawTextO(ctx, lbl, CX - 9, 118 - bob, "#ffe9a0", "#060a18");
-    } else if (nearPile2) {
+    } else if (nearPile2 && selectedStation(g)!=="pile") {
       const lbl = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : "STORAGE";
       drawTextO(ctx, lbl, PILE_X - 7, 120 - bob, "#ffe9a0", "#060a18");
     } else if (tr) drawTextO(ctx, "CHOP", tr.x - 7, tr.y - 40 - bob, "#ffe9a0", "#060a18");
@@ -2341,7 +2359,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   // Draw after the night mask so players can still see the icons at night,
   // but below the top HUD and any full-screen menu.
   if(inRun && !g.over && !g.menu) {
-    drawStationBubbles(ctx,g,nearbyStation(g),(id,action)=>performStationAction(g,meta,id,action));
+    drawStationBubbles(ctx,g,selectedStation(g),(id,action)=>performStationAction(g,meta,id,action));
   }
   // screen chrome
   if (!inRun) drawScreen(ctx, g, meta);

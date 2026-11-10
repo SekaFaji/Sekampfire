@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #46: choose a station, then use floating circular controls
+
+- **ACT selection:** merely approaching a built Campfire, Workbench or Log Storage shows no floating action circles. **First ACT selects that nearby structure** and reveals its controls; **second ACT performs its left/default action**, as do subsequent ACT presses while the selection stays in range. The central ACT label changes to LIGHT/FEED, CRAFT, or STORE/TAKE when selected.
+- **Circular, semi-transparent pixel-art controls:** replaces square station buttons with gentle bobbing pixel circles. Original icons, readable short labels, proper animated touch zones and matching Grooty fireflies remain tied to the selected station. Station selection/upgrade confirmation closes on departure, opening another menu, or finishing an interaction that opens a detailed screen.
+- **Ash under Menu:** the Run Ash balance moves out from under the Weight plaque and into a two-line 32x22 panel directly beneath the top-right MENU button (same horizontal alignment), with existing compact large-number formatting. Weight and its real kg capacity are unchanged.
+- **Compatibility:** no change to save keys, carried log mass, Ash accounting, station resources, camp upgrades or upgrade double-confirmation; transient station selection is never persisted.
+- **QA:** Patch #46 regression suite checks first-vs-second ACT, real log feeding/upgrades, disappearance on departure/menu, float geometry, live hit zones, guide targeting and exact Ash panel position. Android landscape visual testing remains outstanding.
+
+
 ## Patch #45: fast backpack, true kg weight and proximity camp actions
 
 - **Bottom-right BAG:** An original pixel-art backpack button opens the existing Backpack and Equipment inventory in one tap from the run. The top resource plaque is read-only and the redundant Pause Inventory entry is removed; the keyboard I shortcut remains. The touch rectangle takes precedence over the right-side 15% movement region.

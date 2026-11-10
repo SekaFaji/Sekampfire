@@ -7,6 +7,7 @@ import {CX,BENCH_X,PILE_X} from "./config";
 import {stationLevel,stationCost} from "./campProgress";
 import {guideTarget,guideMenuPosition} from "./guidance";
 import {captureRunSnapshot} from "./save";
+import {selectStation} from "./proximity45";
 let store:Map<string,string>;
 beforeEach(()=>{
  store=new Map();
@@ -71,12 +72,19 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
   const g=state(),m=meta();
   g.builtBench=true;g.builtPile=true;g.player.x=BENCH_X;
   g.pressE=true;update(g,m,.02,cb());
-  expect(g.menu).toBe("bench"); // real crafting recipes still use a list
+  expect(g.menu).toBeNull();expect(g.selectedStation).toBe("bench");
+  g.pressE=true;update(g,m,.02,cb());
+  expect(g.menu).toBe("bench"); // second ACT enters real crafting
   expect(g.stationFrom).toBe(false);
   closeMenu(g);expect(g.menu).toBeNull();
   g.player.x=PILE_X;g.player.wood=2;g.pressE=true;update(g,m,.02,cb());
-  expect(g.menu).toBeNull();expect(g.stored).toBe(2);
+  expect(g.menu).toBeNull();expect(g.stored).toBe(0);
+  g.pressE=true;update(g,m,.02,cb());
+  expect(g.stored).toBe(2);
   g.player.x=CX;g.fireLit=true;g.fuel=10;g.player.wood=1;
+  g.pressE=true;update(g,m,.02,cb());
+  expect(g.selectedStation).toBe("hearth");
+  expect(g.player.wood).toBe(1);
   g.pressE=true;update(g,m,.02,cb());
   expect(g.menu).toBeNull();expect(g.stationId).toBe("hearth");
   expect(g.player.wood).toBe(0);expect(g.guideStokes).toBe(1);
@@ -163,7 +171,7 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
   g.guideLevel=1;g.guideStoredTen=true;g.campExpansion=1;g.stored=15;
   g.campUpgrades.pile=0;g.player.x=PILE_X;
   let target=guideTarget(g,m);
-  expect(target).toMatchObject({space:"screen"});
+  expect(target).toMatchObject({space:"world",x:PILE_X});
   openStation(g,"pile");
   target=guideTarget(g,m);
   expect(target).toMatchObject({space:"menu",menu:"station",row:1});
@@ -173,6 +181,7 @@ describe("Patch #42 physical construction, access and upgrade",()=>{
     y:STATION_ACTIONS.upgrade.y+STATION_ACTIONS.upgrade.h/2});
   closeMenu(g);
   g.guideLevel=3;g.stage=0;g.player.x=BENCH_X;
+  expect(selectStation(g,"bench")).toBe(true);
   target=guideTarget(g,m);expect(target).toMatchObject({space:"screen"});
   openStation(g,"bench");
   target=guideTarget(g,m);

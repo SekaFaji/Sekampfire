@@ -1,5 +1,15 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #46 - Explicit station selection, floating circular controls, right Ash
+- [x] No station bubbles appear on proximity alone. First ACT on a finished station selects it; second ACT performs the primary action. While selected, ACT continues using the default action without opening a generic panel.
+- [x] Replace opaque rectangular station buttons with translucent rounded pixel-art buttons, short labels and a restrained vertical bob. Touch regions and Grooty's goal markers follow the same animated geometry.
+- [x] Move Run Ash from beneath the Weight plaque to a dedicated right-aligned panel immediately under MENU; keep kg weight unchanged.
+- [x] Clear station selection and pending upgrade confirmation on departure or opening/closing other menus; keep these transient fields out of v1 saves.
+- [x] Keep existing two-tap station upgrade spending and original Workbench detailed crafting/blueprint lists.
+- [ ] Real Android landscape check: circle visual contrast by season/time/weather, reachable touch targets, ACT tapping twice, campfire firelight and Ash stack over the world.
+- [ ] Retire legacy station modal helpers after real-device signoff, if they are truly no longer necessary.
+
+
 ## Patch #45 - Proximity station actions, weight HUD and backpack button
 - [x] Show an always-visible dedicated bottom-right pixel-art inventory button; remove redundant Pause Inventory entry while preserving the I key.
 - [x] Display real kg weight instead of occupied inventory stack slots, without changing Pine Logs (1 kg each), 5/13/21 kg capacities, or earned Ash.

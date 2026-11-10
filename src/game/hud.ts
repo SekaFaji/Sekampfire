@@ -170,14 +170,17 @@ function meter(ctx: any, value: number, x: number, y: number, low: string, high:
 
 /** The new source-based layout uses exactly the same data as the old HUD.
  * The panel geometry leaves y=43 onward for notifications and guide access. */
-/** Four wooden panels. Carry weight is the REAL backpack mass in kg,
- * independent of inventory stack slots. Ash gets its own compact third chip. */
+/** The four primary plaques preserve their layout and the original weight
+ * and temperature readings. Run Ash has a separate panel BELOW MENU. */
 export const HUD_RECTS = {
   survival: {x:3,y:17,w:103,h:23},
   thermometer: THERMOMETER_RECT,
   resources: {x:195,y:17,w:38,h:23},
   calendar: {x:235,y:17,w:83,h:23},
 } as const;
+/** The right-aligned Ash panel stacks immediately below the MENU button
+ * (284..316, 21..37), instead of hanging under the Weight plaque. */
+export const ASH_PANEL_RECT = {x:284,y:41,w:32,h:22} as const;
 
 export function hudInventoryReadout(g:any,meta:any):string {
   // Preserve a public readout helper used by older HUD tests, but it now
@@ -193,7 +196,7 @@ export function hudAshReadout(g:any):string {
 
 /** Four native-resolution wooden panels:
  * WARMTH/FUEL | AIR TEMP WEATHER | WEIGHT | DAY/SEASON/MENU.
- * The small Ash chip stays immediately beneath Weight, without crowding it. */
+ * Run Ash is displayed in its own compact two-line panel beneath MENU. */
 export function drawCampHUD(ctx: any, g: any, meta: any) {
   for(const panel of Object.values(HUD_RECTS)){
     drawHudFrame(ctx,panel.x,panel.y,panel.w,panel.h);
@@ -215,8 +218,14 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
   const carrying=weightHudValues(g,meta);
   drawText(ctx,"WEIGHT",199,21,"#f1e1c3");
   drawText(ctx,carrying.label,199,32,carrying.weight>=carrying.limit?"#ffd49e":"#d8dbda");
-  drawHudFrame(ctx,HUD_RECTS.resources.x,43,HUD_RECTS.resources.w,11);
-  drawText(ctx,hudAshReadout(g),199,46,"#d8bcf2");
+  // Two-line stacked Ash badge: same right edge as the real MENU button,
+  // not the weight panel. Every value stays inside its 32px engraved frame.
+  drawHudFrame(ctx,ASH_PANEL_RECT.x,ASH_PANEL_RECT.y,ASH_PANEL_RECT.w,ASH_PANEL_RECT.h);
+  const ashValue=hudAshReadout(g).slice(4);
+  drawText(ctx,"ASH",ASH_PANEL_RECT.x+Math.floor((ASH_PANEL_RECT.w-textW("ASH"))/2),
+    ASH_PANEL_RECT.y+4,"#e3c0ee");
+  drawText(ctx,ashValue,ASH_PANEL_RECT.x+Math.floor((ASH_PANEL_RECT.w-textW(ashValue))/2),
+    ASH_PANEL_RECT.y+13,"#e9d3f6");
 
   const day = g.isNight ? "NIGHT "+g.night : "DAY "+(g.night+1);
   drawText(ctx,day,239,21,"#f1e2c9");
@@ -226,8 +235,8 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
   const seasonText = textW(season)>43 ? season.slice(0,3)+" "+seasonDay(g)+"/7" : season;
   drawText(ctx,seasonText,239,32,"#dfc69d");
   if(g.endlessMode){
-    drawText(ctx,"E"+Math.floor(g.endlessN||0),274,46,"#b7d4ed");
+    drawText(ctx,"E"+Math.floor(g.endlessN||0),239,46,"#b7d4ed");
   }else if(g.longNightActive&&Math.sin(g.animT*6)>0){
-    drawText(ctx,"LONG NIGHT",274,46,"#8fd0ff");
+    drawText(ctx,"LONG NIGHT",239,46,"#8fd0ff");
   }
 }

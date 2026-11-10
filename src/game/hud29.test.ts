@@ -64,16 +64,16 @@ describe("Patch #29 native-resolution real-game HUD",()=>{
     g.zones=[];drawRunChrome(v.ctx,g);
     const target=(x:number,y:number,w:number,h:number)=>g.zones.find((z:any)=>z.x===x&&z.y===y&&z.w===w&&z.h===h);
     expect(target(133,151,54,26)).toBeDefined();
-    expect(target(77,158,47,18)).toBeDefined();
-    expect(target(196,158,47,18)).toBeDefined();
+    expect(target(97,151,28,26)).toBeDefined();
+    expect(target(195,151,28,26)).toBeDefined();
     expect(target(284,21,32,16)).toBeDefined();
-    expect(target(77,158,47,18)!.quickSlot).toBe(0);
-    expect(target(196,158,47,18)!.quickSlot).toBe(1);
+    expect(target(97,151,28,26)!.quickSlot).toBe(0);
+    expect(target(195,151,28,26)!.quickSlot).toBe(1);
     target(133,151,54,26)!.onDown();
     expect(g.pressE).toBe(true);
     target(133,151,54,26)!.onUp();
     expect(g.keys.act).toBe(false);
-    expect(target(77,158,47,18)!.onDown).toBeUndefined();
+    expect(target(97,151,28,26)!.onDown).toBeUndefined();
     // BUILD now opens from the Pause menu, never by hitting a slot.
   });
   it("wooden frame stays within all 320x180 logical coordinates",()=>{

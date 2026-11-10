@@ -84,11 +84,14 @@ function App() {
         m.best = Math.max(m.best || 0, stats.nights);
         m.runs = (m.runs || 0) + 1;
         if (kind === "won" || g.won) m.wonEver = true;
+        if (kind === "campaign" && g.levelCompletePending && g.campaignLevel === 1) {
+          m.maxCampaignLevel = Math.max(m.maxCampaignLevel || 1, 2);
+        }
         saveMeta(m);
         g.lastResult = { ...stats, kind };
         g.menu = null;
         g.settingsFrom = null;
-        g.ui = kind === "won" ? "win" : "dead";
+        g.ui = kind === "campaign" ? "levelBanked" : kind === "won" ? "win" : "dead";
       },
     };
     // let in-canvas menus end the run (pause menu "END RUN")

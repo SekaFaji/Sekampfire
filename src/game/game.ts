@@ -367,7 +367,6 @@ function update(g: any, meta: any, dt: number, cb: any) {
   g.museumBuilt = !!meta.museumBuilt;
   const p = g.player;
   const cap = carryCap(g, meta);
-  const pcap = pileCap(g);
   const speed = g.crafts.boots ? 112 : 90;
 
   // Movement takes priority over any unfinished axe swing. If ACT remains
@@ -936,6 +935,106 @@ function closeZone(ctx: any, g: any, x: number, y: number) {
   g.zones.push({ x: x - 4, y: y - 3, w: 14, h: 11, onDown: () => { closeMenu(g); } });
 }
 
+/** Station interaction is permitted only at a physical camp position.
+ * First construction remains on-site, so the Workbench can be built from
+ * scratch without requiring its own build menu. Never open remote plans. */
+function openStation(g:any,id:"hearth"|"bench"|"pile"):boolean {
+  const x=id==="hearth"?CX:id==="bench"?BENCH_X:PILE_X;
+  if(g.ui!=="run" || g.over || Math.abs(g.player.x-x)>=22) return false;
+  if(id==="bench"&&!g.builtBench || id==="pile"&&!g.builtPile) return false;
+  g.stationId=id;
+  g.stationFrom=false;
+  g.menu="station";
+  g.menuSel=0;
+  g.buildConfirm=null;
+  g.craftConfirm=null;
+  g.keys.act=false;
+  g.pressE=false;
+  return true;
+}
+
+/** ACCESS from a real fireplace. The previous fire light/stoke rules, real
+ * pine-log and storage costs, tutorial count, and sounds are unchanged. */
+function accessHearth(g:any):void {
+  const p=g.player;
+  if(!g.fireLit){
+    if(g.firestarter>0){
+      g.firestarter--;g.fireLit=true;g.everLit=true;g.fuel=34;
+      AUDIO.effect("light");toast(g,"The fire catches. Warm at last.");
+    }else if(p.wood>=3||g.stored>=3){
+      const fromStore=Math.max(0,3-p.wood);
+      p.wood-=3-fromStore;g.stored-=fromStore;
+      g.fireLit=true;g.everLit=true;g.fuel=28;
+      AUDIO.effect("light");toast(g,"You rebuild the fire from kindling. (3 pine logs)");
+    }else toast(g,"NEED 3 PINE LOGS TO RELIGHT THE FIRE.");
+  }else if(g.fuel>=99) {
+    toast(g,"THE CAMPFIRE IS ALREADY WELL FED.");
+  }else if(p.wood>0){
+    p.wood--;g.guideStokes++;
+    g.fuel=Math.min(100,g.fuel+stationStokeGain(g));
+  }else if(g.stored>0){
+    g.stored--;g.guideStokes++;
+    g.fuel=Math.min(100,g.fuel+stationStokeGain(g));
+  }else toast(g,"BRING PINE LOGS TO STOKE THE FIRE.");
+}
+function accessStorage(g:any,meta:any):void {
+  const p=g.player,capacity=pileCap(g);
+  if(p.wood>0){
+    const add=Math.min(p.wood,capacity-g.stored);
+    if(add<=0)toast(g,"THE LOG STORAGE IS FULL.");
+    else{
+      g.stored+=add;p.wood-=add;
+      toast(g,"Stored "+add+" pine logs on the pile.");
+    }
+  }else if(g.stored>0){
+    const take=Math.min(g.stored,carryCap(g,meta)-p.wood);
+    if(take<=0)toast(g,"YOU CANNOT CARRY ANY MORE.");
+    else{
+      p.wood+=take;g.stored-=take;
+      toast(g,"Took "+take+" pine logs from storage.");
+    }
+  }else toast(g,"THE LOG STORAGE IS EMPTY.");
+}
+
+/** Uses existing authoritative purchaseStation / stationUpgradeRow, so
+ * station costs and Ash rewards cannot diverge across UI surfaces. */
+function stationRows(g:any,meta:any):any[]{
+  const id:"hearth"|"bench"|"pile"=
+    g.stationId==="bench"||g.stationId==="pile"?g.stationId:"hearth";
+  const upgrade=stationUpgradeRow(g,id);
+  const rows:any[]=[
+    {
+      label:"ACCESS",right:"",desc:id==="bench"?"CRAFT GEAR":id==="pile"?"STORE OR TAKE LOGS":"LIGHT OR STOKE FIRE",
+      h:15,enabled:true,
+      onDown:()=>{
+        g.buildConfirm=null;
+        if(id==="bench"){
+          g.menu="bench";g.stationFrom=true;g.craftTab=0;
+          g.menuSel=0;g.craftConfirm=null;g.keys.act=false;
+        }else{
+          if(id==="hearth")accessHearth(g);else accessStorage(g,meta);
+          g.menu=null;g.keys.act=false;
+        }
+      },
+    },
+    {...upgrade,label:"UPGRADE"},
+  ];
+  if(id==="bench"){
+    rows.push({
+      label:"BUILD PLANS",right:"",desc:"CONSTRUCT NEW CAMP STRUCTURES",
+      h:15,enabled:true,
+      onDown:()=>{
+        if(!g.builtBench || Math.abs(g.player.x-BENCH_X)>=22){
+          toast(g,"VISIT THE WORKBENCH FOR BUILDING PLANS.");return;
+        }
+        g.menu="build";g.stationFrom=true;g.buildTab=0;
+        g.menuSel=0;g.buildConfirm=null;g.keys.act=false;
+      },
+    });
+  }
+  return rows;
+}
+
 // close the open menu; settings opened from pause returns to the pause menu
 function closeMenu(g: any) {
   g.craftConfirm = null;
@@ -960,11 +1059,17 @@ function closeMenu(g: any) {
     g.keys.act = false;
     return;
   }
-  if (g.menu === "build" && g.buildFromPause) {
-    g.buildFromPause = false;
-    g.menu = "pause";
-    g.menuSel = 0;
-    g.keys.act = false;
+  if ((g.menu==="build" || g.menu==="bench") && g.stationFrom) {
+    g.stationFrom=false;
+    g.menu="station";
+    g.menuSel=0;
+    g.keys.act=false;
+    return;
+  }
+  if (g.menu==="station") {
+    g.menu=null;
+    g.menuSel=0;
+    g.keys.act=false;
     return;
   }
   if (["audio", "privacy", "credits", "reset1", "reset2"].includes(g.menu)) {
@@ -1003,10 +1108,6 @@ function pauseRows(g: any, meta: any) {
         g.endRunConfirm = false;
         if (g.cb && g.cb.end) g.cb.end("retired", { nights: g.night, ash: Math.floor(g.ashEarned) });
       },
-    },
-    {
-      label: "BUILD", right: "", desc: "CAMP STRUCTURES AND UPGRADES", h:15, enabled:true,
-      onDown: () => { g.menu="build";g.buildFromPause=true;g.buildTab=0;g.menuSel=0;g.keys.act=false; },
     },
     {
       label: "TOOLBAR", right: "", desc: "SET UP TWO QUICK ACCESS SLOTS", h:15, enabled:true,
@@ -1171,6 +1272,7 @@ function shopRows(g: any, meta: any) {
 }
 
 function menuRows(g: any, meta: any): any[] {
+  if (g.menu === "station") return stationRows(g, meta);
   if (g.menu === "bench") return benchRows(g, meta);
   if (g.menu === "shop") return g.shopTab === 2 ? [] : shopRows(g, meta);
   if (g.menu === "build") return buildRows(g, meta);
@@ -1187,7 +1289,7 @@ function moveSel(g: any, meta: any, dir: number) {
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
   if (g.menu === "bench") g.craftConfirm = null;
   if (g.menu === "pause") g.endRunConfirm = false;
-  if (g.menu === "build" || g.menu === "bench") g.buildConfirm = null;
+  if (g.menu === "build" || g.menu === "bench" || g.menu === "station") g.buildConfirm = null;
 }
 
 function activateSel(g: any, meta: any) {
@@ -1222,7 +1324,7 @@ function doBuildAction(g: any, meta: any) {
 }
 
 function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[]) {
-  const n = rows.length, tabs = g.menu === "build" || g.menu === "bench";
+  const n = rows.length, tabs = g.menu === "bench";
   const pw = 272, ph = 32 + n * 15 + 12 + (tabs ? 18 : 0);
   const x0 = Math.round((W - pw) / 2);
   const y0 = Math.max(8, Math.round((H - ph) / 2) - 4);
@@ -1283,7 +1385,6 @@ function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[
 }
 
 function buildRows(g: any, meta: any) {
-  if (g.buildTab === 1) return stationIds.map(id => stationUpgradeRow(g, id));
   const rows: any[] = [];
   const total = () => g.player.wood + g.stored;
   if (g.stage < 6) {
@@ -1510,12 +1611,14 @@ function drawMenu(ctx: any, g: any, meta: any) {
   ctx.fillRect(0, 0, W, H);
   if (g.menu === "inventory") {
     drawInventoryMenu(ctx,g,meta,()=>closeMenu(g));
+  } else if (g.menu === "station") {
+    drawStationPopup(ctx,g,stationRows(g,meta),()=>closeMenu(g));
   } else if (g.menu === "bench") {
     drawListMenu(ctx, g, "WORKBENCH", "WOOD " + g.player.wood + " + PILE " + g.stored, benchRows(g, meta));
   } else if (g.menu === "shop") {
     drawShopTabs(ctx, g, meta, shopRows(g, meta), () => closeMenu(g));
   } else if (g.menu === "build") {
-    drawListMenu(ctx, g, "BUILD", "WOOD " + (g.player.wood + g.stored), buildRows(g, meta));
+    drawListMenu(ctx, g, "BUILD PLANS", "LOGS " + (g.player.wood + g.stored), buildRows(g, meta));
   } else if (g.menu === "settings") {
     drawListMenu(ctx, g, "SETTINGS", "", settingsRows(g, meta));
   } else if (g.menu === "audio") {
@@ -2190,5 +2293,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

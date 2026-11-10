@@ -26,7 +26,9 @@ import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./stat
 import { drawCampHUD, drawCampMinimap, ASH_PANEL_RECT } from "./hud";
 import { FENCE_TORCH_LIGHT_RADIUS, normalizeFenceTorches, nearestFenceTorchPost,
   activeFenceTorch, buildFenceTorch, advanceFenceTorchDawn, fenceTorchLights, drawFenceTorches,
+  torchPostX,
   } from "./fenceTorches47";
+import { nightLightSources48 } from "./nightLights48";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
 import { drawStationPopup } from "./stationPopup";
@@ -159,7 +161,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.fenceRight = data.fenceRight === undefined ? legacyFence : data.fenceRight === true;
   g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
   if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
-  g.fenceTorches = campEstablished(g) ? normalizeFenceTorches(data.fenceTorches)
+  g.fenceTorches = campEstablished(g)
+    ? normalizeFenceTorches(data.fenceTorches,g.campExpansion>=1)
     : normalizeFenceTorches(null);
   clearClaimedTrees(g);
   keepFencePostsClear(g);
@@ -208,7 +211,7 @@ function createEngine(): any {
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
     guideTalked: false, scoutVisited: false, scoutReturned: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
-    fenceTorches: {left:0,right:0},
+    fenceTorches: {left:0,right:0,outer:0},
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     stationId: "hearth", stationFrom: false, selectedStation: null,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
@@ -451,7 +454,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.time >= total) {
     g.time = 0; g.isNight = false;
     const burnedOut=advanceFenceTorchDawn(g);
-    for(const side of burnedOut) cb.toast((side==="left"?"LEFT":"RIGHT")+" FENCE TORCH BURNED OUT. REBUILD IT FOR 2 LOGS.");
+    for(const side of burnedOut) cb.toast((side==="left"?"LEFT":side==="right"?"RIGHT":"OUTER")+" FENCE TORCH BURNED OUT. REBUILD IT FOR 2 LOGS.");
     if (g.longNightActive) {
       g.longNightActive = false;
       g.weather = "clear";
@@ -2282,7 +2285,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     if (leftFence2 || rightFence2) {
       drawTextO(ctx, "1 LOG", p.x - 10, 112 - bob, "#ffe9a0", "#060a18");
     } else if (nearTorch2) {
-      const wx=nearTorch2==="left"?campClaimBounds(g).west:campClaimBounds(g).east;
+      const wx=torchPostX(g,nearTorch2);
       const lit=activeFenceTorch(g,nearTorch2);
       drawTextO(ctx,lit?"TORCH "+g.fenceTorches[nearTorch2]+"D":"2 LOG TORCH",
         wx-22,105-bob,"#d7e9d9","#060a18");
@@ -2352,24 +2355,12 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     octx.arc(x, y, r, 0, Math.PI * 2);
     octx.fill();
   };
-  let lightR = g.fireLit ? 28 + (g.fuel / 100) * 66 : 0;
-  lightR *= 1 - weatherIntensity(g, "fog") * 0.35;
-  lightR *= 1 - weatherIntensity(g, "blizzard") * 0.25;
-  if (lightR > 0) punch(CX - camX, 146, lightR);
-  if (g.player.torchT > 0) punch(g.player.x - camX, g.player.y - 12, 38);
-  for(const torch of fenceTorchLights(g))
-    punch(torch.x-camX,torch.y,FENCE_TORCH_LIGHT_RADIUS);
-  // With both posts lit, reflected cool light reaches between the fences,
-  // even when the central campfire is out. This remains gentler than fire.
-  if(activeFenceTorch(g,"left") && activeFenceTorch(g,"right")){
-    const {west,east}=campClaimBounds(g);
-    for(const fraction of [0.25,0.5,0.75])
-      punch(west+(east-west)*fraction-camX,128,30);
-  }
-  if (g.stage >= 6) {
-    punch(x0 + 28 - camX, 131, 15);
-    punch(x0 + 66 - camX, 131, 15);
-  }
+  // Only lit, physically visible flames are allowed to create night-mask
+  // cutouts. No unconditional level-6 cabin lights or phantom lights at
+  // equally spaced points between the fence posts.
+  const nightLights=nightLightSources48(g);
+  for(const light of nightLights) punch(light.x-camX,light.y,light.radius);
+  const lightR=nightLights.find(light=>light.kind==="fire")?.radius||0;
   ctx.drawImage(off, 0, 0);
   // Spectacles appear ABOVE the night mask (previously darkened away).
   drawNightSkyEvent(ctx, g, darkA);

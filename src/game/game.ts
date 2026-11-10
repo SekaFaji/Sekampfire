@@ -36,7 +36,7 @@ import { localTemperature, settleThermometer } from "./thermometer";
 import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
 import { guideTarget, drawWorldFireflies, drawOffscreenGuide, drawScreenFireflies } from "./guidance";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
-  campEstablished, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
+  campEstablished, campClaimBounds, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
   expandCamp, keepFencePostsClear, drawCampGround, drawCampFence } from "./campBoundary";
 
 function resumeRun(g: any, data: any, meta?: any) {
@@ -2352,6 +2352,13 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   if (g.player.torchT > 0) punch(g.player.x - camX, g.player.y - 12, 38);
   for(const torch of fenceTorchLights(g))
     punch(torch.x-camX,torch.y,FENCE_TORCH_LIGHT_RADIUS);
+  // With both posts lit, reflected cool light reaches between the fences,
+  // even when the central campfire is out. This remains gentler than fire.
+  if(activeFenceTorch(g,"left") && activeFenceTorch(g,"right")){
+    const {west,east}=campClaimBounds(g);
+    for(const fraction of [0.25,0.5,0.75])
+      punch(west+(east-west)*fraction-camX,128,30);
+  }
   if (g.stage >= 6) {
     punch(x0 + 28 - camX, 131, 15);
     punch(x0 + 66 - camX, 131, 15);

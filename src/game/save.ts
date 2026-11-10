@@ -63,7 +63,7 @@ function captureRunSnapshot(g: any): any {
   // Keep the existing v1 checkpoint key/version. Persist only validated tier
   // numbers; old checkpoints simply load all station levels as zero.
   state.ashLedger = validatedAshLedger(g.ashLedger);
-  state.fenceTorches = normalizeFenceTorches(g.fenceTorches);
+  state.fenceTorches = normalizeFenceTorches(g.fenceTorches); // all 3 corners, unchanged v1 key
   state.campaignLevel = g.campaignLevel === 1 ? 1 : 0;
   state.campaignRunId = typeof g.campaignRunId === "string" && g.campaignRunId.length < 100
     ? g.campaignRunId : null;

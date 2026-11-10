@@ -1,5 +1,14 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #48 implemented (2026-11-10)
+
+**Every fence corner is a torch location.** The original east corner remains a physical post when the east palisade is extended, and the new outer east corner is its own post. There are three independent paid, expiring torches after expansion, not two torches that teleport. Existing P47 saves are migrated based on their historical visible torch position: if the run was already expanded, the former right timer becomes the outer timer, preserving its remaining life with no duplicated resources.
+
+**Only real flames light up the night.** Remove old synthetic cabin-upgrade light cutouts and equally spaced unseen fence glow. Night-mask lighting only follows real visible lit Campfire, carried ember and active fence posts. No invisible window illumination, no fake interior light circles. Protection still works as a gameplay effect along actually sheltered fence sections, whether or not the torches reach the exact middle of camp visually.
+
+**Log Storage is deliberately two-way.** After ACT selects the pile, two actions show when empty (STORE and UPGRADE); when logs are stored, a third TAKE action floats between them. ACT/the left button stays STORE (never auto-withdraws), and TAKE is an explicit tap, allowing players to choose withdrawal while already carrying logs. Show `CURRENT/CAPACITY LOGS` below the selected building name, plus a compact current value in the nearby world label. Use existing capacity rules and keep translucent circles/bobbing.
+
+
 ## Patch #47 implemented (2026-11-10)
 
 **Ash button, not a weird label:** Small single-line ASH directly under MENU is a tap target for the existing permanent-upgrades Shop. The button displays current Run Ash as before, but purchases can only consume already banked Ash. The former two-line Ash plaque is superseded; the rest of the top HUD retains Weight and temperature.

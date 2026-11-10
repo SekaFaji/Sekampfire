@@ -1,5 +1,17 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #48 - No phantom camp lights; every fence corner; storage Take button
+- [x] Remove two unearned max-level camp "window" light sources and three invisible mid-fence spotlights; night illumination comes only from actual lit fires and torches.
+- [x] Keep the original east junction post visible and buildable after camp expansion while adding a third outer-east post and independent 7-dawn torch.
+- [x] Keep previously built inner east torches in place when expanding in an active P48 run. Migrate already-expanded P47 saves' old right torch to the outer post to preserve its original position, with no free second torch.
+- [x] Keep torch warmth shelter proportional to the actually lit adjacent fence sections; the new expansion isn't fully protected until its outer endpoint is lit.
+- [x] Add a third translucent bobbing **TAKE** circle in the center when Log Storage contains wood; left default ACT/STORE and right UPGRADE are still separate actions.
+- [x] Show exact stored logs and real pile capacity beneath Log Storage and in the nearby-world label.
+- [x] Test all three torch locations, night light source list, save migration, expired lamps, Store/Take and carrying limits.
+- [ ] Check on a real Android phone in nighttime rain, winter and at camp level 6; visually verify there are no lit patches without visible flames, especially after expanding the fence.
+- [ ] Check third storage circle legibility, count visibility and one-tap TAKE with mixed carried/stored logs on a landscape touchscreen.
+
+
 ## Patch #47 - Pocket Ash Shop, ambient cold, Museum unlock, fence torches and opacity
 - [x] Make Ash a single-line small panel directly under MENU; tapping it opens the real banked-Ash Shop rather than banking Run Ash.
 - [x] Remove Toolbar from the pause menu, while keeping equipment quick slots and Inventory assignment.

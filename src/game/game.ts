@@ -26,7 +26,9 @@ import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./stat
 import { drawCampHUD, drawCampMinimap, ASH_PANEL_RECT } from "./hud";
 import { FENCE_TORCH_LIGHT_RADIUS, normalizeFenceTorches, nearestFenceTorchPost,
   activeFenceTorch, buildFenceTorch, advanceFenceTorchDawn, fenceTorchLights, drawFenceTorches,
+  torchPostX,
   } from "./fenceTorches47";
+import { nightLightSources48 } from "./nightLights48";
 import { installInventory } from "./inventory";
 import { drawInventoryMenu } from "./inventoryMenu";
 import { drawStationPopup } from "./stationPopup";
@@ -159,7 +161,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.fenceRight = data.fenceRight === undefined ? legacyFence : data.fenceRight === true;
   g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
   if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
-  g.fenceTorches = campEstablished(g) ? normalizeFenceTorches(data.fenceTorches)
+  g.fenceTorches = campEstablished(g)
+    ? normalizeFenceTorches(data.fenceTorches,g.campExpansion>=1)
     : normalizeFenceTorches(null);
   clearClaimedTrees(g);
   keepFencePostsClear(g);
@@ -208,7 +211,7 @@ function createEngine(): any {
     guideLevel: 0, guideChops: 0, guideStokes: 0, guideStoredTen: false,
     guideTalked: false, scoutVisited: false, scoutReturned: false,
     fenceLeft: false, fenceRight: false, campExpansion: 0,
-    fenceTorches: {left:0,right:0},
+    fenceTorches: {left:0,right:0,outer:0},
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     stationId: "hearth", stationFrom: false, selectedStation: null,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
@@ -451,7 +454,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   if (g.time >= total) {
     g.time = 0; g.isNight = false;
     const burnedOut=advanceFenceTorchDawn(g);
-    for(const side of burnedOut) cb.toast((side==="left"?"LEFT":"RIGHT")+" FENCE TORCH BURNED OUT. REBUILD IT FOR 2 LOGS.");
+    for(const side of burnedOut) cb.toast((side==="left"?"LEFT":side==="right"?"RIGHT":"OUTER")+" FENCE TORCH BURNED OUT. REBUILD IT FOR 2 LOGS.");
     if (g.longNightActive) {
       g.longNightActive = false;
       g.weather = "clear";
@@ -789,7 +792,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const chosenStation=selectedStation(g);
   if(chosenStation==="hearth") g.actionLabel=g.fireLit?"FEED":"LIGHT";
   else if(chosenStation==="bench") g.actionLabel="CRAFT";
-  else if(chosenStation==="pile") g.actionLabel=p.wood>0?"STORE":"TAKE";
+  else if(chosenStation==="pile") g.actionLabel="STORE";
 
   if (g.stored >= 10) g.guideStoredTen = true;
   // Scouting is measured after real movement and before objective completion.
@@ -1045,9 +1048,11 @@ function accessHearth(g:any):void {
     g.fuel=Math.min(100,g.fuel+stationStokeGain(g));
   }else toast(g,"BRING PINE LOGS TO STOKE THE FIRE.");
 }
-function accessStorage(g:any,meta:any):void {
+function accessStorage(g:any,meta:any,direction?:"store"|"take"):void {
   const p=g.player,capacity=pileCap(g);
-  if(p.wood>0){
+  const move=direction||(p.wood>0?"store":"take");
+  if(move==="store"){
+    if(p.wood<=0){toast(g,"BRING PINE LOGS TO STORE.");return;}
     const add=Math.min(p.wood,capacity-g.stored);
     if(add<=0)toast(g,"THE LOG STORAGE IS FULL.");
     else{
@@ -1055,7 +1060,7 @@ function accessStorage(g:any,meta:any):void {
       toast(g,"Stored "+add+" pine logs on the pile.");
     }
   }else if(g.stored>0){
-    const take=Math.min(g.stored,carryCap(g,meta)-p.wood);
+    const take=Math.min(g.stored,Math.max(0,carryCap(g,meta)-p.wood));
     if(take<=0)toast(g,"YOU CANNOT CARRY ANY MORE.");
     else{
       p.wood+=take;g.stored-=take;
@@ -1068,7 +1073,16 @@ function accessStorage(g:any,meta:any):void {
  * authoritative station actions. No generic ACCESS/UPGRADE popup is opened. */
 function performStationAction(g:any,meta:any,id:NearbyStation,action:StationAction):boolean {
   if(g.ui!=="run" || g.over || g.menu || selectedStation(g)!==id) return false;
+  if(action==="take" && id!=="pile" || action==="plans" && id!=="bench")return false;
   g.stationId=id;
+  // Log storage deliberately has TWO different transfer directions now.
+  // ACT/the left button always STORES; the middle TAKE button only TAKES.
+  // Reuse the exact carrying and storage capacity rules from accessStorage.
+  if(id==="pile" && (action==="primary"||action==="take")){
+    g.pressE=false;g.keys.act=false;g.buildConfirm=null;
+    accessStorage(g,meta,action==="take"?"take":"store");
+    return true;
+  }
   const rowIndex=action==="primary"?0:action==="upgrade"?1:2;
   const row=stationRows(g,meta)[rowIndex];
   if(!row || row.enabled===false) {
@@ -2282,7 +2296,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     if (leftFence2 || rightFence2) {
       drawTextO(ctx, "1 LOG", p.x - 10, 112 - bob, "#ffe9a0", "#060a18");
     } else if (nearTorch2) {
-      const wx=nearTorch2==="left"?campClaimBounds(g).west:campClaimBounds(g).east;
+      const wx=torchPostX(g,nearTorch2);
       const lit=activeFenceTorch(g,nearTorch2);
       drawTextO(ctx,lit?"TORCH "+g.fenceTorches[nearTorch2]+"D":"2 LOG TORCH",
         wx-22,105-bob,"#d7e9d9","#060a18");
@@ -2300,8 +2314,11 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
       const lbl = "FIREPLACE";
       drawTextO(ctx, lbl, CX - 9, 118 - bob, "#ffe9a0", "#060a18");
     } else if (nearPile2 && selectedStation(g)!=="pile") {
-      const lbl = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS") : "STORAGE";
-      drawTextO(ctx, lbl, PILE_X - 7, 120 - bob, "#ffe9a0", "#060a18");
+      const lbl = !g.builtPile
+        ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : g.pileLogs + "/15 LOGS")
+        : "STORAGE "+g.stored+"/"+pileCap(g);
+      // Center the actual current log count over its physical building.
+      drawTextO(ctx, lbl, PILE_X - Math.floor(textW(lbl)/2), 120 - bob, "#ffe9a0", "#060a18");
     } else if (tr) drawTextO(ctx, "CHOP", tr.x - 7, tr.y - 40 - bob, "#ffe9a0", "#060a18");
   }
   // Fireflies are composited in world coordinates after real trees, buildings
@@ -2352,24 +2369,12 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     octx.arc(x, y, r, 0, Math.PI * 2);
     octx.fill();
   };
-  let lightR = g.fireLit ? 28 + (g.fuel / 100) * 66 : 0;
-  lightR *= 1 - weatherIntensity(g, "fog") * 0.35;
-  lightR *= 1 - weatherIntensity(g, "blizzard") * 0.25;
-  if (lightR > 0) punch(CX - camX, 146, lightR);
-  if (g.player.torchT > 0) punch(g.player.x - camX, g.player.y - 12, 38);
-  for(const torch of fenceTorchLights(g))
-    punch(torch.x-camX,torch.y,FENCE_TORCH_LIGHT_RADIUS);
-  // With both posts lit, reflected cool light reaches between the fences,
-  // even when the central campfire is out. This remains gentler than fire.
-  if(activeFenceTorch(g,"left") && activeFenceTorch(g,"right")){
-    const {west,east}=campClaimBounds(g);
-    for(const fraction of [0.25,0.5,0.75])
-      punch(west+(east-west)*fraction-camX,128,30);
-  }
-  if (g.stage >= 6) {
-    punch(x0 + 28 - camX, 131, 15);
-    punch(x0 + 66 - camX, 131, 15);
-  }
+  // Only lit, physically visible flames are allowed to create night-mask
+  // cutouts. No unconditional level-6 cabin lights or phantom lights at
+  // equally spaced points between the fence posts.
+  const nightLights=nightLightSources48(g);
+  for(const light of nightLights) punch(light.x-camX,light.y,light.radius);
+  const lightR=nightLights.find(light=>light.kind==="fire")?.radius||0;
   ctx.drawImage(off, 0, 0);
   // Spectacles appear ABOVE the night mask (previously darkened away).
   drawNightSkyEvent(ctx, g, darkA);

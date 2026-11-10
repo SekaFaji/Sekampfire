@@ -275,19 +275,19 @@ describe("Patch #53: Bingsu's identity and mature Dogo Argentino pixel art",()=>
     const all=JSON.stringify(BINGSU).toLowerCase();
     expect(all).not.toContain("uncle"); // don't mention real-life inspiration
   });
-  it("keeps 124x65 full-body photo-grounded portrait bounded with a black nose and no collar",()=>{
+  it("keeps 90x68 head-and-chest portrait bounded with soft white shading and no collar",()=>{
     const view=plot();
     drawBingsuPortrait(view.ctx,30,35);
     expect(view.rectangles.length).toBeGreaterThan(60);
-    expect(view.rectangles.every(p=>p.x>=30&&p.x+p.w<=154&&p.y>=35&&p.y+p.h<=100))
+    expect(view.rectangles.every(p=>p.x>=30&&p.x+p.w<=120&&p.y>=35&&p.y+p.h<=103))
       .toBe(true);
-    for(const c of ["#f2f0e9","#fffdf6","#e2dbd4","#191f22"])
+    for(const c of ["#fdf8ea","#fffdf5","#b6a297","#131214"])
       expect(view.rectangles.some(p=>p.color===c)).toBe(true);
     for(const c of ["#a95745","#d47e63","#b2644e","#e3b76b"])
       expect(view.rectangles.some(p=>p.color===c)).toBe(false);
     const profile=plot();
     drawBingsuShopProfile(profile.ctx,meta());
-    expect(profile.rectangles.some(p=>p.color==="#fffdf6")).toBe(true);
+    expect(profile.rectangles.some(p=>p.color==="#fffdf5")).toBe(true);
   });
   it("keeps world dog compact and able to display two real logs, still without collar",()=>{
     const view=plot();

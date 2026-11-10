@@ -1,5 +1,15 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #55 - replace rejected Bingsu full-body unlock portrait
+- [x] Respect the approved art direction: a calm, affectionate, recognizable Dogo Argentino **head and chest** in three-quarter view, with the muzzle facing slightly left.
+- [x] Replace the rejected artificial full-body polygons with a reviewed and pixelized real illustration, with nuanced white coat shading, natural folded ears, strong muzzle and gentle expression.
+- [x] Fit the new actual 90x68 image in a modest 100x68 card, restoring more horizontal room for Bingsu's description, without touching the persistent Shop BUY/action areas.
+- [x] Leave the already-approved in-world dog sprite and fetch/follow behavior entirely unchanged.
+- [x] Remove the obsolete full-body portrait renderer, add exact raster-integrity and real UI touch/price regressions, and update old visual test expectations.
+- [ ] Review the *actual deployed* portrait on a landscape phone alongside the supplied dog photograph; adjust only once the user supplies visual feedback.
+- [ ] Continue playable Level 2 once pet unlock art is approved. No unrelated code changes in this art-only patch.
+
+
 ## Patch #54 - Bingsu Pets Shop likeness against user-supplied photo
 - [x] Replace the small frontal portrait with a larger original 124x65 pixel-art whole-body three-quarter-side study of a female Dogo Argentino.
 - [x] Correct the adult proportions: broad head, natural hanging ears, deep chest, longer lean back, distinct waist tuck, tall legs, natural tail and wide black nose with calm expression.

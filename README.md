@@ -1,5 +1,13 @@
 # Sekampfire
 
+## Patch #55: Bingsu's approved head-and-chest unlock portrait
+
+- **Replaced the rejected full-body portrait with a true 3/4 head-and-chest close-up.** The Pets Shop now uses an artistically shaded 90x68 native-pixel white Dogo Argentino portrait: Bingsu faces slightly left, with a broad black nose, gentle dark eyes, natural folded ears, strong jaw, smooth white neck and upper chest. No awkward rectangular full-body anatomy, legs, tail, collar, angry expression or generic puppy eyes. The image uses an original inspected color-indexed raster rather than the rejected polygon-based dog.
+- **Visible on the real menu:** the close-up sits in a proportionate 100x68 card at (31,50) with the breed, personality and unlock/owned caption in a separate text column. Shop tabs end at y49; art ends at y118; upgrade details begin at y119. The real 40-Ash BUY action and Pet Shop tab/close controls remain unchanged.
+- **Only unlock art changed:** Bingsu's previously approved compact in-world sprite, her animations, two-Pine-Log fetching, personality, purchase ID, Ash price, equipped state, game mechanics and saves are untouched. The old full-body illustration files are removed to prevent accidental reuse; this is the new single source of truth.
+- **No dependency on loading images:** the original pixel art is encoded as a small static indexed palette and 68 rows of pixels rendered directly to the existing Canvas. No added external fonts, network requests, emoji, upscaling, browser APIs or save migration. Automated QA verifies exact image bounds/pixel colors, no collar, card hit zones, bottom BUY/pet ownership, and unchanged companion sprite. Real-device visual signoff is still recommended.
+
+
 ## Patch #54: Bingsu's actual Dogo Argentino reference-based Pets portrait
 
 - **Replaced the Pet Shop picture, not the world sprite.** The old 54x65 front-facing pixel head made Bingsu look like a squashed white puppy. The player supplied a real side/three-quarter adult Dogo Argentino photograph. The Pets Shop now displays an original **124x65 full-body left-facing pixel portrait**, with a gentle adult face, folded natural ears, strong neck and shoulders, deep chest, long athletic torso, tucked abdomen, tall legs, natural lowered tail and broad black nose. No red collar, harness, fluff, angry expression or generic emoji.

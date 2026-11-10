@@ -53,6 +53,8 @@ describe("Patch #47: compact Ash Shop and transparent interface",()=>{
     for(const ash of [0,8,999,1234,9999,20000,170000,5000000]){
       g.ashEarned=ash;
       expect(hudAshButtonLabel(g).length).toBeGreaterThan(0);
+      if(ash===999)expect(hudAshButtonLabel(g)).toBe("A999");
+      if(ash===9999)expect(hudAshButtonLabel(g)).toBe("A9.9K");
       expect(hudAshReadout(g).startsWith("ASH ")).toBe(true);
       g.zones=[];drawCampHUD(v.ctx,g,m);
       expect(v.rects.some(r=>r.x===284&&r.y===40&&r.w===32&&r.h===14)).toBe(true);

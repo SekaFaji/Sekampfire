@@ -762,6 +762,12 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : "STORAGE";
   else if (tree) g.actionLabel = "CHOP";
   else g.actionLabel = "-";
+  // Once ACT has selected a completed structure, the central control
+  // names its real default action instead of redundantly naming the building.
+  const chosenStation=selectedStation(g);
+  if(chosenStation==="hearth") g.actionLabel=g.fireLit?"FEED":"LIGHT";
+  else if(chosenStation==="bench") g.actionLabel="CRAFT";
+  else if(chosenStation==="pile") g.actionLabel=p.wood>0?"STORE":"TAKE";
 
   if (g.stored >= 10) g.guideStoredTen = true;
   // Scouting is measured after real movement and before objective completion.

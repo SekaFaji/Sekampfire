@@ -1,5 +1,14 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #45 implemented (2026-11-10)
+
+**World-first interactions:** Walking close to a built Campfire, Workbench or Log Storage automatically reveals small original pixel-art action buttons above that object. The first (left) action is also available immediately with ACT; the right arrow upgrades with the familiar two-press confirmation, and the Workbench additionally exposes Plans. The previous generic station modal is no longer part of the normal interaction route, although crafting and construction still open their real detailed lists.
+
+**Inventory access and carrying weight:** The inventory has a dedicated BAG shortcut in the lower-right river control area, with a separate touch zone from moving right. The old pause entry and touch action on the top inventory/Ash plaque are replaced by this direct access. The HUD now reads WEIGHT and the current kg/capacity, using the existing Pine Log mass and untouched 5/13/21 kg carrying limits; Ash remains visible directly beneath it.
+
+**Follow-up:** Test positions against real Android screen dimensions, especially when stations are near the camera edge or weather effects overlap. Later cleanup can remove the old modal's unreachable code once the inline replacement is verified in play.
+
+
 ## Patch #44 implemented (2026-11-10)
 
 **Level 1 completion and genuine Ash rewards:** New campaign runs stop at the end of the third First Settlement milestone and open an unbanked Level 1 completion choice. The pending reward accurately separates real dawn, aurora, station and structure Ash awards. Older unclassified saved earnings appear as Earlier Run Ash. Only an explicit **BANK ASH + FINISH LEVEL** action transfers Run Ash to permanent Banked Ash, closes the run and records Level 2 unlocked. A validated saved run receipt helps prevent duplicate bank deposits after reload. Replays reset the physical camp while purchased Ash upgrades and Museum collections persist.

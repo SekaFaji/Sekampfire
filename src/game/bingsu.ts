@@ -20,8 +20,11 @@ export const BINGSU = {
  * her in-world companion and two-log retrieval remain unchanged. */
 export { BINGSU_PORTRAIT55 } from "./bingsuPortrait55";
 import { drawBingsuPortrait55 } from "./bingsuPortrait55";
-export function drawBingsuPortrait(ctx:any,x:number,y:number):void {
-  drawBingsuPortrait55(ctx,x,y);
+export function drawBingsuPortrait(
+  ctx:any,x:number,y:number,
+  width?:number,height?:number
+):void {
+  drawBingsuPortrait55(ctx,x,y,width,height);
 }
 
 export function drawBingsuShopProfile(ctx:any,meta:any):void {
@@ -30,8 +33,8 @@ export function drawBingsuShopProfile(ctx:any,meta:any):void {
   ctx.fillStyle="#a2855f";
   ctx.fillRect(30,73,260,1);
   ctx.fillRect(30,151,260,1);
-  // Character close-up stays inside the original 260x79 profile panel.
-  drawBingsuPortrait(ctx,34,78);
+  // A little matting keeps her whole bust clear of the text and frame.
+  drawBingsuPortrait(ctx,38,81,86,62);
   drawText(ctx,"BINGSU - DOGO ARGENTINO",130,80,"#f6dfae");
   drawText(ctx,BINGSU.personality,130,92,"#e0d5bc");
   drawText(ctx,BINGSU.affection,130,101,"#bfd3c7");

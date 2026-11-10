@@ -1,5 +1,13 @@
 # Sekampfire
 
+## Patch #57: Bingsu portrait fits INSIDE the Pet Shop frame
+
+- **UI-only framing correction:** The approved 94x68 Bingsu head-and-chest artwork is now uniformly fitted to an 86x62 pixel display using integer nearest-neighbor sampling. It is the **same image**, not a redrawn or newly cropped dog. The former 94x68 rendering started at the card's top edge and covered the border, making her chest touch the bottom of the frame.
+- **Visible even matting:** The original 100x68 Pets card at (31,50) now draws her image at (38,53), leaving precisely 7 game pixels left/right and 3 top/bottom. A restrained slate matte backs the picture while preserving the gold selected border. The right-hand Bingsu description, three tabs, Shop close, detail area and real BUY/OWNED button remain in their existing coordinates.
+- **No game changes:** Same saved 40-Ash ownership, she/her personality text, zero-collar Dogo art, 2-log retrieval, equipment UI, in-world sprite, Ash balance and run saves. Only the portrait rendering/placement changes, including a matching inset in the older detailed pet profile.
+- **Regression coverage:** Tests assert the original source pixels remain available at native 94x68, confirm proportional 86x62 downsample stays inside the frame with a margin on all sides, verify a visible border and matte on the actual Shop, and preserve Bingsu's unlock and companion behavior. A real-device visual review remains pending.
+
+
 ## Patch #56: show more of Bingsu's approved Pet unlock portrait
 
 - **Zoomed OUT, not redrawn:** The player liked Patch #55's gentle Dogo Argentino portrait but pointed out that the in-game image was cropped too tightly. This patch uses a wider view of the **same approved pixel illustration**, showing more of Bingsu's muscular white neck, upper chest and shoulders while preserving the face, natural ears, black nose, soft expression and entirely collar-free appearance.

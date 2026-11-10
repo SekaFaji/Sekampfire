@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #48: real fence-corner torches, clean night lighting, Log Storage TAKE
+
+- **Fix unexplained lights:** The camp-upgrade renderer previously cut two unearned light holes into the night mask at stage 6 and added three invisible quarter-way "lights" across the fenced interior. Those are removed. Night-mask openings now come only from real, visibly burning Campfire, handheld torch or **built, active physical fence torches**. The fence glow stays pale/cool compared with the campfire.
+- **Keep every fence corner after expansion:** Once the original west and east posts are built, expansion retains the old east junction post and adds a THIRD outer east post. All three are visible on the palisade/minimap and can each take their own **2-log torch**, with independent seven-dawn timers and rebuild costs. A torch already built on the old eastern post **does not move when you expand**. Protection applies to each lit post's nearby ground and each fenced segment with two lit endpoint torches; full expanded-camp protection requires the new outer torch too.
+- **Safe P47 save migration:** P47 two-key saves from *already-expanded* camps had their eastern torch visually on the outer boundary. On first resume its unexpired timer transfers to the new outer post, while the original east junction becomes available for a new one. This runs only when the old optional `outer` key is missing and never duplicates a torch. Run save key/version and banked Ash remain unchanged.
+- **Separate TAKE at Log Storage:** ACT still requires selecting the finished storage once. The left floating button always **STORE**s carried logs; a new center **TAKE** button appears whenever the storage contains logs, even while carrying logs; right **UPGRADE** remains. Taking respects the actual 5/13/21 kg backpack limit, storing respects the real pile cap, and neither direction can silently reverse. A live `7/12 LOGS`-style readout sits below the floating **LOG STORAGE** title; its nearby world label also shows the count.
+- **Regression coverage:** New Patch #48 tests verify the stationary old junction, three torch placements and expiry, old-save migration, true light-only cutouts even at max camp stage, segmented shelter, 3-circle hit zones, actual Take/Store transfers, capacity, ACT semantics and storage count.
+
+
 ## Patch #47: small Ash Shop button, temperature, Museum gate, fence torches and sky-visible UI
 
 - **One-line Ash button:** The upper-right Ash plaque is now a smaller single-line button directly below MENU, aligned with its right edge. Tapping opens the existing real Shop tabs (Upgrades/Pets/Coming Soon), where only **banked Ash** can be spent. Earned Run Ash remains unbanked until End Run or Level completion. It briefly highlights when tapped. Compact numbers are truncated rather than rounded upward, and smaller balances are shown in full when they fit.

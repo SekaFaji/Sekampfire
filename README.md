@@ -2,6 +2,16 @@
 
 **Future designs and brainstorming:** [Ideas and Design Decisions](docs/IDEAS.md). This is a planning document, not a list of implemented features.
 
+## Patch #42: Physical camp station interactions and upgrades
+
+- **No remote building:** BUILD has been removed from the Pause menu and the B keyboard shortcut. Building plans are obtained only by physically visiting the **completed Workbench**, using ACT and choosing **BUILD PLANS**. The plans view lists the next camp structure and Log Museum; its old remote station-upgrade tab no longer exists.
+- **First structures remain possible:** The unfinished Workbench and Log Storage still accept the same 15 Pine Logs directly at their world sites. Placing camp boundary posts, founding the camp, delivering resources and hammering do not require already owning a Workbench.
+- **Local ACCESS / UPGRADE popup:** ACT beside a completed Workbench, Log Storage or the Fireplace opens a small original pixel-art panel showing its level, next benefit and next Pine Log cost, with separate ACCESS and UPGRADE buttons. The Workbench also has BUILD PLANS.
+- **Real ACCESS interactions:** Workbench opens the same Tools/Supplies crafting recipes. Log Storage deposits or withdraws actual carried Pine Logs. Fireplace lights, relights or stokes the same fire. A pre-existing edge case is fixed: one carried plus two stored Pine Logs can correctly pay the three-log relight cost.
+- **Upgrades only at stations:** Each station's UPGRADE button requires two deliberate presses to confirm, costs the original wood amount, grants the existing +2 Run Ash and preserves level 0-2 effects and save state. Crafting no longer duplicates the Workbench upgrade.
+- **Safe navigation:** X, Back and outside press close the local popup; closing Crafting or Build Plans returns to that Workbench popup. Other gameplay buttons cannot be triggered through open menus. Grooty's mission hints and firefly targets now point to the physical station, the correct popup action or the relevant Workbench plan.
+- This changes no persistent run save version, existing Ash rewards, Log Museum ownership, Bingsu or backpack equipment.
+
 ## Patch #41: Square quick slots, Bingsu and Grooty's missions
 
 - **Small square tool slots:** both water-side tools are custom 22x22 pixel-art sockets with larger 28x26 invisible touch targets for Android. Neither overlaps the unchanged central ACT button. Short tap uses the tool; hold 0.5 seconds for the picker. Existing slot-1/slot-2 keys and legacy Ember assignments remain valid.

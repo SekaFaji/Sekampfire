@@ -77,6 +77,11 @@ export function drawLockedEndlessButton(ctx: any, g: any, onDown: () => void) {
 export const SHOP_CARD51 = {x:30,y:52,w:82,h:30,colGap:6,rowGap:3,cols:3} as const;
 export const SHOP_DETAILS51 = {x:30,y:119,w:260,h:45} as const;
 export const SHOP_BUY51 = {x:210,y:142,w:78,h:18} as const;
+export const SHOP_PAGE_SIZE53 = SHOP_CARD51.cols*2;
+export const SHOP_PAGE_CONTROLS53 = {
+  previous:{x:165,y:121,w:13,h:13},
+  next:{x:195,y:121,w:13,h:13}
+} as const;
 
 function shopBox51(ctx:any,x:number,y:number,w:number,h:number,
   ink:string,edge:string):void {
@@ -104,9 +109,9 @@ function selectedShopRow51(g:any,rows:any[]):any|null {
   const index=Math.max(0,Math.min(rows.length-1,Math.floor(g.menuSel||0)));
   return rows[index]||null;
 }
-function drawShopUpgradeCard51(ctx:any,g:any,row:any,i:number,selected:boolean):void {
-  const c=SHOP_CARD51,x=c.x+(i%c.cols)*(c.w+c.colGap);
-  const y=c.y+Math.floor(i/c.cols)*(c.h+c.rowGap);
+function drawShopUpgradeCard51(ctx:any,g:any,row:any,slot:number,globalIndex:number,selected:boolean):void {
+  const c=SHOP_CARD51,x=c.x+(slot%c.cols)*(c.w+c.colGap);
+  const y=c.y+Math.floor(slot/c.cols)*(c.h+c.rowGap);
   const owned=!!row?.maxed;
   const affordable=!!row?.canBuy;
   const border=selected?"#eac487":owned?"#83a48e":"#66798a";
@@ -135,7 +140,7 @@ function drawShopUpgradeCard51(ctx:any,g:any,row:any,i:number,selected:boolean):
   // Cards ALWAYS select, including unaffordable or owned ones. No wood or
   // Ash is spent when exploring information or switching between cards.
   g.zones.push({x,y,w:c.w,h:c.h,onDown:()=>{
-    g.menuSel=i;
+    g.menuSel=globalIndex;
     g.upConfirm=null;
   }});
 }
@@ -153,7 +158,7 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
   const level=Number(selected.level)||0,max=Number(selected.max)||1;
   drawText(ctx,selected.maxed?"MAX LEVEL":"LEVEL "+level+"/"+max+"  NEXT "+(level+1),
     d.x+6,d.y+14,selected.maxed?"#a9dab3":"#b9c7c7");
-  const benefit=SHOP_CARD_BENEFIT51[id]||selected.desc||"PERMANENT UPGRADE.";
+  const benefit=id==="legacy"?selected.desc:(SHOP_CARD_BENEFIT51[id]||selected.desc||"PERMANENT UPGRADE.");
   drawTextWrap(ctx,String(benefit),d.x+6,d.y+24,164,"#bcd0cb",8);
   const canBuy=!!selected.canBuy && !selected.maxed;
   const price=typeof selected.cost==="number"?selected.cost:0;
@@ -169,6 +174,30 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
     // preventing stale-price, double-payment or unexpected pet purchases.
     selected.buy?.();
   }});
+  // Native page navigation preserves readable 82x30 cards at 320x180.
+  // These 13px controls sit beside the detail header, never on a card or
+  // over the BUY hit target. Opening another page only selects information.
+  const pages=Math.ceil(rows.length/SHOP_PAGE_SIZE53);
+  if(pages>1 && g.shopTab===0){
+    const page=Math.floor((g.menuSel||0)/SHOP_PAGE_SIZE53);
+    const arrows=[
+      {r:SHOP_PAGE_CONTROLS53.previous,text:"<",target:page-1},
+      {r:SHOP_PAGE_CONTROLS53.next,text:">",target:page+1}
+    ];
+    drawTextC(ctx,(page+1)+"/"+pages,187,125,"#dac6a4");
+    for(const {r,text:arrow,target} of arrows){
+      const enabled=target>=0&&target<pages;
+      shopBox51(ctx,r.x,r.y,r.w,r.h,
+        enabled?"rgba(69,82,84,0.86)":"rgba(38,50,53,0.61)",
+        enabled?"#cda577":"#68747c");
+      drawTextC(ctx,arrow,r.x+r.w/2,r.y+3,
+        enabled?"#ffe3b3":"#87969a");
+      if(enabled)g.zones.push({...r,onDown:()=>{
+        g.menuSel=target*SHOP_PAGE_SIZE53;
+        g.upConfirm=null;
+      }});
+    }
+  }
 }
 /** Three native Shop tabs, six illustrated upgrade cards, one pet portrait
  * card, a details inspector, and a single real BUY button. Selecting a card
@@ -212,8 +241,13 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     }
   }else{
     g.menuSel=Math.max(0,Math.min(rows.length-1,g.menuSel||0));
-    for(let i=0;i<rows.length;i++)
-      drawShopUpgradeCard51(ctx,g,rows[i],i,i===g.menuSel);
+    const page=Math.floor(g.menuSel/SHOP_PAGE_SIZE53);
+    const first=page*SHOP_PAGE_SIZE53;
+    const visible=rows.slice(first,first+SHOP_PAGE_SIZE53);
+    for(let slot=0;slot<visible.length;slot++){
+      const index=first+slot;
+      drawShopUpgradeCard51(ctx,g,visible[slot],slot,index,index===g.menuSel);
+    }
     drawShopDetails51(ctx,g,meta,rows);
   }
   drawTextC(ctx,tab===1?"OWN PETS FOREVER. EQUIP FROM INVENTORY."

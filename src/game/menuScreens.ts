@@ -2,6 +2,7 @@ import { drawText, drawTextC, drawTextWrap, textW } from "./font";
 import { drawTutorialArt, TUTORIAL_PAGES } from "./tutorial";
 import { BINGSU, drawBingsuPortrait } from "./bingsu";
 import { drawShopCardIcon51, SHOP_CARD_LABEL51, SHOP_CARD_BENEFIT51, type ShopId51 } from "./shopCards51";
+import { SHOP_CARD58,SHOP_VIEW58,SHOP_SCROLLBAR58,clampShopScroll58,shopMaxScroll58 } from "./shopScroll58";
 
 function frame(ctx: any, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = "rgba(8,12,26,0.75)";
@@ -71,10 +72,9 @@ export function drawLockedEndlessButton(ctx: any, g: any, onDown: () => void) {
   g.zones.push({ x, y, w, h, onDown });
 }
 
-/** Compact card geometry at the original 320x180 native resolution.
- * Card hit-zones end above the details pane, which has ONE separate BUY
- * button. The old tabs/close box remain pixel-identical and never overlap. */
-export const SHOP_CARD51 = {x:30,y:52,w:82,h:30,colGap:6,rowGap:3,cols:3} as const;
+/** Scrollable Shop card geometry in the original 320x180 native resolution.
+ * The banked balance, three tabs, details pane and separate BUY remain fixed. */
+export const SHOP_CARD51=SHOP_CARD58; // Historical alias for card geometry tests.
 export const SHOP_DETAILS51 = {x:30,y:119,w:260,h:45} as const;
 export const SHOP_BUY51 = {x:210,y:142,w:78,h:18} as const;
 /** Native 320x180 layout: the painted bust has 7px horizontal and 3px
@@ -83,11 +83,7 @@ export const BINGSU_PET_FIT57 = {
   card:{x:31,y:50,w:100,h:68},
   art:{x:38,y:53,w:86,h:62}
 } as const;
-export const SHOP_PAGE_SIZE53 = SHOP_CARD51.cols*2;
-export const SHOP_PAGE_CONTROLS53 = {
-  previous:{x:165,y:121,w:13,h:13},
-  next:{x:195,y:121,w:13,h:13}
-} as const;
+
 
 function shopBox51(ctx:any,x:number,y:number,w:number,h:number,
   ink:string,edge:string):void {
@@ -115,40 +111,81 @@ function selectedShopRow51(g:any,rows:any[]):any|null {
   const index=Math.max(0,Math.min(rows.length-1,Math.floor(g.menuSel||0)));
   return rows[index]||null;
 }
-function drawShopUpgradeCard51(ctx:any,g:any,row:any,slot:number,globalIndex:number,selected:boolean):void {
-  const c=SHOP_CARD51,x=c.x+(slot%c.cols)*(c.w+c.colGap);
-  const y=c.y+Math.floor(slot/c.cols)*(c.h+c.rowGap);
-  const owned=!!row?.maxed;
-  const affordable=!!row?.canBuy;
+function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number):void {
+  const c=SHOP_CARD58;
+  const x=c.x+(index%c.cols)*(c.w+c.colGap);
+  const y=c.y+Math.floor(index/c.cols)*(c.h+c.rowGap)-offset;
+  const top=Math.max(y,SHOP_VIEW58.y);
+  const bottom=Math.min(y+c.h,SHOP_VIEW58.y+SHOP_VIEW58.h);
+  if(bottom<=top)return;
+  const selected=index===g.menuSel;
+  const owned=!!row?.maxed,affordable=!!row?.canBuy;
   const border=selected?"#eac487":owned?"#83a48e":"#66798a";
   shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.72)":
-    "rgba(29,46,55,0.62)",border);
+    "rgba(29,46,55,0.68)",border);
   if(selected){
-    ctx.fillStyle="#f5d49a";
-    ctx.fillRect(x+2,y+3,2,c.h-6);
+    ctx.fillStyle="#f5d49a";ctx.fillRect(x+2,y+3,2,c.h-6);
   }
   const id=row?.id as ShopId51;
   if(id&&SHOP_CARD_LABEL51[id])drawShopCardIcon51(ctx,id,x+6,y+7);
   else {
     ctx.fillStyle="#9bbac3";ctx.fillRect(x+8,y+9,10,10);
-    ctx.fillStyle="#e3c88e";ctx.fillRect(x+12,y+7,3,2);
   }
-  drawText(ctx,compact51(shopCardLabel51(row),c.w-26),
-    x+24,y+6,selected?"#fff0ca":"#e6dbbc");
-  const max=Number(row?.max)||1,level=Number(row?.level)||0;
-  drawText(ctx,owned?"MAX":("LV"+level+"/"+max),x+24,y+19,
-    owned?"#a8d9af":"#b7c4ca");
-  const right=owned?"":(typeof row?.cost==="number"
-    ?String(row.cost):String(row?.right||""));
-  const label=compact51(right,29);
-  drawText(ctx,label,x+c.w-4-textW(label),y+19,
-    affordable?"#ebcf91":"#9aa9b4");
-  // Cards ALWAYS select, including unaffordable or owned ones. No wood or
-  // Ash is spent when exploring information or switching between cards.
-  g.zones.push({x,y,w:c.w,h:c.h,onDown:()=>{
-    g.menuSel=globalIndex;
+  drawText(ctx,compact51(shopCardLabel51(row),c.w-30),
+    x+25,y+5,selected?"#fff0ca":"#e6dbbc");
+  const max=Math.max(1,Number(row?.max)||1);
+  const level=Math.max(0,Number(row?.level)||0);
+  drawText(ctx,owned?"MAX LEVEL":("LV "+level+"/"+max),
+    x+25,y+17,owned?"#a8d9af":"#b7c4ca");
+  const right=owned?"OWNED":typeof row?.cost==="number"?row.cost+" ASH":"";
+  const ink=owned?"#a8d9af":affordable?"#ebcf91":"#9aa9b4";
+  const label=compact51(right,48);
+  drawText(ctx,label,x+c.w-4-textW(label),y+17,ink);
+  // Thin progress track gives multi-tier upgrades a clear sense of progress.
+  ctx.fillStyle="#465557";ctx.fillRect(x+25,y+26,c.w-31,2);
+  if(level>0){
+    ctx.fillStyle=owned?"#9cd0a9":"#e0b674";
+    ctx.fillRect(x+25,y+26,Math.round((c.w-31)*Math.min(1,level/max)),2);
+  }
+  // Only the VISIBLE part responds to taps: cropped cards can never
+  // activate the fixed details panel or BUY button beneath this viewport.
+  g.zones.push({x,y:top,w:c.w,h:bottom-top,shopCardIndex58:index,onDown:()=>{
+    g.menuSel=index;
     g.upConfirm=null;
   }});
+}
+/** Fixed-height card viewport: Canvas clips moving art before we draw the
+ * fixed Shop details. The lightweight fake contexts in tests omit clip();
+ * production Canvas always provides it. Interactive zones are still cropped
+ * in every context. */
+function drawScrollableShop58(ctx:any,g:any,rows:any[]):void {
+  const v=SHOP_VIEW58;
+  const offset=clampShopScroll58(g,rows.length);
+  ctx.fillStyle="rgba(16,31,38,0.38)";
+  ctx.fillRect(v.x,v.y,v.w,v.h);
+  const canClip=typeof ctx.save==="function"&&
+    typeof ctx.beginPath==="function"&&typeof ctx.rect==="function"&&
+    typeof ctx.clip==="function"&&typeof ctx.restore==="function";
+  if(canClip){
+    ctx.save();ctx.beginPath();ctx.rect(v.x,v.y,v.w,v.h);ctx.clip();
+  }
+  for(let i=0;i<rows.length;i++){
+    const cardY=SHOP_CARD58.y+Math.floor(i/SHOP_CARD58.cols)*
+      (SHOP_CARD58.h+SHOP_CARD58.rowGap)-offset;
+    if(cardY+SHOP_CARD58.h<=v.y||cardY>=v.y+v.h)continue;
+    drawShopUpgradeCard51(ctx,g,rows[i],i,offset);
+  }
+  if(canClip)ctx.restore();
+  // Neutral track and gold thumb communicate position without arrows/pages.
+  const max=shopMaxScroll58(rows.length);
+  if(max>0){
+    const bar=SHOP_SCROLLBAR58;
+    ctx.fillStyle="rgba(62,76,79,0.88)";
+    ctx.fillRect(bar.x,bar.y,bar.w,bar.h);
+    const thumbH=Math.max(12,Math.round(bar.h*v.h/(v.h+max)));
+    const thumbY=bar.y+Math.round((bar.h-thumbH)*offset/max);
+    ctx.fillStyle="#d4b17c";ctx.fillRect(bar.x,thumbY,bar.w,thumbH);
+  }
 }
 function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
   const d=SHOP_DETAILS51;
@@ -180,32 +217,9 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
     // preventing stale-price, double-payment or unexpected pet purchases.
     selected.buy?.();
   }});
-  // Native page navigation preserves readable 82x30 cards at 320x180.
-  // These 13px controls sit beside the detail header, never on a card or
-  // over the BUY hit target. Opening another page only selects information.
-  const pages=Math.ceil(rows.length/SHOP_PAGE_SIZE53);
-  if(pages>1 && g.shopTab===0){
-    const page=Math.floor((g.menuSel||0)/SHOP_PAGE_SIZE53);
-    const arrows=[
-      {r:SHOP_PAGE_CONTROLS53.previous,text:"<",target:page-1},
-      {r:SHOP_PAGE_CONTROLS53.next,text:">",target:page+1}
-    ];
-    drawTextC(ctx,(page+1)+"/"+pages,187,125,"#dac6a4");
-    for(const {r,text:arrow,target} of arrows){
-      const enabled=target>=0&&target<pages;
-      shopBox51(ctx,r.x,r.y,r.w,r.h,
-        enabled?"rgba(69,82,84,0.86)":"rgba(38,50,53,0.61)",
-        enabled?"#cda577":"#68747c");
-      drawTextC(ctx,arrow,r.x+r.w/2,r.y+3,
-        enabled?"#ffe3b3":"#87969a");
-      if(enabled)g.zones.push({...r,onDown:()=>{
-        g.menuSel=target*SHOP_PAGE_SIZE53;
-        g.upConfirm=null;
-      }});
-    }
-  }
+
 }
-/** Three native Shop tabs, six illustrated upgrade cards, one pet portrait
+/** Three native Shop tabs, scrollable illustrated upgrades, one pet portrait
  * card, a details inspector, and a single real BUY button. Selecting a card
  * never calls row.onDown (that historical function had double-tap purchase).
  */
@@ -218,7 +232,7 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
   const tab=Math.max(0,Math.min(2,g.shopTab||0));
   for(const [id,label,x] of [[0,"UPGRADES",30],[1,"PETS",116],[2,"COMING SOON",202]] as const)
     action(ctx,g,x,33,82,label,()=>{
-      g.shopTab=id;g.menuSel=0;g.upConfirm=null;
+      g.shopTab=id;g.menuSel=0;g.shopScroll=0;g.shopVelocity=0;g.upConfirm=null;
     },true,tab===id);
   if(tab===2){
     drawTextC(ctx,"MORE TO DISCOVER",160,78,"#e6cf98");
@@ -255,13 +269,7 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     }
   }else{
     g.menuSel=Math.max(0,Math.min(rows.length-1,g.menuSel||0));
-    const page=Math.floor(g.menuSel/SHOP_PAGE_SIZE53);
-    const first=page*SHOP_PAGE_SIZE53;
-    const visible=rows.slice(first,first+SHOP_PAGE_SIZE53);
-    for(let slot=0;slot<visible.length;slot++){
-      const index=first+slot;
-      drawShopUpgradeCard51(ctx,g,visible[slot],slot,index,index===g.menuSel);
-    }
+    drawScrollableShop58(ctx,g,rows);
     drawShopDetails51(ctx,g,meta,rows);
   }
   drawTextC(ctx,tab===1?"OWN PETS FOREVER. EQUIP FROM INVENTORY."

@@ -8,7 +8,8 @@ import { CAMP_LEGACY_COSTS53,CAMP_LEGACY_MAX53,
 import { campEstablished } from "./campBoundary";
 import { GUIDE_LEVELS } from "./guide";
 import { SHOP_CARD_LABEL51,SHOP_CARD_BENEFIT51 } from "./shopCards51";
-import { drawShopTabs,SHOP_CARD51,SHOP_PAGE_SIZE53,SHOP_PAGE_CONTROLS53,SHOP_BUY51 } from "./menuScreens";
+import { drawShopTabs,SHOP_CARD51,SHOP_BUY51 } from "./menuScreens";
+import { SHOP_VIEW58,shopMaxScroll58,moveShopScroll58 } from "./shopScroll58";
 import { BINGSU,drawBingsuPortrait,drawBingsuShopProfile } from "./bingsu";
 import { drawBingsuWorldSprite } from "./bingsuWorld49";
 
@@ -227,36 +228,36 @@ describe("Patch #53: four permanent Camp Legacy levels",()=>{
   });
 });
 
-describe("Patch #53: the seven-upgrade Ash Shop remains readable and clickable",()=>{
-  it("uses two pages of six cards without squeezing the native art or BUY zones",()=>{
+describe("Patch #58: the seven-upgrade Ash Shop scrolls instead of paging",()=>{
+  it("scrolls all seven cards while keeping the separate BUY area fixed",()=>{
     const m=meta(),g=createEngine();
     g.ui="run";g.menu="shop";g.shopTab=0;g.menuSel=0;
     expect(shopRows(g,m).length).toBe(7);
-    expect(SHOP_PAGE_SIZE53).toBe(6);
+    expect(SHOP_CARD51.cols).toBe(2);
     expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // including pet
     const pageOne=drawShop(g,m);
     const cards=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);
-    expect(cards).toHaveLength(6);
+    expect(cards).toHaveLength(4);
     expect(pageOne.every(p=>p.x>=24&&p.x+p.w<=296&&p.y>=8&&p.y+p.h<=172)).toBe(true);
-    expect(g.zones.some((z:any)=>z.x===SHOP_PAGE_CONTROLS53.next.x
-      &&z.y===SHOP_PAGE_CONTROLS53.next.y)).toBe(true);
-    tap(g,SHOP_PAGE_CONTROLS53.next.x+5,SHOP_PAGE_CONTROLS53.next.y+5);
+    expect(SHOP_VIEW58.h).toBe(64);
+    expect(shopMaxScroll58(7)).toBeGreaterThan(0);
+    moveShopScroll58(g,999,7);
+    expect(g.menuSel).toBe(0); // scrolling does NOT change selection
+    expect(m.ash).toBe(1000);
+    const bottom=drawShop(g,m);
+    expect(g.zones.some((z:any)=>z.shopCardIndex58===6)).toBe(true);
+    expect(bottom.every(p=>p.x>=24&&p.x+p.w<=296&&p.y>=8&&p.y+p.h<=172)).toBe(true);
+    const legacy=g.zones.find((z:any)=>z.shopCardIndex58===6);
+    tap(g,legacy.x+5,legacy.y+5);
     expect(g.menuSel).toBe(6);
-    expect(m.ash).toBe(1000); // navigation alone never buys
-    const pageTwo=drawShop(g,m);
-    expect(g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h))
-      .toHaveLength(1);
-    expect(pageTwo.every(p=>p.x>=24&&p.x+p.w<=296&&p.y>=8&&p.y+p.h<=172)).toBe(true);
-    tap(g,SHOP_CARD51.x+12,SHOP_CARD51.y+12);
     expect(m.up.legacy).toBe(0);
     drawShop(g,m);
     tap(g,SHOP_BUY51.x+10,SHOP_BUY51.y+10);
     expect(m.up.legacy).toBe(1);
     expect(m.ash).toBe(965);
+    moveShopScroll58(g,-999,7);
     drawShop(g,m);
-    tap(g,SHOP_PAGE_CONTROLS53.previous.x+5,
-      SHOP_PAGE_CONTROLS53.previous.y+5);
-    expect(g.menuSel).toBe(0);
+    expect(g.menuSel).toBe(6); // scroll position is independent of selection
     expect(m.ash).toBe(965);
   });
 });

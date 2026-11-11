@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { fitViewport } from "./ui/viewport";
-import { W, H, loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO } from "./game/game";
+import { W, H, loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, handleWheel, AUDIO } from "./game/game";
+import { tickShopScroll58 } from "./game/shopScroll58";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -159,6 +160,8 @@ function App() {
         const active = g.ui === "run" && !g.over && !g.menu;
         if (active) update(g, metaRef.current, dt, cb);
         if (!g.menu) updateAmbient(g, dt);
+        if(g.menu==="shop"&&g.shopTab===0)
+          tickShopScroll58(g,dt,g.shopUpgradeCount58||0);
         if (g.ui === "run" && !g.over) {
           saveAccum += dt;
           if (saveAccum >= 4) { saveRunSnapshot(g); saveAccum = 0; }
@@ -221,6 +224,13 @@ function App() {
     const pu = (e: PointerEvent) => {
       handlePointer(g, "up", e.pointerId, 0, 0);
     };
+    const wheel=(e:WheelEvent)=>{
+      const [mx,my]=toXY(e);
+      const scale=canvas.getBoundingClientRect().width/W||1;
+      const logicalDelta=e.deltaY*(e.deltaMode===1?14:e.deltaMode===2?64:1)/scale;
+      if(handleWheel(g,logicalDelta,mx,my))e.preventDefault();
+    };
+    canvas.addEventListener("wheel",wheel,{passive:false});
     canvas.addEventListener("pointerdown", pd);
     canvas.addEventListener("pointermove", pm);
     canvas.addEventListener("pointerup", pu);
@@ -237,6 +247,7 @@ function App() {
       window.removeEventListener("blur", blur);
       window.removeEventListener("pagehide", pagehide);
       document.removeEventListener("visibilitychange", visibility);
+      canvas.removeEventListener("wheel",wheel);
       canvas.removeEventListener("pointerdown", pd);
       canvas.removeEventListener("pointermove", pm);
       canvas.removeEventListener("pointerup", pu);

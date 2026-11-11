@@ -1,6 +1,7 @@
 import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, STAGES, CRAFTS, UPGRADES, WEATHER_TEXT } from "./config";
 import { createInputHandlers } from "./input";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
+import { revealShopCard58 } from "./shopScroll58";
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
 import { useOneFireLog52 } from "./firewood52";
@@ -224,7 +225,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, ashTapFx:0,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, shopScroll:0, shopVelocity:0, shopUpgradeCount58:0, ashTapFx:0,
     craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
@@ -1429,7 +1430,10 @@ function moveSel(g: any, meta: any, dir: number) {
   const rows = menuRows(g, meta);
   if (!rows.length) return;
   g.menuSel = (g.menuSel + dir + rows.length) % rows.length;
-  if (g.menu === "shop") g.upConfirm = null;
+  if (g.menu === "shop") {
+    g.upConfirm = null;
+    if(g.shopTab===0)revealShopCard58(g,g.menuSel,rows.length);
+  }
   if (g.menu === "bench") g.craftConfirm = null;
   if (g.menu === "pause") g.endRunConfirm = false;
   if (g.menu === "build" || g.menu === "bench" || g.menu === "station") g.buildConfirm = null;
@@ -2047,7 +2051,7 @@ function drawScreen(ctx: any, g: any, meta: any) {
 }
 
 // Gameplay and menus inject their handlers into this input adapter.
-const { handleKey, handlePointer, tickQuickSlotHolds } = createInputHandlers({
+const { handleKey, handlePointer, handleWheel, tickQuickSlotHolds } = createInputHandlers({
   audioRows, moveSel, titleActions, activateSel, closeMenu, activateTitleItem, startRun, goEndless, returnToMainMenu, bankLevelOne
 });
 
@@ -2489,5 +2493,5 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
 
 // ============ App ============
 
-export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, AUDIO, bankLevelOne, performStationAction, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
+export { loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, handleWheel, AUDIO, bankLevelOne, performStationAction, titleActions, drawScreen, renderReflectionSubjects, spawnEvent, drawMovementFeedback, benchRows, buildRows, stationRows, openStation, accessHearth, accessStorage, shopRows, pauseRows, toolbarRows, quickSlotRows, settingsRows, goEndless, moveSel, closeMenu, drawSideArrows, drawRunChrome, drawMenu };
 export { W, H } from "./config";

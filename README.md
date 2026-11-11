@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #58: Smooth, scrollable Ash Shop upgrade cards
+
+- **No more Shop pages:** Replaces the former 3x2 fixed/paged grid and 1/2-page arrows with one continuous **2-column, larger 120x30 illustrated card collection**. Original 320x180 layout is preserved. The top three Shop tabs, banked Ash balance, close control, fixed bottom details inspector, and separate BUY button never move.
+- **Easy to browse:** Drag on the card area to scroll on phone with a short, damped momentum tail after releasing; mouse wheel and laptop trackpad scroll cards independently; keyboard Up/Down reveals the selected upgrade automatically. A small golden scrollbar shows how far the player has scrolled. Each card now has a small level progress strip, the true price or OWNED label, and more width for readable names. Selection never spends Ash.
+- **Strictly bounded input and viewport:** A drag starts as a pending click and only scrolls after moving past the finger-movement threshold. Releasing a drag can NEVER trigger the held card's click or the BUY button. Only the part of an upgrade card visible within the clipped 260x64 viewport is touchable; offscreen cards cannot capture clicks through the fixed details panel. Scrolling does not leak through to gameplay or other menus.
+- **Save and economy unchanged:** All seven original permanent upgrades (plus Bingsu in the separate Pets tab), their exact IDs, prices, costs, levels, caps, live banked-Ash checks, Camp Legacy effects and v1 saves remain exactly as before. The scroll offset and velocity are temporary UI state, never serialized. No new permanent upgrades are introduced in this UI-only patch; Fireplace Mastery, Fence Reinforcement and other Ash upgrades are planned for Patch #59 after visual review.
+- **QA:** Adds tests for scroll geometry, full/partial card clipping, two-column readout, touch drag versus tap, momentum/clamping, wheel outside the Shop, keyboard auto-reveal, actual purchase safety, insufficient banked Ash and preserving unbanked Run Ash. Real landscape phone feel and mouse-wheel behavior should still be manually checked.
+
+
 ## Patch #57: Bingsu portrait fits INSIDE the Pet Shop frame
 
 - **UI-only framing correction:** The approved 94x68 Bingsu head-and-chest artwork is now uniformly fitted to an 86x62 pixel display using integer nearest-neighbor sampling. It is the **same image**, not a redrawn or newly cropped dog. The former 94x68 rendering started at the card's top edge and covered the border, making her chest touch the bottom of the frame.

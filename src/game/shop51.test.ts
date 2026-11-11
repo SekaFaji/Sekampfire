@@ -1,6 +1,7 @@
 import {beforeEach,afterEach,describe,expect,it,vi} from "vitest";
 import {createEngine,drawMenu,handleKey,shopRows} from "./game";
 import {SHOP_CARD51,SHOP_DETAILS51,SHOP_BUY51,drawShopTabs} from "./menuScreens";
+import { SHOP_VIEW58,shopMaxScroll58 } from "./shopScroll58";
 import {SHOP_CARD_LABEL51,SHOP_CARD_BENEFIT51,drawShopCardIcon51} from "./shopCards51";
 import {drawBingsuPortrait,BINGSU} from "./bingsu";
 import {drawBingsuWorldSprite} from "./bingsuWorld49";
@@ -55,29 +56,28 @@ function tap(g:any,x:number,y:number){
  expect(z).toBeDefined();
  z.onDown();
 }
-const cardCenter=(index:number)=>{
+const cardCenter=(index:number,scroll=0)=>{
  const {x,y,w,h,colGap,rowGap,cols}=SHOP_CARD51;
  return {
   x:x+(index%cols)*(w+colGap)+w/2,
-  y:y+Math.floor(index/cols)*(h+rowGap)+h/2
+  y:y+Math.floor(index/cols)*(h+rowGap)+h/2-scroll
  };
 };
 
-describe("Patch #51: Ash Shop six compact pixel-art cards",()=>{
- it("renders six readable native cards, fixed tab/header and a dedicated bottom inspector",()=>{
+describe("Patch #51 / #58: scrollable illustrated Ash Shop cards",()=>{
+ it("renders two columns with four visible cards, fixed tabs and inspector",()=>{
   const g=world(),m=meta(),v=render(g,m);
   const cardZones=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);
-  expect(cardZones).toHaveLength(6);
+  expect(cardZones).toHaveLength(4);
   expect(cardZones.map((z:any)=>[z.x,z.y])).toEqual([
-   [30,52],[118,52],[206,52],[30,85],[118,85],[206,85]
+   [30,52],[158,52],[30,86],[158,86]
   ]);
   const close=g.zones.find((z:any)=>z.x===278&&z.y===13);
   expect(close).toBeDefined();
   const tabs=g.zones.filter((z:any)=>z.y===33&&z.h===16);
   expect(tabs).toHaveLength(3);
   expect(tabs.every((z:any)=>z.y>=close.y+close.h)).toBe(true);
-  expect(SHOP_DETAILS51.y).toBeGreaterThan(
-   SHOP_CARD51.y+SHOP_CARD51.h*2+SHOP_CARD51.rowGap-1);
+  expect(SHOP_DETAILS51.y).toBeGreaterThan(SHOP_VIEW58.y+SHOP_VIEW58.h);
   expect(v.pixels.every(r=>r.x>=24&&r.y>=8&&r.x+r.w<=296&&r.y+r.h<=172)).toBe(true);
   expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // 7 upgrade icons plus Bingsu
   expect(Object.values(SHOP_CARD_BENEFIT51).every(s=>s.length>10)).toBe(true);
@@ -112,8 +112,9 @@ describe("Patch #51: Ash Shop six compact pixel-art cards",()=>{
  });
  it("owning or lacking Ash still allows looking at a card, never creates BUY hitboxes",()=>{
   const g=world(),m=meta();m.ash=0;
+  g.shopScroll=shopMaxScroll58(7);
   render(g,m);
-  const c=cardCenter(5);tap(g,c.x,c.y);
+  const c=cardCenter(5,g.shopScroll);tap(g,c.x,c.y);
   expect(g.menuSel).toBe(5);
   expect(shopRows(g,m)[5].canBuy).toBe(false);
   render(g,m);

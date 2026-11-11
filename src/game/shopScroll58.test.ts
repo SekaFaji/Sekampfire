@@ -79,7 +79,9 @@ describe("Patch #58: scrollable Ash Shop geometry",()=>{
    expect(g.shopScroll).toBe(40);expect(g.menuSel).toBe(0);
    expect(m.ash).toBe(200);expect(m.up).toEqual({});
    render(g,m);
-   expect(g.zones.some((z:any)=>z.shopCardIndex58===6)).toBe(false);
+   const peek=g.zones.find((z:any)=>z.shopCardIndex58===6);
+   expect(peek).toBeDefined(); // two pixels of the last row peek into view
+   expect(peek.h).toBe(2); // hitbox clipped, never overlaps details
    expect(handleWheel(g,40,148,84)).toBe(true);
    expect(g.shopScroll).toBe(68);
    render(g,m);

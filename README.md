@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #60: left-side Ash Upgrade categories and a compact two-row grid
+
+- **Category sidebar inside Upgrades:** Four fixed selections - ALL, SURVIVAL, GEAR, CAMP - sit on the left of the existing Ash Shop. Survival filters Warm Blood, Old Flint and Everwarm Scarf; Gear filters Backpack and Grandpa's Axe; Camp filters Blueprints and Camp Legacy. ALL lists everything. Pets and Coming Soon remain their own main tabs and are not changed. Press C while the Shop's Upgrades tab is open to cycle categories on keyboard.
+- **Two visible rows of four squares:** The new 41x41 native-pixel tiles occupy four columns and up to two complete rows inside the original 320x180 menu. Each tile shows its real mini pixel-art icon, a deliberately short complete label, owned level or MAX, and a slim progression strip. The full upgrade name, actual benefits, banked-Ash price and BUY/OWNED action live in the fixed 27px bottom inspector. The sidebar occupies the left 50 pixels; the tile viewport is x85..272 and y51..135, leaving a clear gap before the inspector at y138.
+- **Smooth scrolling preserved for growth:** Existing seven upgrades fit in two rows without scrolling, and filtered categories fit easily. If a category grows past eight upgrades in a later patch, clipped touch dragging, gentle momentum, mouse wheel/trackpad, keyboard auto-reveal and the gold scrollbar are still supported. Switching categories resets temporary scroll position, selection and momentum to prevent stale upgrade purchases or hidden cards capturing touches.
+- **No changes to the economy or permanent gameplay:** Real purchases continue through the single banked-Ash BUY button and existing price/level/max revalidation. The seven upgrades, Bingsu's Pets portrait/40-Ash unlock, Old Flint prelit campfire, Camp Legacy foundations, save migration and run resources are identical. The sidebar, category, selection and scroll are UI-only state and are not serialized.
+- **QA and next step:** Adds real tests for every category's membership, shop filtering, 4x2 native hit zones and absence of layout overlap, full-name/short-tile labels, changing filters without spending Ash, pet-tab isolation, category keyboard cycling, safe BUY, and future 12+ row scroll behavior. Visually confirm on an actual landscape phone. Permanent Hearth/Fence/Workshop/Storage upgrade expansion is deliberately left for the next patch after this layout is approved.
+
+
 ## Patch #59: Four square Ash Shop cards per row
 
 - **Four actual squares:** The permanent Upgrades tab uses four equal **59x59 native-pixel** cards in each scrolling row, instead of the wider 120x30 rectangles from Patch #58. The cards sit at x=30, 95, 160 and 225 with even 6px gaps, leaving a gutter for the gold scrollbar.

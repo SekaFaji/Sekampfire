@@ -1,6 +1,7 @@
 import { W } from "./config";
 import { tickQuickSlotHolds, useQuickSlot } from "./quickSlots";
 import { navigateEquipment50, activateEquipment50, chooseEquipmentCategory50 } from "./inventoryMenu";
+import { insideShopViewport58,moveShopScroll58,wheelShop58 } from "./shopScroll58";
 
 /** In-canvas keyboard and pointer controls; callbacks are injected to avoid
  * a cycle between the input adapter and the gameplay/menus module.
@@ -27,7 +28,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   }
   if (down && g.menu === "shop" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
     g.shopTab = Math.max(0,Math.min(2,(g.shopTab||0)+(k==="arrowleft"||k==="a"?-1:1)));
-    g.menuSel = 0; g.upConfirm = null;
+    g.menuSel = 0; g.shopScroll=0; g.shopVelocity=0; g.upConfirm = null;
     return;
   }
   // Inventory has its own real grid-navigation model, not the linear
@@ -129,6 +130,18 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
       const currentMenu = g.menu;
       if (g.menuZonesFor !== currentMenu) return; // Wait for next render.
       const from = Number.isInteger(g.menuZonesStart) ? g.menuZonesStart : g.zones.length;
+      // The scrolling viewport handles pointer DOWN as a pending TAP.
+      // A vertical drag cancels selection; it can never land on BUY since
+      // that button is in the fixed, separate details pane below y119.
+      if(currentMenu==="shop"&&g.shopTab===0&&insideShopViewport58(mx,my)){
+        const zone=g.zones.slice(from).reverse().find((z:any)=>
+          z.shopCardIndex58!==undefined&&mx>=z.x&&mx<z.x+z.w&&
+          my>=z.y&&my<z.y+z.h);
+        g.shopVelocity=0;
+        g.pointers[id]={shopScroll58:true,menu:currentMenu,startY:my,
+          lastY:my,startX:mx,dragged:false,zone};
+        return;
+      }
       for (let i = g.zones.length - 1; i >= from; i--) {
         const z = g.zones[i];
         if (mx >= z.x && mx < z.x + z.w && my >= z.y && my < z.y + z.h) {
@@ -163,6 +176,23 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
     }
   } else if (type === "move") {
     const pt = g.pointers[id];
+    if(pt?.shopScroll58){
+      if(pt.menu!==g.menu||g.shopTab!==0){delete g.pointers[id];return;}
+      const delta=my-pt.lastY;
+      if(Math.abs(my-pt.startY)>4||Math.abs(mx-pt.startX)>9)
+        pt.dragged=true;
+      if(pt.dragged){
+        const before=Number(g.shopScroll)||0;
+        moveShopScroll58(g,-delta,g.shopUpgradeCount58||0);
+        const used=(Number(g.shopScroll)||0)-before;
+        // 50px/s minimum sampling would make tiny moves feel inert.
+        // Clamp momentum to a short, readable coast on release.
+        if(Math.abs(used)>0.25)
+          pt.velocity=Math.max(-210,Math.min(210,(-delta)*12));
+      }
+      pt.lastY=my;
+      return;
+    }
     if(pt && pt.quickSlot !== undefined) {
       if(Math.abs(mx-pt.startX)>12 || Math.abs(my-pt.startY)>12) pt.cancelled=true;
     } else if(pt && pt.side) {
@@ -171,6 +201,16 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
     }
   } else {
     const pt = g.pointers[id];
+    if(pt?.shopScroll58){
+      // A tap selects one card; releasing a drag only coasts the list.
+      // Never call the stored onDown if the Shop changed underneath it.
+      if(pt.menu===g.menu&&g.shopTab===0){
+        if(pt.dragged)g.shopVelocity=Number(pt.velocity)||0;
+        else pt.zone?.onDown?.();
+      }
+      delete g.pointers[id];
+      return;
+    }
     if (pt) {
       if (pt.zone && pt.zone.onUp) pt.zone.onUp();
       // A held slot opens its picker without also using the item on release.
@@ -183,6 +223,13 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
   }
 }
 
+/** Wheel and trackpad scrolling only consume events above the cards.
+ * Mouse wheel over the fixed BUY button or other game screens passes through.
+ * delta is already normalized to logical Canvas pixels by App. */
+function handleWheel(g:any,delta:number,mx:number,my:number):boolean{
+ if(!insideShopViewport58(mx,my))return false;
+ return wheelShop58(g,delta,g.shopUpgradeCount58||0);
+}
 
-  return { handleKey, handlePointer, tickQuickSlotHolds };
+  return { handleKey, handlePointer, handleWheel, tickQuickSlotHolds };
 }

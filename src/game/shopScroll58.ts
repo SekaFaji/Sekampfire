@@ -2,7 +2,10 @@
  * transient scroll motion and keyboard selection. No save schema changes.
  * Only the upgrade cards scroll; tabs, Bingsu, banked Ash and BUY are fixed. */
 export const SHOP_VIEW58={x:30,y:52,w:260,h:64} as const;
-export const SHOP_CARD58={x:30,y:52,w:120,h:30,colGap:8,rowGap:4,cols:2} as const;
+/** Patch #59: exactly four equal square cards across the 260px viewport.
+ * Four 59px squares + 3x6px gaps = 254px, leaving a 6px gutter for the
+ * scrollbar, with no overlap against the fixed inspector at y119. */
+export const SHOP_CARD58={x:30,y:52,w:59,h:59,colGap:6,rowGap:5,cols:4} as const;
 export const SHOP_SCROLLBAR58={x:284,y:54,w:3,h:60} as const;
 const STEP=SHOP_CARD58.h+SHOP_CARD58.rowGap;
 export function shopMaxScroll58(count:number):number{

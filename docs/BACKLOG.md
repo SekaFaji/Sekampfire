@@ -1,5 +1,17 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #60 - categories on the left + compact 4 x 2 Ash upgrade grid
+- [x] Group the existing permanent Ash upgrades using a left sidebar: ALL, SURVIVAL, GEAR and CAMP. Preserve the separate main Upgrades / Pets / Coming Soon tabs.
+- [x] Fit two complete rows of four **41x41 pixel squares** inside the existing native-resolution Shop instead of one 59x59 row.
+- [x] Each small tile keeps its original icon, an untruncated short name, the owned level/MAX and a clear progress strip. The selected upgrade's full name, benefits, price and only BUY action stay in a fixed compact bottom inspector.
+- [x] Keep touch drag/momentum, desktop wheel/trackpad, mouse-safe clipped cards, and keyboard navigation for categories containing more than eight items.
+- [x] Category changes reset temporary scroll and selection, but never modify purchased upgrades, saved ownership, Ash balance or active runs.
+- [x] The Bingsu pet tab, her approved portrait, the Old Flint upgrade and Camp Legacy are unchanged.
+- [x] Add category, geometry, real BUY, keyboard/touch/scroll, safe-hitbox and save-preservation regression coverage.
+- [ ] Verify side-category readability, icon clarity and BUY comfort on a real landscape Android phone. Tune the layout only after seeing the deployed result.
+- [ ] **Next Patch #61 - new permanent camp benefits:** Hearth Mastery, Fence Reinforcement, Workshop Legacy and Storage Legacy. Avoid duplicate Old Flint/Camp Legacy effects and only apply newly bought foundations to future runs.
+
+
 ## Patch #59 - four-square upgrade cards per scrolling row
 - [x] Replace Patch #58's wide rectangular upgrade cards with four equal square tiles per row, 59x59 game pixels each.
 - [x] Preserve the existing scrolling, momentum, desktop wheel, keyboard automatic reveal and clipped hit zones.
@@ -8,7 +20,7 @@
 - [x] Preserve the actual seven permanent Ash upgrades and their saved ownership, prices, effects and banked-Ash safety.
 - [x] Add square geometry, 4-across placement, text-fit, scroll-into-second-row and progress tests.
 - [ ] Real-device approval for 4 square cards on landscape phone, especially scroll gestures and icon/price legibility.
-- [ ] **Patch #60:** Add permanent Hearth Mastery, Fence Reinforcement, Workshop Legacy and Storage Legacy, avoiding duplicate Old Flint/Camp Legacy effects.
+- [ ] **Patch #61:** Add permanent Hearth Mastery, Fence Reinforcement, Workshop Legacy and Storage Legacy, avoiding duplicate Old Flint/Camp Legacy effects.
 
 
 ## Patch #58 - scrollable, responsive Ash Shop (approved)

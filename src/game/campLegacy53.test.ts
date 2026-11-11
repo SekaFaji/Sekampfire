@@ -233,7 +233,8 @@ describe("Patch #58: the seven-upgrade Ash Shop scrolls instead of paging",()=>{
     const m=meta(),g=createEngine();
     g.ui="run";g.menu="shop";g.shopTab=0;g.menuSel=0;
     expect(shopRows(g,m).length).toBe(7);
-    expect(SHOP_CARD51.cols).toBe(2);
+    expect(SHOP_CARD51.cols).toBe(4);
+    expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
     expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // including pet
     const pageOne=drawShop(g,m);
     const cards=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);

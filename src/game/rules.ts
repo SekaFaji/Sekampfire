@@ -1,8 +1,14 @@
 import { stationPileBonus } from "./campProgress";
 import { AXE_STATS, equippedAxe } from "./equipment50";
-/** Preserved gameplay capacity rules. Never infer these from visual sprite sizes. */
-export const carryCap = (g: any, meta: any): number =>
-  5 + (meta.up.pack ? 8 : 0) + (g.crafts.pack ? 8 : 0);
+/** Permanent Big Backpack now adds +5 kg per Ash level (max five).
+ * The crafted Timber Pack remains a separate run-only +8 kg. This single
+ * formula powers pickups, pet transfers, storage, HUD and inventory. */
+export const MAX_CARRY_KG = 38;
+export const carryCap = (g: any, meta: any): number => {
+  const raw = Number(meta?.up?.pack);
+  const level = Number.isFinite(raw) ? Math.min(5, Math.max(0, Math.floor(raw))) : 0;
+  return 5 + level * 5 + (g?.crafts?.pack ? 8 : 0);
+};
 export const pileCap = (g: any): number =>
   g.builtPile ? (g.stage >= 4 ? 40 : 12) + stationPileBonus(g) : 0;
 

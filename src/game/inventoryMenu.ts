@@ -3,6 +3,7 @@ import { INVENTORY_GRID_SLOTS, ITEM_DEFINITIONS, type ItemId,
   availableInventorySlots, occupiedInventorySlots, carriedWeight,
   carriedWeightLimit, inventoryEquipment } from "./inventory";
 import { assignQuickSlot } from "./quickSlots";
+import { coldProtection } from "./cold";
 import { saveMeta } from "./save";
 import { ownedAxeOptions, ownedPetOptions, equippedAxe, equippedPet,
   equipAxe, equipPet, AXE_STATS, type AxeId, type GearCategory } from "./equipment50";
@@ -240,7 +241,7 @@ function drawEquipmentPane50(ctx:any,g:any,meta:any):void {
     const def=ITEM_DEFINITIONS[selected];
     drawText(ctx,fit(def.name,121),168,132,"#f1d8a9");
     const desc=kind==="axe" ? AXE_STATS[selected as AxeId].description
-      :kind==="pet"?"RETRIEVES 2 REAL LOGS"
+      :kind==="pet"?"FETCH 2 LOGS / +5 PROT NEAR"
       :def.description[0];
     drawText(ctx,fit(desc,123),168,140,"#a9c9bd");
   }
@@ -277,6 +278,7 @@ export function drawInventoryMenu(ctx:any,g:any,meta:any,close:()=>void):void{
   drawText(ctx,"INVENTORY",x+9,y+8,"#ffdf9a");
   const used=occupiedInventorySlots(g),capacity=availableInventorySlots(g,meta);
   drawText(ctx,"SLOTS "+used+"/"+capacity,169,y+8,"#d5c5a6");
+  drawText(ctx,"PROT "+coldProtection(g,meta),235,y+8,"#b9d8cf");
   actionable(ctx,g,278,13,16,14,"X",close);
   drawText(ctx,"BACKPACK",29,33,"#e8d09a");
   drawText(ctx,"EQUIPMENT",166,33,"#e8d09a");

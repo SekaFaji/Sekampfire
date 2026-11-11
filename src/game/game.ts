@@ -4,7 +4,7 @@ import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLocked
 import { revealShopCard58 } from "./shopScroll58";
 import { visibleShopUpgrades60,shopCategory60 } from "./shopCategories60";
 import { clamp } from "./math";
-import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
+import { MAX_CARRY_KG, carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
 import { useOneFireLog52 } from "./firewood52";
 import { applyCampLegacy53, campLegacyNextBenefit53 } from "./campLegacy53";
 import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
@@ -62,7 +62,7 @@ function resumeRun(g: any, data: any, meta?: any) {
   genScenery(g, seed);
   g.player.x = finiteRange(data.player.x, 10, WORLD_W - 10, CX + 26);
   g.player.dir = data.player.dir === -1 ? -1 : 1;
-  g.player.wood = finiteRange(data.player.wood, 0, 26, 0);
+  g.player.wood = finiteRange(data.player.wood, 0, MAX_CARRY_KG, 0);
   g.player.warmth = finiteRange(data.player.warmth, 1, 100, 100);
   g.heatSoak = n("heatSoak", 0, HEAT_SOAK_SECONDS, 0);
   g.player.torchT = finiteRange(data.player.torchT, 0, 60, 0);
@@ -141,8 +141,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.equippedAxe = normalizeEquippedAxe(data.equippedAxe,g,meta);
   // Import sanitized canonical Pine Logs from new runs, or upgrade older
   // wood-only checkpoints without modifying their version-one save key.
-  installInventory(g,data.inventory,finiteRange(data.player.wood,0,26,0));
-  g.cold = n("cold", 0, 100, coldTarget(g));
+  installInventory(g,data.inventory,finiteRange(data.player.wood,0,MAX_CARRY_KG,0));
+  g.cold = n("cold", 0, 100, coldTarget(g, meta));
   g.quickSlots = normalizeQuickSlots(data.quickSlots);
   // The instrument is display-only. Its reading is derived from the
   // restored world weather/season, not from player insulation or Cold.
@@ -502,7 +502,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
     g.pressT = false;
     if (g.fireLit && p.torchT <= 0 && g.fuel > 12) {
       g.fuel -= 8;
-      p.torchT = (meta.up.scarf ? 50 : 30) + stationTorchBonus(g);
+      p.torchT = 30 + stationTorchBonus(g);
       cb.toast("You take an ember. The fire dimmed a little.");
     } else if (!g.fireLit) {
       cb.toast("No fire to take an ember from.");
@@ -754,7 +754,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   const f = g.fireLit ? g.fuel / 100 : 0;
   // Weather drains warmth ONLY through Cold; do not stack the old
   // cold-snap/blizzard bonuses over the new exposure pressure.
-  advanceCold(g, dt);
+  advanceCold(g, dt, meta);
   let d = coldWarmthDrain(g, meta);
   const wr = 20 + f * 34;
   const byFire = g.fireLit && Math.abs(p.x - CX) < wr;

@@ -16,11 +16,11 @@ export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
 export const SHOP_CARD_BENEFIT51:Record<ShopId51,string>={
   blood:"COLD DRAINS WARMTH MORE SLOWLY.",
   flint:"BEGIN EACH RUN WITH THE FIRE LIT.",
-  pack:"PERMANENTLY CARRY 8 MORE PINE LOGS.",
+  pack:"EACH LEVEL ADDS 5KG. MAX +25KG.",
   axe:"PERMANENT STRONGER CHOPPING AXE.",
   blue:"ALL BUILDINGS COST 20 PERCENT LESS.",
-  scarf:"EMBER TORCH LASTS 50S, NOT 30S.",
-  dog:"SHE FETCHES UP TO TWO REAL PINE LOGS.",
+  scarf:"PERMANENT +15 COLD PROTECTION.",
+  dog:"SHE FETCHES 2 LOGS AND WARMS YOU NEARBY.",
   legacy:"START FUTURE RUNS WITH BUILT STRUCTURES."
 };
 export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{

@@ -5,10 +5,11 @@ describe("wood capacity progression", () => {
   const g = (craft = false) => ({ crafts: { pack: craft } });
   const meta = (owned = false) => ({ up: { pack: owned } });
   it("starts with five logs", () => expect(carryCap(g(), meta())).toBe(5));
-  it("adds eight for each independent upgrade", () => {
+  it("adds five per permanent level and eight for the crafted pack", () => {
     expect(carryCap(g(true), meta())).toBe(13);
-    expect(carryCap(g(), meta(true))).toBe(13);
-    expect(carryCap(g(true), meta(true))).toBe(21);
+    expect(carryCap(g(), meta(true))).toBe(10);
+    expect(carryCap(g(true), meta(true))).toBe(18);
+    expect(carryCap(g(true), {up:{pack:5}})).toBe(38);
   });
   it("honors original wood pile capacity", () => {
     expect(pileCap({ builtPile: false, stage: 6 })).toBe(0);

@@ -1,5 +1,13 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #61 implemented (2026-11-11) - real carrying tiers and Cold protection
+
+**Backpack economy:** Big Backpack now costs 16, 24, 34, 46 and 60 banked Ash at levels 1-5, each adding exactly +5 kg. Crafted Timber Pack remains +8 kg for the current run. The real combined maximum is 38 kg, including loaded/legacy Pine Log checkpoints. The permanent level-1 upgrade on existing profiles remains at level 1; the existing Shop purchase and save mechanism handles all five levels without new keys.
+
+**One protection stat, not another temperature meter:** Cold is still environmental pressure, while Warmth is survival. The player now has derived Cold protection: +12 from crafted boots, +15 from owning the permanent scarf and +5 while equipped Bingsu is within 25 world pixels. The scarf replaces, rather than stacks with, its old 20-second torch-duration bonus. The player's passive Warm Blood multiplier, torches, outside thermometer, fire heat-soak and weather calculation remain separate and unchanged. Inventory shows PROT as a live number. Future jackets/gear can extend this central function without introducing new meters.
+
+**QA remaining:** Verify that five bag levels don't outpace first-run Ash earnings; balance cold severity at full +32 protection through winter blizzards, rain and rain dampness. A future clothing equipment slot is not implied by this passive scarf; explicit equipping needs separate UX design.
+
 ## Patch #53 implemented (2026-11-10) - Camp Legacy and Bingsu
 
 **Four sequential permanent foundations:** New banked-Ash upgrade `legacy` costs 35, 60, 95 and 140 Ash. Level 1 prebuilds Log Storage, 2 prebuilds Workbench, 3 restores both fence posts, and 4 restores eastern expansion. These are intentionally run-start foundations rather than carried-over mutable game-state snapshots. No station upgrades, remaining logs, pre-lit torches, fire fuel, crafts, earned Run Ash or completed missions carry over. The built flags apply only to newly created runs, so old v1 checkpoints never change their historical content when an upgrade is purchased later. The first tutorial still requires talking, chopping, lighting and night exploration; fence goals automatically detect inherited actual posts.

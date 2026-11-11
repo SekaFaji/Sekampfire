@@ -1,5 +1,15 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #61 - permanent backpack tiers and clothing protection
+- [x] Change Big Backpack to five permanent Ash levels at +5 kg each; keep crafted Timber Pack's +8 kg independent.
+- [x] Keep old owned levels and banked Ash in the same permanent save schema, with five real prices.
+- [x] Extend run snapshot hydration and real Pine Log inventory sanitization to 38 kg maximum.
+- [x] Implement one Cold protection stat from +12 crafted boots, +15 permanent scarf, and +5 when equipped Bingsu is nearby.
+- [x] Remove Everwarm Scarf's old ember-duration effect and update Shop benefits, pet/boots descriptions and Inventory PROT display.
+- [x] Update regression expectations and introduce direct new upgrade/cold/save tests.
+- [ ] Playtest winter and blizzard balance, after earning the scarf and pet, on landscape Android.
+- [ ] Next patch: standalone Hearth/Fence/Workshop/Storage permanent upgrades, subject to design review.
+
 ## Patch #60 - categories on the left + compact 4 x 2 Ash upgrade grid
 - [x] Group the existing permanent Ash upgrades using a left sidebar: ALL, SURVIVAL, GEAR and CAMP. Preserve the separate main Upgrades / Pets / Coming Soon tabs.
 - [x] Fit two complete rows of four **41x41 pixel squares** inside the existing native-resolution Shop instead of one 59x59 row.

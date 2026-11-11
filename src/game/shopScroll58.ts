@@ -6,7 +6,7 @@ export const SHOP_VIEW58={x:30,y:52,w:260,h:64} as const;
  * Four 59px squares + 3x6px gaps = 254px, leaving a 6px gutter for the
  * scrollbar, with no overlap against the fixed inspector at y119. */
 export const SHOP_CARD58={x:30,y:52,w:59,h:59,colGap:6,rowGap:5,cols:4} as const;
-export const SHOP_SCROLLBAR58={x:284,y:54,w:3,h:60} as const;
+export const SHOP_SCROLLBAR58={x:287,y:54,w:3,h:60} as const;
 const STEP=SHOP_CARD58.h+SHOP_CARD58.rowGap;
 export function shopMaxScroll58(count:number):number{
  const n=Number.isFinite(count)?Math.max(0,Math.floor(count)):0;

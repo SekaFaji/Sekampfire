@@ -41,7 +41,7 @@ describe("Patch #61 - five permanent backpack levels",()=>{
     expect(bag.max).toBe(5);
     expect(bag.costs).toEqual([16,24,34,46,60]);
     for(let i=0;i<5;i++){
-      const row=shopRows(g,m).find((r:any)=>r.id==="pack");
+      const row=shopRows(g,m).find((r:any)=>r.id==="pack")!;
       expect(row.level).toBe(i);
       expect(row.cost).toBe(bag.costs[i]);
       const prior=m.ash;
@@ -49,7 +49,7 @@ describe("Patch #61 - five permanent backpack levels",()=>{
       expect(m.up.pack).toBe(i+1);
       expect(m.ash).toBe(prior-bag.costs[i]);
     }
-    const last=shopRows(g,m).find((r:any)=>r.id==="pack");
+    const last=shopRows(g,m).find((r:any)=>r.id==="pack")!;
     expect(last.maxed).toBe(true);
     expect(last.buy()).toBe(false);
     expect(m.up.pack).toBe(5);

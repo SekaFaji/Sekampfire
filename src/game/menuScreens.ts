@@ -160,6 +160,7 @@ function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number)
  * in every context. */
 function drawScrollableShop58(ctx:any,g:any,rows:any[]):void {
   const v=SHOP_VIEW58;
+  g.shopUpgradeCount58=rows.length;
   const offset=clampShopScroll58(g,rows.length);
   ctx.fillStyle="rgba(16,31,38,0.38)";
   ctx.fillRect(v.x,v.y,v.w,v.h);

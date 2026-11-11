@@ -24,7 +24,7 @@ describe("persistent progress", () => {
     const meta = loadMeta();
     expect(meta.ash).toBe(0);
     expect(meta.up.axe).toBe(1);
-    expect(meta.up.pack).toBe(1);
+    expect(meta.up.pack).toBe(3); // valid multi-level backpack now retains level 3
   });
   it("retains the historical legacy save fallback", () => {
     saved.set("emberwood-meta-v2", JSON.stringify({ ash: 25, runs: 4 }));

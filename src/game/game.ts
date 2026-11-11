@@ -2,6 +2,7 @@ import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGH
 import { createInputHandlers } from "./input";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
 import { revealShopCard58 } from "./shopScroll58";
+import { visibleShopUpgrades60,shopCategory60 } from "./shopCategories60";
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
 import { useOneFireLog52 } from "./firewood52";
@@ -225,7 +226,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, shopScroll:0, shopVelocity:0, shopUpgradeCount58:0, ashTapFx:0,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, shopCategory60:"all", shopScroll:0, shopVelocity:0, shopUpgradeCount58:0, ashTapFx:0,
     craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
@@ -1380,8 +1381,9 @@ function purchaseShopUpgrade51(g:any,meta:any,id:string):boolean {
 }
 function shopRows(g:any,meta:any) {
   if(g.shopTab===2)return [];
-  return UPGRADES.filter((u:any)=>g.shopTab===1?u.id==="dog":u.id!=="dog")
-    .map((u:any)=>{
+  const available=UPGRADES.filter((u:any)=>g.shopTab===1?u.id==="dog":u.id!=="dog");
+  const filtered=g.shopTab===0?visibleShopUpgrades60(available,shopCategory60(g)):available;
+  return filtered.map((u:any)=>{
       const lvl=Math.max(0,Math.floor(Number(meta?.up?.[u.id])||0));
       const maxed=lvl>=u.max;
       const cost=maxed?0:u.costs[lvl];

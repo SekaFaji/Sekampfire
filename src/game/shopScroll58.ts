@@ -1,12 +1,12 @@
 /** Patch #58 - one source of truth for the Ash Shop's scroll geometry,
  * transient scroll motion and keyboard selection. No save schema changes.
  * Only the upgrade cards scroll; tabs, Bingsu, banked Ash and BUY are fixed. */
-export const SHOP_VIEW58={x:30,y:52,w:260,h:64} as const;
-/** Patch #59: exactly four equal square cards across the 260px viewport.
- * Four 59px squares + 3x6px gaps = 254px, leaving a 6px gutter for the
- * scrollbar, with no overlap against the fixed inspector at y119. */
-export const SHOP_CARD58={x:30,y:52,w:59,h:59,colGap:6,rowGap:5,cols:4} as const;
-export const SHOP_SCROLLBAR58={x:287,y:54,w:3,h:60} as const;
+/** Patch #60: sidebar occupies x30..79, compact grid x86..264.
+ * 2 x 41px tiles with a 3px gap fit completely at y51..135.
+ * The separate details and BUY inspector begins at y138. */
+export const SHOP_VIEW58={x:85,y:51,w:188,h:85} as const;
+export const SHOP_CARD58={x:86,y:51,w:41,h:41,colGap:5,rowGap:3,cols:4} as const;
+export const SHOP_SCROLLBAR58={x:270,y:53,w:2,h:81} as const;
 const STEP=SHOP_CARD58.h+SHOP_CARD58.rowGap;
 export function shopMaxScroll58(count:number):number{
  const n=Number.isFinite(count)?Math.max(0,Math.floor(count)):0;

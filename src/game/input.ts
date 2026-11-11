@@ -2,6 +2,7 @@ import { W } from "./config";
 import { tickQuickSlotHolds, useQuickSlot } from "./quickSlots";
 import { navigateEquipment50, activateEquipment50, chooseEquipmentCategory50 } from "./inventoryMenu";
 import { insideShopViewport58,moveShopScroll58,wheelShop58 } from "./shopScroll58";
+import {cycleShopCategory60} from "./shopCategories60";
 
 /** In-canvas keyboard and pointer controls; callbacks are injected to avoid
  * a cycle between the input adapter and the gameplay/menus module.
@@ -24,6 +25,11 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
   if (down && g.menu === "help" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
     const delta = k === "arrowleft" || k === "a" ? -1 : 1;
     g.helpPage = Math.max(0, Math.min(6, (g.helpPage || 0) + delta));
+    return;
+  }
+  // The four upgrade filters are also accessible without a mouse.
+  if(down && g.menu==="shop" && g.shopTab===0 && k==="c"){
+    cycleShopCategory60(g);
     return;
   }
   if (down && g.menu === "shop" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {

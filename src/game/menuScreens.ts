@@ -3,6 +3,7 @@ import { drawTutorialArt, TUTORIAL_PAGES } from "./tutorial";
 import { BINGSU, drawBingsuPortrait } from "./bingsu";
 import { drawShopCardIcon51, SHOP_CARD_LABEL51, SHOP_CARD_BENEFIT51, type ShopId51 } from "./shopCards51";
 import { SHOP_CARD58,SHOP_VIEW58,SHOP_SCROLLBAR58,clampShopScroll58,shopMaxScroll58 } from "./shopScroll58";
+import { SHOP_CATEGORIES60, SHOP_SIDEBAR60, SHOP_TILE_NAME60,shopCategory60,chooseShopCategory60 } from "./shopCategories60";
 
 function frame(ctx: any, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = "rgba(8,12,26,0.75)";
@@ -75,7 +76,8 @@ export function drawLockedEndlessButton(ctx: any, g: any, onDown: () => void) {
 /** Scrollable Shop card geometry in the original 320x180 native resolution.
  * The banked balance, three tabs, details pane and separate BUY remain fixed. */
 export const SHOP_CARD51=SHOP_CARD58; // Historical alias for card geometry tests.
-export const SHOP_DETAILS51 = {x:30,y:119,w:260,h:45} as const;
+export const SHOP_DETAILS51 = {x:30,y:138,w:260,h:27} as const;
+export const SHOP_PET_DETAILS51 = {x:30,y:119,w:260,h:45} as const;
 export const SHOP_BUY51 = {x:210,y:142,w:78,h:18} as const;
 /** Native 320x180 layout: the painted bust has 7px horizontal and 3px
  * vertical breathing room inside the original 100x68 bordered pet card. */
@@ -111,9 +113,8 @@ function selectedShopRow51(g:any,rows:any[]):any|null {
   const index=Math.max(0,Math.min(rows.length-1,Math.floor(g.menuSel||0)));
   return rows[index]||null;
 }
-/** Patch #59: one complete square per upgrade, with a distinct illustrated
- * icon above centered name/level/price. The bottom inspector holds the
- * verbose effect explanation, so tiles stay clean and easy to scan. */
+/** Patch #60: compact pixel-art square, with full names and prices in the
+ * fixed details pane. Cards only need icon, short label and owned level. */
 function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number):void {
   const c=SHOP_CARD58;
   const x=c.x+(index%c.cols)*(c.w+c.colGap);
@@ -122,45 +123,49 @@ function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number)
   const bottom=Math.min(y+c.h,SHOP_VIEW58.y+SHOP_VIEW58.h);
   if(bottom<=top)return;
   const selected=index===g.menuSel;
-  const owned=!!row?.maxed,affordable=!!row?.canBuy;
-  const border=selected?"#eac487":owned?"#83a48e":"#66798a";
-  shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.78)":
-    "rgba(29,46,55,0.76)",border);
-  // The small inset grounds each original 14x14 illustrated sprite.
-  const insetX=x+Math.floor((c.w-19)/2);
-  ctx.fillStyle=selected?"#715536":"#273b43";
-  ctx.fillRect(insetX,y+3,19,19);
-  ctx.fillStyle=selected?"#d3b57d":"#596d70";
-  ctx.fillRect(insetX,y+3,19,1);
+  const owned=!!row?.maxed;
+  shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.82)":
+    "rgba(29,46,55,0.78)",
+    selected?"#eac487":owned?"#83a48e":"#66798a");
+  // Original pixel-art icon stays recognizable despite the smaller square.
   const id=row?.id as ShopId51;
   if(id&&SHOP_CARD_LABEL51[id])
-    drawShopCardIcon51(ctx,id,x+Math.floor((c.w-14)/2),y+5);
-  else {
-    ctx.fillStyle="#9bbac3";ctx.fillRect(x+24,y+9,10,10);
-  }
-  const title=compact51(shopCardLabel51(row),c.w-6);
-  drawTextC(ctx,title,x+c.w/2,y+26,selected?"#fff0ca":"#e6dbbc");
-  const max=Math.max(1,Number(row?.max)||1);
+    drawShopCardIcon51(ctx,id,x+Math.floor((c.w-14)/2),y+3);
+  else {ctx.fillStyle="#9bbac3";ctx.fillRect(x+15,y+5,10,10);}
+  const title=SHOP_TILE_NAME60[String(id)]||shopCardLabel51(row);
+  drawTextC(ctx,compact51(title,c.w-4),x+c.w/2,y+19,
+    selected?"#fff0ca":"#e6dbbc");
   const level=Math.max(0,Number(row?.level)||0);
-  drawTextC(ctx,owned?"MAX LEVEL":("LV "+level+"/"+max),
-    x+c.w/2,y+37,owned?"#a8d9af":"#b7c4ca");
-  const price=owned?"OWNED":typeof row?.cost==="number"
-    ?row.cost+" ASH":"";
-  drawTextC(ctx,compact51(price,c.w-7),x+c.w/2,y+46,
-    owned?"#a8d9af":affordable?"#ebcf91":"#9aa9b4");
-  // Slim permanent-level bar stays inside all four square cards.
-  ctx.fillStyle="#455759";ctx.fillRect(x+4,y+c.h-5,c.w-8,2);
+  const max=Math.max(1,Number(row?.max)||1);
+  drawTextC(ctx,owned?"MAX":"LV"+level+"/"+max,x+c.w/2,y+29,
+    owned?"#a8d9af":"#b7c4ca");
+  // Clear multi-level progression even on the smallest card.
+  ctx.fillStyle="#455759";ctx.fillRect(x+3,y+c.h-4,c.w-6,2);
   if(level>0){
     ctx.fillStyle=owned?"#9cd0a9":"#e0b674";
-    ctx.fillRect(x+4,y+c.h-5,
-      Math.round((c.w-8)*Math.min(1,level/max)),2);
+    ctx.fillRect(x+3,y+c.h-4,
+      Math.round((c.w-6)*Math.min(1,level/max)),2);
   }
-  // Hit zones are clipped separately so swiping past the visible row can
-  // never select hidden tiles or the fixed BUY panel underneath.
   g.zones.push({x,y:top,w:c.w,h:bottom-top,shopCardIndex58:index,onDown:()=>{
-    g.menuSel=index;
-    g.upConfirm=null;
+    g.menuSel=index;g.upConfirm=null;
   }});
+}
+function drawShopCategories60(ctx:any,g:any):void {
+  const s=SHOP_SIDEBAR60;
+  const active=shopCategory60(g);
+  for(let i=0;i<SHOP_CATEGORIES60.length;i++){
+    const {id,label}=SHOP_CATEGORIES60[i];
+    const y=s.y+i*(s.h+s.gap);
+    const selected=active===id;
+    shopBox51(ctx,s.x,y,s.w,s.h,
+      selected?"rgba(104,75,41,0.88)":"rgba(36,56,65,0.74)",
+      selected?"#eac487":"#60747c");
+    if(selected){ctx.fillStyle="#f2d4a1";ctx.fillRect(s.x+2,y+3,2,s.h-6);}
+    drawTextC(ctx,label,s.x+s.w/2,y+6,
+      selected?"#ffe9bc":"#bccbd0");
+    g.zones.push({x:s.x,y,w:s.w,h:s.h,shopCategory60:id,
+      onDown:()=>chooseShopCategory60(g,id)});
+  }
 }
 /** Fixed-height card viewport: Canvas clips moving art before we draw the
  * fixed Shop details. The lightweight fake contexts in tests omit clip();
@@ -197,21 +202,44 @@ function drawScrollableShop58(ctx:any,g:any,rows:any[]):void {
   }
 }
 function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
-  const d=SHOP_DETAILS51;
-  shopBox51(ctx,d.x,d.y,d.w,d.h,"rgba(21,37,44,0.72)","#876e53");
+  const compact=g.shopTab===0;
+  const d=compact?SHOP_DETAILS51:SHOP_PET_DETAILS51;
+  shopBox51(ctx,d.x,d.y,d.w,d.h,"rgba(21,37,44,0.80)","#876e53");
   const selected=selectedShopRow51(g,rows);
   if(!selected){
-    drawTextC(ctx,"SELECT AN UPGRADE TO LEARN MORE.",160,137,"#9db1be");
+    drawTextC(ctx,compact?"NO UPGRADES IN THIS CATEGORY."
+      :"SELECT AN UPGRADE TO LEARN MORE.",
+      160,d.y+Math.floor(d.h/2)-2,"#9db1be");
     return;
   }
   const id=selected.id as ShopId51;
   const name=shopCardLabel51(selected);
-  drawText(ctx,compact51(name,160),d.x+6,d.y+5,"#ffe4b3");
   const level=Number(selected.level)||0,max=Number(selected.max)||1;
-  drawText(ctx,selected.maxed?"MAX LEVEL":"LEVEL "+level+"/"+max+"  NEXT "+(level+1),
-    d.x+6,d.y+14,selected.maxed?"#a9dab3":"#b9c7c7");
-  const benefit=id==="legacy"?selected.desc:(SHOP_CARD_BENEFIT51[id]||selected.desc||"PERMANENT UPGRADE.");
-  drawTextWrap(ctx,String(benefit),d.x+6,d.y+24,164,"#bcd0cb",8);
+  const benefit=id==="legacy"?selected.desc:
+    (SHOP_CARD_BENEFIT51[id]||selected.desc||"PERMANENT UPGRADE.");
+  if(compact){
+    // Two-line maximum under the selected name so everything fits y138-165.
+    const top=(name+"  "+(selected.maxed?"MAX":"LV"+level+"/"+max));
+    drawText(ctx,compact51(top,170),d.x+5,d.y+3,"#ffe4b3");
+    const words=String(benefit).toUpperCase().split(/\s+/);
+    const lines:string[]=[];let line="";
+    for(const word of words){
+      const next=line?line+" "+word:word;
+      if(textW(next)<=170)line=next;
+      else {if(line)lines.push(line);line=word;}
+    }
+    if(line)lines.push(line);
+    for(let i=0;i<Math.min(2,lines.length);i++){
+      const last=i===1&&lines.length>2;
+      drawText(ctx,compact51(lines[i]+(last?"..":""),170),
+        d.x+5,d.y+13+i*7,"#bcd0cb");
+    }
+  }else{
+    drawText(ctx,compact51(name,160),d.x+6,d.y+5,"#ffe4b3");
+    drawText(ctx,selected.maxed?"MAX LEVEL":"LEVEL "+level+"/"+max+"  NEXT "+(level+1),
+      d.x+6,d.y+14,selected.maxed?"#a9dab3":"#b9c7c7");
+    drawTextWrap(ctx,String(benefit),d.x+6,d.y+24,164,"#bcd0cb",8);
+  }
   const canBuy=!!selected.canBuy && !selected.maxed;
   const price=typeof selected.cost==="number"?selected.cost:0;
   const label=selected.maxed?"OWNED":canBuy?"BUY "+price+" ASH":"NEED "+price+" ASH";
@@ -221,12 +249,7 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
   drawTextC(ctx,compact51(label,SHOP_BUY51.w-6),
     SHOP_BUY51.x+SHOP_BUY51.w/2,SHOP_BUY51.y+6,
     canBuy?"#fff0c8":"#a6b0ad");
-  if(canBuy)g.zones.push({...SHOP_BUY51,onDown:()=>{
-    // Central purchase callback recomputes live ownership and banked Ash,
-    // preventing stale-price, double-payment or unexpected pet purchases.
-    selected.buy?.();
-  }});
-
+  if(canBuy)g.zones.push({...SHOP_BUY51,onDown:()=>selected.buy?.()});
 }
 /** Three native Shop tabs, scrollable illustrated upgrades, one pet portrait
  * card, a details inspector, and a single real BUY button. Selecting a card
@@ -278,11 +301,12 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     }
   }else{
     g.menuSel=Math.max(0,Math.min(rows.length-1,g.menuSel||0));
+    drawShopCategories60(ctx,g);
     drawScrollableShop58(ctx,g,rows);
     drawShopDetails51(ctx,g,meta,rows);
   }
   drawTextC(ctx,tab===1?"OWN PETS FOREVER. EQUIP FROM INVENTORY."
-    :"ONLY BANKED ASH CAN BE SPENT.",160,165,"#9dafb9");
+    :"C: CATEGORY   -   BANKED ASH ONLY.",160,165,"#9dafb9");
 }
 
 /** Informational preview only. This is NOT a playable mode or an unlock;

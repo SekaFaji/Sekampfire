@@ -65,12 +65,13 @@ const cardCenter=(index:number,scroll=0)=>{
 };
 
 describe("Patch #51 / #58: scrollable illustrated Ash Shop cards",()=>{
- it("renders two columns with four visible cards, fixed tabs and inspector",()=>{
+ it("renders four square cards in one row, with fixed tabs and inspector",()=>{
   const g=world(),m=meta(),v=render(g,m);
   const cardZones=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);
   expect(cardZones).toHaveLength(4);
+  expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
   expect(cardZones.map((z:any)=>[z.x,z.y])).toEqual([
-   [30,52],[158,52],[30,86],[158,86]
+   [30,52],[95,52],[160,52],[225,52]
   ]);
   const close=g.zones.find((z:any)=>z.x===278&&z.y===13);
   expect(close).toBeDefined();

@@ -1,5 +1,16 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #59 - four-square upgrade cards per scrolling row
+- [x] Replace Patch #58's wide rectangular upgrade cards with four equal square tiles per row, 59x59 game pixels each.
+- [x] Preserve the existing scrolling, momentum, desktop wheel, keyboard automatic reveal and clipped hit zones.
+- [x] Center the existing pixel-art icons above legible upgrade names, level, price/OWNED and slim permanent-level bars.
+- [x] Keep BANKED ASH, three tabs, Bingsu's Pets panel, close control and selected-upgrade details/BUY panel fixed.
+- [x] Preserve the actual seven permanent Ash upgrades and their saved ownership, prices, effects and banked-Ash safety.
+- [x] Add square geometry, 4-across placement, text-fit, scroll-into-second-row and progress tests.
+- [ ] Real-device approval for 4 square cards on landscape phone, especially scroll gestures and icon/price legibility.
+- [ ] **Patch #60:** Add permanent Hearth Mastery, Fence Reinforcement, Workshop Legacy and Storage Legacy, avoiding duplicate Old Flint/Camp Legacy effects.
+
+
 ## Patch #58 - scrollable, responsive Ash Shop (approved)
 - [x] Replace the old Upgrades page-1/page-2 buttons and six-card pagination with one scrollable two-column card collection.
 - [x] Improve readability with larger illustrated cards, clear level/price/OWNED state and proportional progress strips.
@@ -9,7 +20,7 @@
 - [x] Preserve existing Ash upgrade prices, ownership, abilities, Bingsu pet portrait and permanent v1 saves without adding new upgrades this patch.
 - [x] Add automated pointer/wheel/keyboard interaction and purchasing safeguards.
 - [ ] Visual and tactile QA on portrait-safe landscape Android plus desktop trackpad, especially small scroll swipes and edge clamping.
-- [ ] **Next Patch #59 - New permanent Ash upgrades:** brainstorm/verify costs and implement Hearth Mastery (initial level-1/2 fireplace), Fence Reinforcement (better cold protection inside built fences), Workshop Legacy and Storage Legacy. Do not duplicate Old Flint's pre-lit fire or Camp Legacy's built posts; bought effects must apply to new runs only.
+- [ ] **Planned Patch #60 - New permanent Ash upgrades:** brainstorm/verify costs and implement Hearth Mastery (initial level-1/2 fireplace), Fence Reinforcement (better cold protection inside built fences), Workshop Legacy and Storage Legacy. Do not duplicate Old Flint's pre-lit fire or Camp Legacy's built posts; bought effects must apply to new runs only.
 
 
 ## Patch #57 - properly contain Bingsu's approved portrait in her Pet Shop card

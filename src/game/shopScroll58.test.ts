@@ -1,6 +1,8 @@
 import {beforeEach,afterEach,describe,expect,it,vi} from "vitest";
 import {createEngine,shopRows,handlePointer,handleWheel,handleKey} from "./game";
 import {drawShopTabs,SHOP_CARD51,SHOP_DETAILS51,SHOP_BUY51} from "./menuScreens";
+import {textW} from "./font";
+import {SHOP_CARD_LABEL51} from "./shopCards51";
 import {SHOP_VIEW58,SHOP_SCROLLBAR58,shopMaxScroll58,moveShopScroll58,
   clampShopScroll58,revealShopCard58,tickShopScroll58,wheelShop58,
   insideShopViewport58} from "./shopScroll58";
@@ -44,30 +46,66 @@ function find(g:any,x:number,y:number){
  return [...g.zones].reverse().find((z:any)=>x>=z.x&&y>=z.y&&x<z.x+z.w&&y<z.y+z.h);
 }
 describe("Patch #58: scrollable Ash Shop geometry",()=>{
- it("has readable 2-column cards inside the permanent fixed Shop viewport",()=>{
-   expect(SHOP_CARD51).toMatchObject({x:30,y:52,w:120,h:30,cols:2});
+ it("has four square cards across the fixed Shop viewport",()=>{
+   expect(SHOP_CARD51).toMatchObject({x:30,y:52,w:59,h:59,cols:4,colGap:6,rowGap:5});
+   expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
    expect(SHOP_VIEW58).toEqual({x:30,y:52,w:260,h:64});
    expect(SHOP_VIEW58.y+SHOP_VIEW58.h).toBeLessThan(SHOP_DETAILS51.y);
    expect(SHOP_SCROLLBAR58.x).toBeGreaterThan(
-     SHOP_CARD51.x+SHOP_CARD51.w*2+SHOP_CARD51.colGap);
+     SHOP_CARD51.x+SHOP_CARD51.w*4+SHOP_CARD51.colGap*3);
    const g=world(),m=meta(),v=render(g,m);
    expect(v.clips).toEqual([SHOP_VIEW58]);
    const cards=g.zones.filter((z:any)=>z.shopCardIndex58!==undefined);
    expect(cards).toHaveLength(4);
    expect(cards.map((z:any)=>[z.x,z.y])).toEqual([
-     [30,52],[158,52],[30,86],[158,86]
+     [30,52],[95,52],[160,52],[225,52]
    ]);
    expect(cards.every((z:any)=>z.y>=52&&z.y+z.h<=116)).toBe(true);
    expect(g.zones.some((z:any)=>z.x===SHOP_BUY51.x&&z.y===SHOP_BUY51.y))
      .toBe(true);
  });
+ it("four complete square tiles fit side-by-side and the second row scrolls fully into view",()=>{
+   const g=world(),m=meta();
+   const first=render(g,m);
+   expect(g.zones.filter((z:any)=>z.shopCardIndex58!==undefined)
+     .map((z:any)=>[z.shopCardIndex58,z.x,z.y,z.w,z.h])).toEqual([
+       [0,30,52,59,59],[1,95,52,59,59],
+       [2,160,52,59,59],[3,225,52,59,59]
+     ]);
+   expect(g.zones.some((z:any)=>z.shopCardIndex58===4)).toBe(false);
+   expect(first.clips).toEqual([SHOP_VIEW58]);
+   expect(SHOP_CARD51.x+4*SHOP_CARD51.w+3*SHOP_CARD51.colGap)
+     .toBeLessThan(SHOP_SCROLLBAR58.x);
+   // All permanent upgrade names fit in full at the native 3x5 font size.
+   for(const row of shopRows(g,m)){
+     expect(textW(SHOP_CARD_LABEL51[row.id as keyof typeof SHOP_CARD_LABEL51]))
+       .toBeLessThanOrEqual(SHOP_CARD51.w-6);
+   }
+   const ash=m.ash;
+   moveShopScroll58(g,1000,shopRows(g,m).length);
+   expect(g.shopScroll).toBe(59);
+   render(g,m);
+   expect(g.zones.filter((z:any)=>z.shopCardIndex58!==undefined)
+     .map((z:any)=>[z.shopCardIndex58,z.x,z.y,z.w,z.h])).toEqual([
+       [4,30,57,59,59],[5,95,57,59,59],[6,160,57,59,59]
+     ]);
+   expect(m.ash).toBe(ash);
+   expect(g.menuSel).toBe(0);
+ });
+ it("a fully purchased upgrade fills its square progress bar without changing Ash",()=>{
+   const g=world(),m=meta();m.up.blood=3;
+   const v=render(g,m);
+   expect(v.rectangles.some(r=>r.x===34&&r.y===106&&r.w===51&&r.h===2
+     &&r.ink==="#9cd0a9")).toBe(true);
+   expect(m.ash).toBe(200);
+ });
  it("scroll range is derived from rows; clamps all malformed inputs safely",()=>{
    expect(shopMaxScroll58(0)).toBe(0);
    expect(shopMaxScroll58(2)).toBe(0);
-   expect(shopMaxScroll58(4)).toBe(0); // 2 rows fit
-   expect(shopMaxScroll58(7)).toBe(68);
+   expect(shopMaxScroll58(4)).toBe(0); // one full square row fits
+   expect(shopMaxScroll58(7)).toBe(59);
    const g=world();
-   expect(moveShopScroll58(g,999,7)).toBe(68);
+   expect(moveShopScroll58(g,999,7)).toBe(59);
    expect(moveShopScroll58(g,-999,7)).toBe(0);
    g.shopScroll=Infinity;
    expect(clampShopScroll58(g,7)).toBe(0);
@@ -80,16 +118,16 @@ describe("Patch #58: scrollable Ash Shop geometry",()=>{
    expect(m.ash).toBe(200);expect(m.up).toEqual({});
    render(g,m);
    const peek=g.zones.find((z:any)=>z.shopCardIndex58===6);
-   expect(peek).toBeDefined(); // two pixels of the last row peek into view
-   expect(peek.h).toBe(2); // hitbox clipped, never overlaps details
+   expect(peek).toBeDefined(); // after scrolling, lower square row appears
+   expect(peek.h).toBe(40); // clipped to the 64px card viewport
    expect(handleWheel(g,40,148,84)).toBe(true);
-   expect(g.shopScroll).toBe(68);
+   expect(g.shopScroll).toBe(59);
    render(g,m);
    expect(g.zones.some((z:any)=>z.shopCardIndex58===6)).toBe(true);
    expect(g.zones.every((z:any)=>z.shopCardIndex58===undefined||
      z.y>=SHOP_VIEW58.y&&z.y+z.h<=SHOP_VIEW58.y+SHOP_VIEW58.h)).toBe(true);
    expect(handleWheel(g,-999,148,84)).toBe(true);
-   expect(g.shopScroll).toBe(20); // wheel per event is bounded to 48
+   expect(g.shopScroll).toBe(11); // wheel per event is bounded to 48
    expect(handleWheel(g,-999,148,84)).toBe(true);
    expect(g.shopScroll).toBe(0);
  });
@@ -120,13 +158,13 @@ describe("Patch #58: scrollable Ash Shop geometry",()=>{
    tickShopScroll58(g,0.016,7);
    expect(g.shopScroll).toBeGreaterThan(initial);
    for(let i=0;i<300;i++)tickShopScroll58(g,0.016,7);
-   expect(g.shopScroll).toBeLessThanOrEqual(68);
+   expect(g.shopScroll).toBeLessThanOrEqual(59);
    expect(g.shopVelocity).toBe(0);
  });
  it("a deliberate card tap selects, never spends; BUY still rechecks live balance",()=>{
    const g=world(),m=meta();render(g,m);
-   handlePointer(g,"down",12,178,100);
-   handlePointer(g,"move",12,179,102); // tiny finger jitter, not a drag
+   handlePointer(g,"down",12,246,100);
+   handlePointer(g,"move",12,247,102); // tiny finger jitter, not a drag
    handlePointer(g,"up",12,0,0);
    expect(g.menuSel).toBe(3);
    expect(m.ash).toBe(200);
@@ -152,11 +190,11 @@ describe("Patch #58: scrollable Ash Shop geometry",()=>{
    const g=world(),m=meta();render(g,m);
    for(let i=0;i<6;i++)handleKey(g,m,"arrowdown",true);
    expect(g.menuSel).toBe(6);
-   expect(g.shopScroll).toBe(68);
+   expect(g.shopScroll).toBe(59);
    render(g,m);
    const legacy=g.zones.find((z:any)=>z.shopCardIndex58===6);
    expect(legacy).toBeDefined();
-   expect(legacy.h).toBe(30);
+   expect(legacy.h).toBe(59);
    expect(m.ash).toBe(200);
    handleKey(g,m,"enter",true);
    expect(m.up.legacy).toBe(1);
@@ -169,7 +207,7 @@ describe("Patch #58: scrollable Ash Shop geometry",()=>{
    expect(g.shopScroll).toBe(0);
  });
  it("touch gesture from last card never closes or taps underlying menus",()=>{
-   const g=world(),m=meta();g.shopScroll=68;render(g,m);
+   const g=world(),m=meta();g.shopScroll=59;render(g,m);
    const card=g.zones.find((z:any)=>z.shopCardIndex58===6);
    expect(card).toBeDefined();
    handlePointer(g,"down",66,card.x+5,card.y+5);

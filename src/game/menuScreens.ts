@@ -111,6 +111,9 @@ function selectedShopRow51(g:any,rows:any[]):any|null {
   const index=Math.max(0,Math.min(rows.length-1,Math.floor(g.menuSel||0)));
   return rows[index]||null;
 }
+/** Patch #59: one complete square per upgrade, with a distinct illustrated
+ * icon above centered name/level/price. The bottom inspector holds the
+ * verbose effect explanation, so tiles stay clean and easy to scan. */
 function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number):void {
   const c=SHOP_CARD58;
   const x=c.x+(index%c.cols)*(c.w+c.colGap);
@@ -121,34 +124,39 @@ function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number)
   const selected=index===g.menuSel;
   const owned=!!row?.maxed,affordable=!!row?.canBuy;
   const border=selected?"#eac487":owned?"#83a48e":"#66798a";
-  shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.72)":
-    "rgba(29,46,55,0.68)",border);
-  if(selected){
-    ctx.fillStyle="#f5d49a";ctx.fillRect(x+2,y+3,2,c.h-6);
-  }
+  shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.78)":
+    "rgba(29,46,55,0.76)",border);
+  // The small inset grounds each original 14x14 illustrated sprite.
+  const insetX=x+Math.floor((c.w-19)/2);
+  ctx.fillStyle=selected?"#715536":"#273b43";
+  ctx.fillRect(insetX,y+3,19,19);
+  ctx.fillStyle=selected?"#d3b57d":"#596d70";
+  ctx.fillRect(insetX,y+3,19,1);
   const id=row?.id as ShopId51;
-  if(id&&SHOP_CARD_LABEL51[id])drawShopCardIcon51(ctx,id,x+6,y+7);
+  if(id&&SHOP_CARD_LABEL51[id])
+    drawShopCardIcon51(ctx,id,x+Math.floor((c.w-14)/2),y+5);
   else {
-    ctx.fillStyle="#9bbac3";ctx.fillRect(x+8,y+9,10,10);
+    ctx.fillStyle="#9bbac3";ctx.fillRect(x+24,y+9,10,10);
   }
-  drawText(ctx,compact51(shopCardLabel51(row),c.w-30),
-    x+25,y+5,selected?"#fff0ca":"#e6dbbc");
+  const title=compact51(shopCardLabel51(row),c.w-6);
+  drawTextC(ctx,title,x+c.w/2,y+26,selected?"#fff0ca":"#e6dbbc");
   const max=Math.max(1,Number(row?.max)||1);
   const level=Math.max(0,Number(row?.level)||0);
-  drawText(ctx,owned?"MAX LEVEL":("LV "+level+"/"+max),
-    x+25,y+17,owned?"#a8d9af":"#b7c4ca");
-  const right=owned?"OWNED":typeof row?.cost==="number"?row.cost+" ASH":"";
-  const ink=owned?"#a8d9af":affordable?"#ebcf91":"#9aa9b4";
-  const label=compact51(right,48);
-  drawText(ctx,label,x+c.w-4-textW(label),y+17,ink);
-  // Thin progress track gives multi-tier upgrades a clear sense of progress.
-  ctx.fillStyle="#465557";ctx.fillRect(x+25,y+26,c.w-31,2);
+  drawTextC(ctx,owned?"MAX LEVEL":("LV "+level+"/"+max),
+    x+c.w/2,y+37,owned?"#a8d9af":"#b7c4ca");
+  const price=owned?"OWNED":typeof row?.cost==="number"
+    ?row.cost+" ASH":"";
+  drawTextC(ctx,compact51(price,c.w-7),x+c.w/2,y+46,
+    owned?"#a8d9af":affordable?"#ebcf91":"#9aa9b4");
+  // Slim permanent-level bar stays inside all four square cards.
+  ctx.fillStyle="#455759";ctx.fillRect(x+4,y+c.h-5,c.w-8,2);
   if(level>0){
     ctx.fillStyle=owned?"#9cd0a9":"#e0b674";
-    ctx.fillRect(x+25,y+26,Math.round((c.w-31)*Math.min(1,level/max)),2);
+    ctx.fillRect(x+4,y+c.h-5,
+      Math.round((c.w-8)*Math.min(1,level/max)),2);
   }
-  // Only the VISIBLE part responds to taps: cropped cards can never
-  // activate the fixed details panel or BUY button beneath this viewport.
+  // Hit zones are clipped separately so swiping past the visible row can
+  // never select hidden tiles or the fixed BUY panel underneath.
   g.zones.push({x,y:top,w:c.w,h:bottom-top,shopCardIndex58:index,onDown:()=>{
     g.menuSel=index;
     g.upConfirm=null;

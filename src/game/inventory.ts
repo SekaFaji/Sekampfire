@@ -1,4 +1,4 @@
-import { carryCap } from "./rules";
+import { MAX_CARRY_KG, carryCap } from "./rules";
 
 export const INVENTORY_GRID_SLOTS = 20;
 export const INVENTORY_START_SLOTS = 5;
@@ -33,7 +33,7 @@ export const ITEM_DEFINITIONS: Record<ItemId, ItemDef> = {
   },
   bingsu: {
     id:"bingsu",name:"BINGSU",category:"pet",weight:0,maxStack:1,sprite:"pet",
-    description:["LOYAL DOGO ARGENTINO.", "RETRIEVES 2 REAL LOGS.", "EQUIP OR UNEQUIP."]
+    description:["LOYAL DOGO ARGENTINO.", "RETRIEVES 2 REAL LOGS.", "+5 COLD PROTECTION NEARBY."]
   },
   wood_axe: {
     id:"wood_axe", name:"WOOD AXE", category:"tool", weight:0,maxStack:1,sprite:"axe",
@@ -41,11 +41,11 @@ export const ITEM_DEFINITIONS: Record<ItemId, ItemDef> = {
   },
   warm_boots: {
     id:"warm_boots", name:"WARM BOOTS", category:"clothing", weight:0,maxStack:1,sprite:"boots",
-    description:["CRAFTED WINTER BOOTS.", "MOVE FASTER AND KEEP WARM."]
+    description:["CRAFTED WINTER BOOTS.", "MOVE FASTER. +12 COLD PROTECTION."]
   },
   timber_pack: {
     id:"timber_pack", name:"TIMBER PACK", category:"backpack", weight:0,maxStack:1,sprite:"pack",
-    description:["CRAFTED BACKPACK.", "CARRY MORE MATERIALS.", "ADDS FIVE BAG SLOTS."]
+    description:["CRAFTED BACKPACK.", "+8KG CARRY CAPACITY.", "ADDS FIVE BAG SLOTS."]
   },
   fire_reflector: {
     id:"fire_reflector",name:"FIRE REFLECTOR",category:"camp",weight:0,maxStack:1,sprite:"camp",
@@ -96,10 +96,10 @@ export function normalizeInventory(raw:unknown,legacyWood=0):InventoryState {
     for(const item of candidate){
       if(item?.id==="pine_log") count+=cleanQuantity(item.qty,99);
     }
-    const qty=Math.min(count,26);
+    const qty=Math.min(count,MAX_CARRY_KG);
     if(qty>0) bag.slots[0]={id:"pine_log",qty};
   }else{
-    const qty=cleanQuantity(legacyWood,26);
+    const qty=cleanQuantity(legacyWood,MAX_CARRY_KG);
     if(qty>0) bag.slots[0]={id:"pine_log",qty};
   }
   return bag;
@@ -147,7 +147,7 @@ export function carriedWeight(g:any):number {
     sum+(s?.id==="pine_log"?s.qty*ITEM_DEFINITIONS.pine_log.weight:0),0);
 }
 export function carriedWeightLimit(g:any,meta:any):number {
-  return carryCap(g,meta); // old 5/13/21 wood capacity is preserved verbatim
+  return carryCap(g,meta); // 5 base +5 per permanent bag level +8 crafted
 }
 export function inventoryEquipment(g:any,meta:any):{id:ItemId;source:string}[] {
   const result:{id:ItemId;source:string}[] = [];

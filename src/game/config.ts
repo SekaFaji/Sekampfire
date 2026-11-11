@@ -35,11 +35,11 @@ const CRAFTS = [
 const UPGRADES = [
   { id: "blood", name: "Warm Blood", costs: [12, 26, 45], max: 3, desc: "COLD DRAINS YOU LESS EACH LEVEL" },
   { id: "flint", name: "Old Flint", costs: [14], max: 1, desc: "START EVERY RUN WITH THE FIRE LIT" },
-  { id: "pack", name: "Big Backpack", costs: [16], max: 1, desc: "CARRY 8 MORE WOOD" },
+  { id: "pack", name: "Big Backpack", costs: [16, 24, 34, 46, 60], max: 5, desc: "+5KG CARRY PER LEVEL. +25KG AT LV5." },
   { id: "axe", name: "Grandpas Axe", costs: [20], max: 1, desc: "CHOP ALMOST TWICE AS FAST" },
   { id: "blue", name: "Blueprints", costs: [22], max: 1, desc: "ALL BUILDING COSTS 20 PERCENT LESS" },
-  { id: "scarf", name: "Everwarm Scarf", costs: [30], max: 1, desc: "TORCHES LAST 50S INSTEAD OF 30S" },
-  { id: "dog", name: "Bingsu", costs: [40], max: 1, desc: "SWEET, CALM DOGO ARGENTINO. FETCHES 2 PINE LOGS." },
+  { id: "scarf", name: "Everwarm Scarf", costs: [30], max: 1, desc: "+15 COLD PROTECTION. PASSIVE IN EVERY RUN." },
+  { id: "dog", name: "Bingsu", costs: [40], max: 1, desc: "FETCHES 2 LOGS. +5 COLD PROTECTION WHEN NEARBY." },
   { id: "legacy", name: "Camp Legacy", costs: [35, 60, 95, 140], max: 4, desc: "RESTORE CAMP BUILDINGS IN FUTURE RUNS" },
 ];
 

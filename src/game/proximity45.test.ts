@@ -41,7 +41,7 @@ function canvas(){
   return {ctx,rects};
 }
 describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>{
-  it("reports kg instead of inventory occupied slots with unchanged 5/13/21 limits",()=>{
+  it("reports kg with permanent +5 and crafted +8 carrying upgrades",()=>{
     const g=run(),m=meta();
     expect(weightHudValues(g,m)).toEqual({weight:0,limit:5,label:"0/5KG"});
     expect(hudInventoryReadout(g,m)).toBe("WEIGHT 0/5KG");
@@ -51,7 +51,7 @@ describe("Patch #45: readable weight HUD and proximity-first camp controls",()=>
     g.crafts.pack=true;
     expect(weightHudValues(g,m).limit).toBe(13);
     m.up.pack=1;
-    expect(weightHudValues(g,m)).toEqual({weight:3,limit:21,label:"3/21KG"});
+    expect(weightHudValues(g,m)).toEqual({weight:3,limit:18,label:"3/18KG"});
   });
   it("finds nearby stations without automatically selecting or drawing buttons",()=>{
     const g=run();g.player.x=CX;

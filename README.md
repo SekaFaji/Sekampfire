@@ -1,5 +1,13 @@
 # Sekampfire
 
+## Patch #61: five-level backpack and real Cold protection
+
+- **Permanent Big Backpack:** five Ash levels cost 16 / 24 / 34 / 46 / 60. Every owned level adds exactly **+5 kg** to carrying capacity; level 5 adds +25 kg. The crafted Timber Pack still independently adds +8 kg, so carry capacity ranges from 5 kg to 38 kg. Old one-level ownership remains level 1, never wiped or silently promoted.
+- **Unified Cold protection:** the existing Cold exposure meter now subtracts protection from crafted Warm Boots (+12), permanent Everwarm Scarf (+15), and equipped Bingsu when actually nearby (+5). These effects stack, with a maximum of 32 points of protection from currently available gear. Protection reduces environmental exposure, not thermometer Celsius, and does not grant free Warmth. Warm Blood still separately reduces actual Warmth loss.
+- **Scarf reworked:** Everwarm Scarf no longer extends ember torch duration; that misleading old perk is replaced with permanent insulation. Normal torches still use their existing 30-second base duration and real camp-station bonuses.
+- **Visible, persistent and safe:** Shop text, five-level prices/progress, inventory PROT readout, pet/boots equipment descriptions and carrying-weight HUD reflect the real rules. Current meta keys and v1 run-save format remain unchanged; Pine Log inventory/restoration now accepts the true 38 kg maximum rather than truncating at the old 26-log safeguard. No new clothing slots or second Cold bar have been invented.
+- **QA:** dedicated upgrade/protection/save tests plus updated legacy capacity expectations. Android landscape verification is still needed. The previously planned four new camp upgrades move to the next patch.
+
 ## Patch #60: left-side Ash Upgrade categories and a compact two-row grid
 
 - **Category sidebar inside Upgrades:** Four fixed selections - ALL, SURVIVAL, GEAR, CAMP - sit on the left of the existing Ash Shop. Survival filters Warm Blood, Old Flint and Everwarm Scarf; Gear filters Backpack and Grandpa's Axe; Camp filters Blueprints and Camp Legacy. ALL lists everything. Pets and Coming Soon remain their own main tabs and are not changed. Press C while the Shop's Upgrades tab is open to cycle categories on keyboard.

@@ -71,8 +71,8 @@ describe("Patch #40 MMO backpack inventory and Pine Logs",()=>{
    expect(carriedWeightLimit(g,m)).toBe(13);
    (m.up as any).pack=1;
    expect(availableInventorySlots(g,m)).toBe(15);
-   expect(carriedWeightLimit(g,m)).toBe(21);
-   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 5/21KG");
+   expect(carriedWeightLimit(g,m)).toBe(18);
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 5/18KG");
  });
  it("supports old version-one checkpoint migration, stable round-trip and rejecting corrupted stacks",()=>{
    const g=run(),m=meta();g.player.wood=4;

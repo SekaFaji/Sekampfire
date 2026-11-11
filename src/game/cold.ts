@@ -4,6 +4,7 @@ import { visualSeason } from "./palette";
 import { weatherIntensity } from "./weather";
 import { localTemperature } from "./thermometer";
 import { protectedByFenceTorches } from "./fenceTorches47";
+import { activePet } from "./companion";
 
 /** Cold represents environmental exposure (0-100), NOT a second life bar.
  * It replaces the weather-specific warmth drain additions in game.ts. */
@@ -23,9 +24,24 @@ export function fireSheltered(g: any): boolean {
   return g.fireLit && Math.abs(g.player.x - CX) < wr;
 }
 
+/** Equipment and nearby companions reduce Cold exposure; they do not
+ * replenish Warmth or alter the outside air thermometer. This is the single
+ * stat future wearable clothing can extend without a second Cold bar.
+ * The scarf is a permanent passive upgrade; boots are run-only crafted gear.
+ * Bingsu must actually be equipped, visible and close to share her warmth. */
+export const COLD_PROTECTION = { boots: 12, scarf: 15, bingsu: 5 } as const;
+export function coldProtection(g: any, meta?: any): number {
+  let protection = g?.crafts?.boots ? COLD_PROTECTION.boots : 0;
+  if ((Number(meta?.up?.scarf) || 0) > 0) protection += COLD_PROTECTION.scarf;
+  const nearby = Number.isFinite(g?.player?.x) && Number.isFinite(g?.dog?.x)
+    && Math.abs(g.player.x - g.dog.x) <= 25 && !g.dog.hidden;
+  if (nearby && activePet(meta) === "dog") protection += COLD_PROTECTION.bingsu;
+  return protection;
+}
+
 /** Target exposure, sampled from actual run weather, season, equipment and
  * dampness. Weather blends once, and the meter itself eases into the target. */
-export function coldTarget(g: any): number {
+export function coldTarget(g: any, meta?: any): number {
   const p = g.player || { x: CX };
   const wet = clamp(Number(g.dampness) || 0, 0, 100);
   let target = g.isNight ? 38 : 14;
@@ -36,7 +52,7 @@ export function coldTarget(g: any): number {
   target += weatherIntensity(g, "coldsnap") * 22;
   target += weatherIntensity(g, "blizzard") * 43;
   target += wet * 0.14;
-  if (g.crafts?.boots) target -= 12;
+  target -= coldProtection(g, meta);
   if (fireSheltered(g)) target -= 12;
   if (g.stage >= 5 && Math.abs(p.x - CX) < 50) target -= 6;
   return clamp(target, 0, 100);
@@ -45,7 +61,7 @@ export function coldTarget(g: any): number {
 /** Advances the optional run-local climate fields, with no randomness or
  * dt-specific jumps. Rain gradually wets unprotected campers; a fire or
  * shelter dries them. Missing fields are safe for pre-v36 checkpoints. */
-export function advanceCold(g: any, dt: number): void {
+export function advanceCold(g: any, dt: number, meta?: any): void {
   const elapsed = Math.max(0, Number.isFinite(dt) ? dt : 0);
   const dampness = clamp(Number(g.dampness) || 0, 0, 100);
   const safe = shelteredFromRain(g);
@@ -57,7 +73,7 @@ export function advanceCold(g: any, dt: number): void {
     : -AMBIENT_DRY_RATE;
   g.dampness = clamp(dampness + delta * elapsed, 0, 100);
 
-  const target = coldTarget(g);
+  const target = coldTarget(g, meta);
   const current = clamp(Number.isFinite(g.cold) ? g.cold : target, 0, 100);
   g.cold = clamp(current + (target - current) * (1 - Math.exp(-elapsed / COLD_RESPONSE_SECONDS)), 0, 100);
 }

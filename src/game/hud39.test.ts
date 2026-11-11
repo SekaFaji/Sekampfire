@@ -125,8 +125,8 @@ describe("Patch #39: four compact survival HUD plaques",()=>{
    expect(hudInventoryReadout(g,m)).toBe("WEIGHT 0/5KG");
    g.player.wood=4;expect(hudInventoryReadout(g,m)).toBe("WEIGHT 4/5KG");
    g.player.wood=5;expect(hudInventoryReadout(g,m)).toBe("WEIGHT 5/5KG");
-   (m.up as any).pack=1;g.crafts.pack=true;g.player.wood=19;
-   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 19/21KG");
+   (m.up as any).pack=1;g.crafts.pack=true;g.player.wood=17;
+   expect(hudInventoryReadout(g,m)).toBe("WEIGHT 17/18KG");
    g.ashEarned=18;expect(hudAshReadout(g)).toBe("ASH 18");
    g.ashEarned=1276;expect(hudAshReadout(g)).toBe("ASH 1.3K");
    expect(m.ash).toBe(28); // no banking just because Ash appears on HUD

@@ -1,6 +1,8 @@
 import {beforeEach,afterEach,describe,expect,it,vi} from "vitest";
 import {createEngine,shopRows,handlePointer,handleWheel,handleKey} from "./game";
 import {drawShopTabs,SHOP_CARD51,SHOP_DETAILS51,SHOP_BUY51} from "./menuScreens";
+import {textW} from "./font";
+import {SHOP_CARD_LABEL51} from "./shopCards51";
 import {SHOP_VIEW58,SHOP_SCROLLBAR58,shopMaxScroll58,moveShopScroll58,
   clampShopScroll58,revealShopCard58,tickShopScroll58,wheelShop58,
   insideShopViewport58} from "./shopScroll58";
@@ -61,6 +63,41 @@ describe("Patch #58: scrollable Ash Shop geometry",()=>{
    expect(cards.every((z:any)=>z.y>=52&&z.y+z.h<=116)).toBe(true);
    expect(g.zones.some((z:any)=>z.x===SHOP_BUY51.x&&z.y===SHOP_BUY51.y))
      .toBe(true);
+ });
+ it("four complete square tiles fit side-by-side and the second row scrolls fully into view",()=>{
+   const g=world(),m=meta();
+   const first=render(g,m);
+   expect(g.zones.filter((z:any)=>z.shopCardIndex58!==undefined)
+     .map((z:any)=>[z.shopCardIndex58,z.x,z.y,z.w,z.h])).toEqual([
+       [0,30,52,59,59],[1,95,52,59,59],
+       [2,160,52,59,59],[3,225,52,59,59]
+     ]);
+   expect(g.zones.some((z:any)=>z.shopCardIndex58===4)).toBe(false);
+   expect(first.clips).toEqual([SHOP_VIEW58]);
+   expect(SHOP_CARD51.x+4*SHOP_CARD51.w+3*SHOP_CARD51.colGap)
+     .toBeLessThan(SHOP_SCROLLBAR58.x);
+   // All permanent upgrade names fit in full at the native 3x5 font size.
+   for(const row of shopRows(g,m)){
+     expect(textW(SHOP_CARD_LABEL51[row.id as keyof typeof SHOP_CARD_LABEL51]))
+       .toBeLessThanOrEqual(SHOP_CARD51.w-6);
+   }
+   const ash=m.ash;
+   moveShopScroll58(g,1000,shopRows(g,m).length);
+   expect(g.shopScroll).toBe(59);
+   render(g,m);
+   expect(g.zones.filter((z:any)=>z.shopCardIndex58!==undefined)
+     .map((z:any)=>[z.shopCardIndex58,z.x,z.y,z.w,z.h])).toEqual([
+       [4,30,57,59,59],[5,95,57,59,59],[6,160,57,59,59]
+     ]);
+   expect(m.ash).toBe(ash);
+   expect(g.menuSel).toBe(0);
+ });
+ it("a fully purchased upgrade fills its square progress bar without changing Ash",()=>{
+   const g=world(),m=meta();m.up.blood=3;
+   const v=render(g,m);
+   expect(v.rectangles.some(r=>r.x===34&&r.y===106&&r.w===51&&r.h===2
+     &&r.ink==="#9cd0a9")).toBe(true);
+   expect(m.ash).toBe(200);
  });
  it("scroll range is derived from rows; clamps all malformed inputs safely",()=>{
    expect(shopMaxScroll58(0)).toBe(0);

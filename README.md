@@ -1,5 +1,14 @@
 # Sekampfire
 
+## Patch #59: Four square Ash Shop cards per row
+
+- **Four actual squares:** The permanent Upgrades tab uses four equal **59x59 native-pixel** cards in each scrolling row, instead of the wider 120x30 rectangles from Patch #58. The cards sit at x=30, 95, 160 and 225 with even 6px gaps, leaving a gutter for the gold scrollbar.
+- **Better illustrated tiles:** Each card centers its existing original pixel-art upgrade icon in a small inset, then presents the full upgrade name, current level (or MAX LEVEL), true Ash price (or OWNED), and permanent-level progress bar. Names are checked against the actual native pixel font to fit without truncation. Tapping a square still only selects its full explanation in the fixed bottom details panel.
+- **Everything stays scrollable and safe:** The original 260x64 upgrade viewport now shows one complete row of four squares at a time; scrolling reveals the next row. Touch drag/momentum, desktop mouse-wheel and trackpad, keyboard auto-reveal, partial-card hit-zone clipping and distinct BUY controls all retain Patch #58's behavior. Three tabs, BANKED ASH header and bottom inspector remain fixed.
+- **No balance or pet changes:** The existing seven permanent upgrades, Camp Legacy inheritance, exact prices/ownership, banked-Ash transaction checks, saved run format and Bingsu's separate Pets portrait remain untouched. The previously discussed Hearth/Fence/Workshop/Storage upgrade expansion moves to **Patch #60** after we review the square layout.
+- **Regression checks:** Automated tests assert equal square width/height, four exact card hit zones, fully readable names, row-to-row scroll/clipping, filled progress bars, no accidental purchase during gestures and all existing Ash spending rules. Real Android landscape visual testing is still recommended.
+
+
 ## Patch #58: Smooth, scrollable Ash Shop upgrade cards
 
 - **No more Shop pages:** Replaces the former 3x2 fixed/paged grid and 1/2-page arrows with one continuous **2-column, larger 120x30 illustrated card collection**. Original 320x180 layout is preserved. The top three Shop tabs, banked Ash balance, close control, fixed bottom details inspector, and separate BUY button never move.

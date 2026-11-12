@@ -81,7 +81,7 @@ describe("Patch #51 / #58: scrollable illustrated Ash Shop cards",()=>{
   expect(tabs.every((z:any)=>z.y>=close.y+close.h)).toBe(true);
   expect(SHOP_DETAILS51.y).toBeGreaterThan(SHOP_VIEW58.y+SHOP_VIEW58.h);
   expect(v.pixels.every(r=>r.x>=24&&r.y>=8&&r.x+r.w<=296&&r.y+r.h<=172)).toBe(true);
-  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(12); // 11 upgrade icons plus Bingsu
+  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(13); // 12 upgrade icons plus Bingsu
   expect(Object.values(SHOP_CARD_BENEFIT51).every(s=>s.length>10)).toBe(true);
  });
  it("tapping a card ONLY selects details and cannot spend banked or run Ash",()=>{

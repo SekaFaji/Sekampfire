@@ -1,5 +1,15 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #63 implemented (2026-11-12) - 500-fuel fire and clearer permanent upgrades
+
+**Fire fuel progression:** 100 base fuel plus 50 per permanent Fire Capacity level, 8 levels = 500 max. Prices 18, 28, 40, 54, 70, 88, 108, 130 Ash. This is fuel CAPACITY, not free burn value; real Pine Logs (5-20 fuel) still supply all fuel, and Old Flint keeps the old 40-unit prelit start. The current run captures the owned fire-capacity level when it begins so mid-run Ash purchases cannot change old checkpoints or create free fire.
+
+**Fire power:** 0..100 actual fuel uses its former 0..1 strength and radius; 100..500 increases intensity gently to 1.75 at 500, the same source of truth feeding the real flame size, physical shelter/warmth radius and local thermometer. Direct warmth regeneration now scales from 0.55x at empty intensity to 1x at 100 and up to ~1.34x at 500, still requiring actual proximity and heat-soak. The fuel gauge fills relative to actual capacity.
+
+**Shop:** more opaque Shop panel and readable cards, no redundant footer line, third line for explanatory benefits. Camp Legacy restores physical structures on new runs, while Hearth/Workshop/Storage Mastery upgrades their tiers, not their build state. Fence Reinforcement and scarf have clear **COLD PROTECTION** explanations, emphasizing slower environmental Warmth loss rather than inventing a new temperature meter.
+
+**Follow-up design:** Consider whether very high fuel fullness should visually add more stacked burning logs as an additional sprite variation and adjust overnight burn rates after testing. Do not give players free fuel or auto-completed mission rewards. Continue Level 2 gameplay when visual Shop is approved.
+
 ## Patch #62 implemented (2026-11-12) - Permanent Camp Masteries
 
 **New upgrades (two tiers each):** Hearth Mastery 38/78 Ash restores real Fireplace station levels 1/2 on future runs; Fence Reinforcement 28/62 Ash grants +8/+16 Cold protection strictly within a physically claimed camp; Workshop Mastery 42/86 Ash restores Workbench tiers 1/2 when the workbench is actually built; Storage Mastery 32/72 Ash restores Log Storage tiers 1/2 when built. Existing station costs and bonuses are not rebalanced. With Storage mastery level 2, an actual built pile at stage 0 holds 52 logs, and stage 4 still adds the original Woodshed bonus.

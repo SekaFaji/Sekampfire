@@ -8,6 +8,7 @@ import { MAX_CARRY_KG, carryCap, pileCap, choppingToolTier, choppingSeconds } fr
 import { useOneFireLog52 } from "./firewood52";
 import { applyCampLegacy53, campLegacyNextBenefit53 } from "./campLegacy53";
 import { applyCampMastery62, campMasteryNextBenefit62 } from "./campMastery62";
+import { fireFuelCapacity63, fireHeatRadius63, seedFireCapacity63, fireCapacityNextBenefit63, FIRE_MAX_LEVEL63 } from "./fireCapacity63";
 import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
@@ -79,7 +80,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.aurora = flag("aurora");
   g.nightSkyEvent = data.nightSkyEvent === "parade" ? "parade" : g.aurora ? "aurora" : "none";
   g.paradeTimer = 0;
-  g.fuel = n("fuel", 0, 100, 0);
+  g.fireCapacityTier63 = Math.floor(n("fireCapacityTier63", 0, FIRE_MAX_LEVEL63, 0));
+  g.fuel = n("fuel", 0, fireFuelCapacity63(g), 0);
   g.fireLit = flag("fireLit") && g.fuel > 0;
   g.everLit = flag("everLit") || g.fireLit;
   g.firestarter = n("firestarter", 0, 1, 0);
@@ -212,7 +214,7 @@ function createEngine(): any {
     pleft: false, pright: false, moveFeedbackLeft: 0, moveFeedbackRight: 0,
     quickSlots: [null, null], quickSlotIndex:0, quickSlotFrom:"run", buildFromPause:false,
     inventory:null, inventoryTab:0, inventorySel:0, inventoryEquipSel:0, inventoryFrom:"run",
-    fireLit: false, everLit: false, firestarter: 1, fuel: 0, stage: 0,
+    fireLit: false, everLit: false, firestarter: 1, fuel: 0, fireCapacityTier63: 0, stage: 0,
     longNightPending: false, longNightActive: false,
     won: false, victoryPending: false, endlessMode: false, endlessN: 0, over: false, museumBuilt:false,
     ashEarned: 0, ashLedger: {}, campaignLevel: 0, campaignRunId: null,
@@ -283,6 +285,7 @@ function startRunEngine(g: any, meta: any) {
   g.campaignLevel = 1; // fresh campaigns; old saved runs remain legacy
   const legacyLevel=applyCampLegacy53(g,meta);
   applyCampMastery62(g,meta); // tiers are run-owned; future Ash purchases do not mutate an active run
+  seedFireCapacity63(g,meta); // copy max fuel tier on a NEW run; no free starting fuel
   genScenery(g, Math.floor(Math.random() * 1e9));
   g.campaignRunId = "lv1-" + g.scenerySeed + "-" + Date.now();
   spawnTrees(g, 26);
@@ -755,12 +758,11 @@ function update(g: any, meta: any, dt: number, cb: any) {
   updateDogCompanion(g, meta, dt);
 
   // ---- meters ----
-  const f = g.fireLit ? g.fuel / 100 : 0;
   // Weather drains warmth ONLY through Cold; do not stack the old
   // cold-snap/blizzard bonuses over the new exposure pressure.
   advanceCold(g, dt, meta);
   let d = coldWarmthDrain(g, meta);
-  const wr = 20 + f * 34;
+  const wr = fireHeatRadius63(g);
   const byFire = g.fireLit && Math.abs(p.x - CX) < wr;
   g.heatSoak = advanceHeatSoak(g.heatSoak, dt, byFire);
   if (byFire) d -= fireWarmthRate(g);
@@ -1380,6 +1382,7 @@ function purchaseShopUpgrade51(g:any,meta:any,id:string):boolean {
   saveMeta(meta);
   toast(g,id==="legacy"
     ? "CAMP LEGACY LV"+meta.up[id]+" ACTIVE ON YOUR NEXT RUN."
+    : id==="firecap" ? "MAX FIRE FUEL "+(100+50*meta.up[id])+" ON YOUR NEXT RUN."
     : u.name.toUpperCase()+" UNLOCKED.");
   return true;
 }
@@ -1398,6 +1401,7 @@ function shopRows(g:any,meta:any) {
         label:u.name.toUpperCase()+(u.max>1?" "+lvl+"/"+u.max:""),
         right:maxed?"OWNED":confirm?"BUY?":cost+" ASH",
         desc:u.id==="legacy"?campLegacyNextBenefit53(lvl)
+          :u.id==="firecap"?fireCapacityNextBenefit63(lvl)
           :["hearth","fence","workshop","storage"].includes(u.id)?campMasteryNextBenefit62(u.id,lvl)
           :u.id==="dog" && maxed?"OWNED. EQUIP OR UNEQUIP IN INVENTORY."
           :maxed?u.desc:confirm?"PRESS AGAIN TO CONFIRM":u.desc,

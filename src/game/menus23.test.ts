@@ -72,7 +72,7 @@ describe("menus split without hiding ownership or overlapping exit", () => {
     const g=createEngine(),m=meta();
     g.shopTab=0;
     expect(shopRows(g,m).map((x:any)=>x.label)).not.toContain("GOOD DOG");
-    expect(shopRows(g,m)).toHaveLength(11); // original seven plus four real camp masteries
+    expect(shopRows(g,m)).toHaveLength(12); // original seven, four camp masteries, fire capacity
     g.shopTab=1;
     expect(shopRows(g,m)).toHaveLength(1);
     expect(shopRows(g,m)[0].label).toBe("BINGSU");

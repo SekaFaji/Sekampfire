@@ -66,7 +66,7 @@ describe("Patch #33 progressive fire warmth",()=>{
   it("stage 2 Log Bench and fireplace levels still improve warmth recovery",()=>{
     const g=game();g.heatSoak=8;
     const baseline=fireWarmthRate(g);
-    expect(baseline).toBeCloseTo(8.5);
+    expect(baseline).toBeCloseTo(8.5*(0.55+0.45*0.9)); // 90 fuel is a little cooler
     g.stage=2;expect(fireWarmthRate(g)).toBeGreaterThan(baseline);
     g.campUpgrades.hearth=2;
     expect(fireWarmthRate(g)).toBeGreaterThan(baseline*1.25);

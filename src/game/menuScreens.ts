@@ -5,8 +5,8 @@ import { drawShopCardIcon51, SHOP_CARD_LABEL51, SHOP_CARD_BENEFIT51, type ShopId
 import { SHOP_CARD58,SHOP_VIEW58,SHOP_SCROLLBAR58,clampShopScroll58,shopMaxScroll58 } from "./shopScroll58";
 import { SHOP_CATEGORIES60, SHOP_SIDEBAR60, SHOP_TILE_NAME60,shopCategory60,chooseShopCategory60 } from "./shopCategories60";
 
-function frame(ctx: any, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = "rgba(8,12,26,0.75)";
+function frame(ctx: any, x: number, y: number, w: number, h: number, ink = "rgba(8,12,26,0.75)") {
+  ctx.fillStyle = ink;
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = "#bb945d";
   ctx.fillRect(x, y, w, 1);
@@ -76,8 +76,8 @@ export function drawLockedEndlessButton(ctx: any, g: any, onDown: () => void) {
 /** Scrollable Shop card geometry in the original 320x180 native resolution.
  * The banked balance, three tabs, details pane and separate BUY remain fixed. */
 export const SHOP_CARD51=SHOP_CARD58; // Historical alias for card geometry tests.
-export const SHOP_DETAILS51 = {x:30,y:138,w:260,h:27} as const;
-export const SHOP_PET_DETAILS51 = {x:30,y:119,w:260,h:45} as const;
+export const SHOP_DETAILS51 = {x:30,y:137,w:260,h:33} as const;
+export const SHOP_PET_DETAILS51 = {x:30,y:119,w:260,h:51} as const;
 export const SHOP_BUY51 = {x:210,y:142,w:78,h:18} as const;
 /** Native 320x180 layout: the painted bust has 7px horizontal and 3px
  * vertical breathing room inside the original 100x68 bordered pet card. */
@@ -124,8 +124,8 @@ function drawShopUpgradeCard51(ctx:any,g:any,row:any,index:number,offset:number)
   if(bottom<=top)return;
   const selected=index===g.menuSel;
   const owned=!!row?.maxed;
-  shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.82)":
-    "rgba(29,46,55,0.78)",
+  shopBox51(ctx,x,y,c.w,c.h,selected?"rgba(90,67,44,0.96)":
+    "rgba(29,46,55,0.94)",
     selected?"#eac487":owned?"#83a48e":"#66798a");
   // Original pixel-art icon stays recognizable despite the smaller square.
   const id=row?.id as ShopId51;
@@ -158,7 +158,7 @@ function drawShopCategories60(ctx:any,g:any):void {
     const y=s.y+i*(s.h+s.gap);
     const selected=active===id;
     shopBox51(ctx,s.x,y,s.w,s.h,
-      selected?"rgba(104,75,41,0.88)":"rgba(36,56,65,0.74)",
+      selected?"rgba(104,75,41,0.96)":"rgba(36,56,65,0.92)",
       selected?"#eac487":"#60747c");
     if(selected){ctx.fillStyle="#f2d4a1";ctx.fillRect(s.x+2,y+3,2,s.h-6);}
     drawTextC(ctx,label,s.x+s.w/2,y+6,
@@ -175,7 +175,7 @@ function drawScrollableShop58(ctx:any,g:any,rows:any[]):void {
   const v=SHOP_VIEW58;
   g.shopUpgradeCount58=rows.length;
   const offset=clampShopScroll58(g,rows.length);
-  ctx.fillStyle="rgba(16,31,38,0.38)";
+  ctx.fillStyle="rgba(16,31,38,0.90)";
   ctx.fillRect(v.x,v.y,v.w,v.h);
   const canClip=typeof ctx.save==="function"&&
     typeof ctx.beginPath==="function"&&typeof ctx.rect==="function"&&
@@ -204,7 +204,7 @@ function drawScrollableShop58(ctx:any,g:any,rows:any[]):void {
 function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
   const compact=g.shopTab===0;
   const d=compact?SHOP_DETAILS51:SHOP_PET_DETAILS51;
-  shopBox51(ctx,d.x,d.y,d.w,d.h,"rgba(21,37,44,0.80)","#876e53");
+  shopBox51(ctx,d.x,d.y,d.w,d.h,"rgba(21,37,44,0.97)","#876e53");
   const selected=selectedShopRow51(g,rows);
   if(!selected){
     drawTextC(ctx,compact?"NO UPGRADES IN THIS CATEGORY."
@@ -215,10 +215,10 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
   const id=selected.id as ShopId51;
   const name=shopCardLabel51(selected);
   const level=Number(selected.level)||0,max=Number(selected.max)||1;
-  const benefit=["legacy","hearth","fence","workshop","storage"].includes(id)?selected.desc:
+  const benefit=["legacy","hearth","fence","workshop","storage","firecap"].includes(id)?selected.desc:
     (SHOP_CARD_BENEFIT51[id]||selected.desc||"PERMANENT UPGRADE.");
   if(compact){
-    // Two-line maximum under the selected name so everything fits y138-165.
+    // Removed the redundant footer to show three full benefit lines in y137-170.
     const top=(name+"  "+(selected.maxed?"MAX":"LV"+level+"/"+max));
     drawText(ctx,compact51(top,170),d.x+5,d.y+3,"#ffe4b3");
     const words=String(benefit).toUpperCase().split(/\s+/);
@@ -229,8 +229,8 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
       else {if(line)lines.push(line);line=word;}
     }
     if(line)lines.push(line);
-    for(let i=0;i<Math.min(2,lines.length);i++){
-      const last=i===1&&lines.length>2;
+    for(let i=0;i<Math.min(3,lines.length);i++){
+      const last=i===2&&lines.length>3;
       drawText(ctx,compact51(lines[i]+(last?"..":""),170),
         d.x+5,d.y+13+i*7,"#bcd0cb");
     }
@@ -256,7 +256,7 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
  * never calls row.onDown (that historical function had double-tap purchase).
  */
 export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):void {
-  frame(ctx,24,8,272,164);
+  frame(ctx,24,8,272,164,"rgba(8,12,26,0.96)");
   drawText(ctx,"ASH SHOP",32,13,"#ffd98a");
   const ash="BANKED "+bankedAsh51(meta)+" ASH";
   drawText(ctx,compact51(ash,134),270-textW(compact51(ash,134)),13,"#e6d2a2");
@@ -279,7 +279,7 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
       // Nearest-neighbor fit preserves the complete 94x68 image, not a crop.
       const card=BINGSU_PET_FIT57.card,art=BINGSU_PET_FIT57.art;
       shopBox51(ctx,card.x,card.y,card.w,card.h,
-        "rgba(26,45,52,0.64)",chosen?"#eac487":"#61798b");
+        "rgba(26,45,52,0.92)",chosen?"#eac487":"#61798b");
       ctx.fillStyle="#455150";
       ctx.fillRect(card.x+2,card.y+2,card.w-4,card.h-4);
       drawBingsuPortrait(ctx,art.x,art.y,art.w,art.h);
@@ -305,8 +305,8 @@ export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):v
     drawScrollableShop58(ctx,g,rows);
     drawShopDetails51(ctx,g,meta,rows);
   }
-  drawTextC(ctx,tab===1?"OWN PETS FOREVER. EQUIP FROM INVENTORY."
-    :"C: CATEGORY   -   BANKED ASH ONLY.",160,165,"#9dafb9");
+  // Patch #63: footer removed. The inspector now uses the extra height for
+  // actionable upgrade effects; the banked Ash balance is already in header.
 }
 
 /** Informational preview only. This is NOT a playable mode or an unlock;

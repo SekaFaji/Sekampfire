@@ -2,7 +2,7 @@
  * Every Shop item uses its real UPGRADES ID, cap and price in config.ts.
  * No emoji, offscreen scaled image, extra Ash resource or invented effect.
  */
-export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog"|"legacy"|"hearth"|"fence"|"workshop"|"storage";
+export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog"|"legacy"|"hearth"|"fence"|"workshop"|"storage"|"firecap";
 export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
   blood:"WARM BLOOD",
   flint:"OLD FLINT",
@@ -15,21 +15,23 @@ export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
   hearth:"HEARTH MASTERY",
   fence:"FENCE REINFORCEMENT",
   workshop:"WORKSHOP MASTERY",
-  storage:"STORAGE MASTERY"
+  storage:"STORAGE MASTERY",
+  firecap:"FIRE CAPACITY"
 };
 export const SHOP_CARD_BENEFIT51:Record<ShopId51,string>={
-  blood:"COLD DRAINS WARMTH MORE SLOWLY.",
+  blood:"LESS COLD WARMTH DRAIN EACH LEVEL.",
   flint:"BEGIN EACH RUN WITH THE FIRE LIT.",
   pack:"EACH LEVEL ADDS 5KG. MAX +25KG.",
   axe:"PERMANENT STRONGER CHOPPING AXE.",
   blue:"ALL BUILDINGS COST 20 PERCENT LESS.",
-  scarf:"PERMANENT +15 COLD PROTECTION.",
+  scarf:"+15 COLD PROTECTION. SLOWS WARMTH LOSS.",
   dog:"SHE FETCHES 2 LOGS AND WARMS YOU NEARBY.",
-  legacy:"START FUTURE RUNS WITH BUILT STRUCTURES.",
+  legacy:"AUTO-BUILD LOG PILE, WORKBENCH AND FENCES ON NEW RUNS.",
   hearth:"START NEW RUNS WITH FIREPLACE STATION TIERS.",
-  fence:"REDUCE COLD INSIDE YOUR ESTABLISHED CAMP.",
+  fence:"COLD PROTECTION SLOWS WARMTH LOSS INSIDE FENCES.",
   workshop:"START NEW RUNS WITH WORKBENCH STATION TIERS.",
-  storage:"START NEW RUNS WITH STORAGE STATION TIERS."
+  storage:"START NEW RUNS WITH STORAGE STATION TIERS.",
+  firecap:"+50 MAX FIRE FUEL PER LEVEL. LEVEL 8 HOLDS 500."
 };
 export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{
   const p=(a:number,b:number,w:number,h:number,c:string)=>{
@@ -94,6 +96,12 @@ export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{
     p(1,8,6,5,"#926847");p(7,8,5,5,"#926847");
     p(2,9,3,3,"#d6ab72");p(8,9,3,3,"#d6ab72");
     p(3,10,1,1,"#895f42");p(9,10,1,1,"#895f42");
+  }else if(id==="firecap"){
+    // Larger fire bowl, capped glowing flame and an extra fuel reservoir.
+    p(1,9,12,4,"#73513b");p(2,8,10,2,"#a17a58");
+    p(4,4,6,5,"#ed853e");p(6,1,2,7,"#ffe08f");
+    p(6,10,2,2,"#ffd58a");
+    p(1,13,3,1,"#54402e");p(10,13,3,1,"#54402e");
   }else if(id==="dog"){
     p(1,5,8,5,"#cdd8d6");p(2,4,8,5,"#f7f6ed");
     p(8,2,4,6,"#e9ede8");p(9,1,2,3,"#b5c3c3");

@@ -6,6 +6,7 @@ import { localTemperature } from "./thermometer";
 import { protectedByFenceTorches } from "./fenceTorches47";
 import { activePet } from "./companion";
 import { fenceProtection62 } from "./campMastery62";
+import { fireHeatRadius63 } from "./fireCapacity63";
 
 /** Cold represents environmental exposure (0-100), NOT a second life bar.
  * It replaces the weather-specific warmth drain additions in game.ts. */
@@ -21,8 +22,7 @@ export function shelteredFromRain(g: any): boolean {
 
 export function fireSheltered(g: any): boolean {
   // Same fire-radius rule used by warmth recovery, not an invented larger area.
-  const wr = 20 + (g.fireLit ? g.fuel / 100 : 0) * 34;
-  return g.fireLit && Math.abs(g.player.x - CX) < wr;
+  return g.fireLit && Math.abs(g.player.x - CX) < fireHeatRadius63(g);
 }
 
 /** Equipment and nearby companions reduce Cold exposure; they do not

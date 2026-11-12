@@ -1,5 +1,6 @@
 import { clamp } from "./math";
 import { stationLevel } from "./campProgress";
+import { fireHeatStrength63 } from "./fireCapacity63";
 
 /** Heat absorbed by lingering near a lit fire, in game-time seconds.
  * Starts gently and rises smoothly; time outside its radius cools the
@@ -13,11 +14,15 @@ export function advanceHeatSoak(seconds: number, dt: number, byFire: boolean): n
 }
 
 /** Warming contribution per second (before environmental cold is subtracted).
- * At 0s: +2; at 4s: +5.25; at 8s: +8.5.
- * The Log Bench and hearth upgrades retain their own warming advantages. */
+ * At 100 fuel: the original +2 to +8.5 soak curve is preserved.
+ * Less fuel gives less heat, while amounts above 100 make an even larger
+ * fireplace increasingly effective without infinite regeneration.
+ * The Log Bench and hearth upgrades retain their warming advantages. */
 export function fireWarmthRate(g: any): number {
   const t = clamp((Number(g.heatSoak) || 0) / HEAT_SOAK_SECONDS, 0, 1);
   const smooth = t * t * (3 - 2 * t);
   const base = 2 + 6.5 * smooth;
-  return base * (g.stage >= 2 ? 1.25 : 1) + stationLevel(g, "hearth") * 0.7;
+  const heat = fireHeatStrength63(g);
+  const multiplier = 0.55 + 0.45 * heat; // 100 fuel = original rate; 500 fuel = 1.3375x
+  return (base * (g.stage >= 2 ? 1.25 : 1) + stationLevel(g, "hearth") * 0.7) * multiplier;
 }

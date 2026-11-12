@@ -8,6 +8,7 @@ import { drawSideLegs } from "./playerLegs";
 import { drawSeasonalWildlife } from "./renderWildlife";
 import { drawMuseumHut } from "./museum";
 import { drawWoodlandSilhouettes } from "./renderAtmosphere";
+import { fireHeatStrength63 } from "./fireCapacity63";
 
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
@@ -344,7 +345,7 @@ function drawFire(ctx: any, g: any) {
   px(ctx, CX - 6, 147, 7, 2, "#5a3a22");
   px(ctx, CX - 1, 148, 7, 2, "#4a2f1a");
   if (g.fireLit) {
-    drawFlame(ctx, CX, 148, g.animT, g.fuel / 100);
+    drawFlame(ctx, CX, 148, g.animT, fireHeatStrength63(g));
     // Tiny ambient embers without artificial spotlights.
     const flicker = Math.sin(g.animT * 7.1) * 1.5;
     px(ctx, CX - 4, 140 + flicker, 1, 1, "#ffb452");

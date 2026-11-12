@@ -1,3 +1,5 @@
+import { FIRE_CAPACITY_COSTS63, FIRE_MAX_LEVEL63 } from "./fireCapacity63";
+
 // ============ constants ============
 const W = 320, H = 180, GROUND = 128, PLAYER_Y = 152;
 // Lift only the world rendering to leave room for decorative foreground water.
@@ -45,6 +47,7 @@ const UPGRADES = [
   { id: "fence", name: "Fence Reinforcement", costs: [28, 62], max: 2, desc: "+8 COLD PROTECTION PER TIER INSIDE BUILT FENCES" },
   { id: "workshop", name: "Workshop Mastery", costs: [42, 86], max: 2, desc: "START NEW RUNS WITH WORKBENCH STATION TIERS" },
   { id: "storage", name: "Storage Mastery", costs: [32, 72], max: 2, desc: "START NEW RUNS WITH STORAGE STATION TIERS" },
+  { id: "firecap", name: "Fire Capacity", costs: FIRE_CAPACITY_COSTS63, max: FIRE_MAX_LEVEL63, desc: "PERMANENT +50 MAX FUEL PER LEVEL, UP TO 500. NEW RUNS." },
 ];
 
 const WEATHER_TEXT: Record<string, string> = {

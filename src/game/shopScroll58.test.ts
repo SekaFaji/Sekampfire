@@ -58,7 +58,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(SHOP_CARD51).toMatchObject({x:86,y:51,w:41,h:41,colGap:5,rowGap:3,cols:4});
    expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
    expect(SHOP_VIEW58).toEqual({x:85,y:51,w:188,h:85});
-   expect(SHOP_DETAILS51).toEqual({x:30,y:138,w:260,h:27});
+   expect(SHOP_DETAILS51).toEqual({x:30,y:137,w:260,h:33});
    expect(SHOP_VIEW58.y+SHOP_VIEW58.h).toBeLessThan(SHOP_DETAILS51.y);
    expect(SHOP_SIDEBAR60.x+SHOP_SIDEBAR60.w).toBeLessThan(SHOP_VIEW58.x);
    expect(SHOP_SCROLLBAR58.x).toBeGreaterThan(
@@ -92,11 +92,11 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    const g=world(),m=meta();render(g,m);
    const baseline=shopRows(g,m).map((r:any)=>[r.id,r.cost]);
    expect(baseline.map(x=>x[0])).toEqual(
-     ["blood","flint","pack","axe","blue","scarf","legacy","hearth","fence","workshop","storage"]);
+     ["blood","flint","pack","axe","blue","scarf","legacy","hearth","fence","workshop","storage","firecap"]);
    for(const [category,expected] of [
      ["survival",["blood","flint","scarf"]],
      ["equipment",["pack","axe"]],
-     ["camp",["blue","legacy","hearth","fence","workshop","storage"]]
+     ["camp",["blue","legacy","hearth","fence","workshop","storage","firecap"]]
    ] as const){
      chooseShopCategory60(g,category);
      expect(shopCategory60(g)).toBe(category);
@@ -110,7 +110,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    }
    chooseShopCategory60(g,"all");
    expect(shopRows(g,m).map((r:any)=>[r.id,r.cost])).toEqual(baseline);
-   expect(visibleShopUpgrades60(shopRows(g,m),"all")).toHaveLength(11);
+   expect(visibleShopUpgrades60(shopRows(g,m),"all")).toHaveLength(12);
  });
  it("the sidebar is interactive and switches categories without spending Ash",()=>{
    const g=world(),m=meta();g.ashEarned=999;
@@ -126,7 +126,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(g.shopVelocity).toBe(0);
    expect(m.ash).toBe(200);
    render(g,m);
-   expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["blue","legacy","hearth","fence","workshop","storage"]);
+   expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["blue","legacy","hearth","fence","workshop","storage","firecap"]);
    const card=g.zones.find((z:any)=>z.shopCardIndex58===1);
    card.onDown();
    expect(g.menuSel).toBe(1);
@@ -157,7 +157,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(find(g,SHOP_BUY51.x+5,SHOP_BUY51.y+6)).toBeDefined();
    expect(m.ash).toBe(200);
    g.shopTab=0;chooseShopCategory60(g,"all");render(g,m);
-   expect(shopRows(g,m)).toHaveLength(11);
+   expect(shopRows(g,m)).toHaveLength(12);
  });
  it("C keyboard shortcut cycles categories and Arrow navigation stays inside each",()=>{
    const g=world(),m=meta();render(g,m);

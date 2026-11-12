@@ -278,7 +278,8 @@ export function drawInventoryMenu(ctx:any,g:any,meta:any,close:()=>void):void{
   drawText(ctx,"INVENTORY",x+9,y+8,"#ffdf9a");
   const used=occupiedInventorySlots(g),capacity=availableInventorySlots(g,meta);
   drawText(ctx,"SLOTS "+used+"/"+capacity,169,y+8,"#d5c5a6");
-  drawText(ctx,"PROT "+coldProtection(g,meta),235,y+8,"#b9d8cf");
+  const protection="COLD PROT "+coldProtection(g,meta);
+  drawText(ctx,protection,292-textW(protection),y+8,"#b9d8cf");
   actionable(ctx,g,278,13,16,14,"X",close);
   drawText(ctx,"BACKPACK",29,33,"#e8d09a");
   drawText(ctx,"EQUIPMENT",166,33,"#e8d09a");

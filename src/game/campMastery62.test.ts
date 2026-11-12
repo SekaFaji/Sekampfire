@@ -12,8 +12,8 @@ import { pileCap } from "./rules";
 import { coldTarget, coldProtection, advanceCold } from "./cold";
 import { SHOP_CARD_LABEL51, drawShopCardIcon51 } from "./shopCards51";
 import { SHOP_TILE_NAME60, chooseShopCategory60 } from "./shopCategories60";
-import { shopMaxScroll58 } from "./shopScroll58";
-import { SHOP_VIEW58, SHOP_BUY51, drawShopTabs } from "./menuScreens";
+import { SHOP_VIEW58, shopMaxScroll58 } from "./shopScroll58";
+import { SHOP_BUY51, drawShopTabs } from "./menuScreens";
 import { textW } from "./font";
 
 let storage: Map<string,string>;

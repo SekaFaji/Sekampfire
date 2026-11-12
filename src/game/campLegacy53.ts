@@ -4,10 +4,10 @@
  */
 export const CAMP_LEGACY_COSTS53=[35,60,95,140] as const;
 export const CAMP_LEGACY_BENEFITS53=[
-  "NEW RUNS START WITH LOG STORAGE BUILT.",
-  "NEW RUNS START WITH WORKBENCH BUILT.",
-  "NEW RUNS START WITH BOTH FENCE POSTS BUILT.",
-  "NEW RUNS START WITH EASTERN CAMP EXPANDED."
+  "NEW RUNS: LOG STORAGE / LOG PILE BUILT. NO LOGS.",
+  "NEW RUNS: WORKBENCH ALREADY BUILT. NO FREE GEAR.",
+  "NEW RUNS: BOTH FENCE POSTS ALREADY BUILT.",
+  "NEW RUNS: EASTERN CAMP EXPANDED, ALREADY BUILT."
 ] as const;
 export const CAMP_LEGACY_MAX53=4;
 
@@ -18,7 +18,7 @@ export function campLegacyLevel53(meta:any):number {
 }
 export function campLegacyNextBenefit53(level:number):string {
   const n=Number.isFinite(level)?Math.max(0,Math.floor(level)):0;
-  return CAMP_LEGACY_BENEFITS53[n]??"ALL CAMP FOUNDATIONS RESTORED.";
+  return CAMP_LEGACY_BENEFITS53[n]??"ALL CAMP STRUCTURES PREBUILT ON NEW RUNS.";
 }
 /** Apply at the start of a FRESH run only. Old v1 checkpoints are loaded
  * from their own actual camp state, never re-seeded by later Ash purchases.

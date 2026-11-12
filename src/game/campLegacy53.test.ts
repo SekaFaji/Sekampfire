@@ -232,10 +232,10 @@ describe("Patch #58 / #62: the expanded Ash Shop scrolls instead of paging",()=>
   it("scrolls all eleven cards while keeping the separate BUY area fixed",()=>{
     const m=meta(),g=createEngine();
     g.ui="run";g.menu="shop";g.shopTab=0;g.menuSel=0;
-    expect(shopRows(g,m).length).toBe(11);
+    expect(shopRows(g,m).length).toBe(12);
     expect(SHOP_CARD51.cols).toBe(4);
     expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
-    expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(12); // including pet
+    expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(13); // including pet
     const pageOne=drawShop(g,m);
     const cards=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);
     expect(cards).toHaveLength(8); // first two visible rows of eleven

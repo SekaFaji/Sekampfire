@@ -1,5 +1,18 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #63 - higher-contrast Ash Shop and growing 500-fuel campfire
+- [x] Make Ash Shop less transparent without darkening the entire gameplay HUD.
+- [x] Remove redundant "C: CATEGORY - BANKED ASH ONLY" footer and use space for a third benefit line.
+- [x] Clarify Camp Legacy's genuine prebuilt structures versus distinct station Mastery, with accurate next-level descriptions.
+- [x] Label "COLD PROT" and explain its role in reducing environmental warmth drain.
+- [x] Add 8 permanent +50 fuel-capacity tiers: 100 initial up to 500 maximum, with real prices, saving, icon and shop scrolling.
+- [x] Scale actual fire shelter radius, warmer local air, flame size and direct warmth gain with real fuel amount; preserve 100-fuel baseline.
+- [x] Keep Pine Log fuel consumption, Old Flint, old run checkpoints, item economy and banking authoritative and compatible.
+- [x] Expand tests for fire capacity, full fuel bars, Shop readability and old save migration.
+- [ ] On-device review: fire flame proportions at 500 fuel; Shop opacity and longer selected-card benefits.
+- [ ] Balance: 500-fuel storage and high-intensity warming against the 5-20 fuel Pine Log roll and overnight survival economy.
+- [ ] Next progression focus: playable Level 2 missions.
+
 ## Patch #62 - independent permanent camp mastery upgrades
 - [x] Hearth Mastery: permanent level 1/2 station tiers on fresh runs, with existing fuel and warmth effects.
 - [x] Fence Reinforcement: +8/+16 Cold protection within real established fence boundaries, including expanded land.

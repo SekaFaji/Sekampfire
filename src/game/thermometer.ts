@@ -4,6 +4,7 @@ import { visualSeason } from "./palette";
 import { weatherIntensity } from "./weather";
 import { drawText, textW } from "./font";
 import { lerpHex } from "./renderUtils";
+import { fireHeatRadius63, fireHeatStrength63 } from "./fireCapacity63";
 
 /** Fictional camp-world ambient air temperature in degrees Celsius.
  * Not the personal Cold exposure value or character Warmth reserve.
@@ -55,11 +56,11 @@ export function thermometerLiquidColor(temperature: number): string {
  * between these temperatures through settleThermometer(). */
 export function localTemperature(g: any): number {
   const outdoor = ambientTemperature(g);
-  const fuel = clamp(Number(g.fuel) || 0, 0, 100);
-  if (!g.fireLit || fuel <= 0 || !Number.isFinite(g.player?.x)) return outdoor;
-  const radius = 20 + (fuel / 100) * 34; // same actual fire influence radius
+  const strength = fireHeatStrength63(g);
+  if (strength <= 0 || !Number.isFinite(g.player?.x)) return outdoor;
+  const radius = fireHeatRadius63(g); // same real heat radius as Cold and Warmth
   const proximity = clamp(1 - Math.abs(g.player.x - CX) / radius, 0, 1);
-  const heat = proximity * (4 + (fuel / 100) * 8);
+  const heat = proximity * (4 + strength * 8);
   return clamp(outdoor + heat, AIR_TEMP_MIN, AIR_TEMP_MAX);
 }
 

@@ -1,5 +1,6 @@
 import { PINE_LOG_ID } from "./inventory";
 import { stationKindlingBonus } from "./campProgress";
+import { FIRE_BASE_CAPACITY63, fireFuelCapacity63 } from "./fireCapacity63";
 
 /** Patch #52 - each actual species owns its fuel range, separate from
  * material quantity, Museum collectibles and camp build costs. New species
@@ -29,7 +30,7 @@ export type FireAction52={
   fuel:number;
 };
 export const INITIAL_TINDER_BONUS52=20;
-export const MAX_FIRE_FUEL52=100;
+export const MAX_FIRE_FUEL52=FIRE_BASE_CAPACITY63; // historical, unupgraded base fuel cap
 
 /** Inclusive integer uniform distribution: Pine provides 5 through 20 fuel
  * per log. The random sample is taken ONLY when a log is actually consumed.
@@ -53,21 +54,22 @@ export function rollWoodFuel52(
  * need just one Pine Log and use its real randomized 5-20 burn value.
  *
  * The first ignition does not count as the guide's separate "feed a log"
- * mission. Further stokes count exactly once; at 99+ fuel no wood or RNG
- * is consumed. No individual per-log quality is serialized into a stack. */
+ * mission. Further stokes count exactly once; when within 1 fuel of the
+ * CURRENT cap no wood or RNG is consumed. No log quality is serialized. */
 export function useOneFireLog52(
   g:any,random:()=>number=Math.random
 ):FireAction52 {
   const lit=!!g.fireLit;
+  const capacity=fireFuelCapacity63(g);
   const fuel=Number.isFinite(g.fuel)
-    ?Math.max(0,Math.min(MAX_FIRE_FUEL52,g.fuel)):0;
+    ?Math.max(0,Math.min(capacity,g.fuel)):0;
   const source:LogSource52|null=Number(g.player?.wood)>0
     ?"carried":Number(g.stored)>0?"storage":null;
   const empty=(kind:FireActionKind52):FireAction52=>({
     kind,wood:null,source:null,roll:0,kindlingBonus:0,
     starterBonus:0,added:0,fuel
   });
-  if(lit && fuel>=99)return empty("full");
+  if(lit && fuel>=capacity-1)return empty("full");
   if(source===null)return empty("no_log");
 
   // This is the only place in this patch that spends firewood. Check
@@ -80,7 +82,7 @@ export function useOneFireLog52(
   const starterBonus=!lit && Number(g.firestarter)>0
     ?INITIAL_TINDER_BONUS52:0;
   const gain=roll+kindlingBonus+starterBonus;
-  const newFuel=Math.min(MAX_FIRE_FUEL52,fuel+gain);
+  const newFuel=Math.min(capacity,fuel+gain);
   g.fuel=newFuel;
   if(!lit){
     g.fireLit=true;

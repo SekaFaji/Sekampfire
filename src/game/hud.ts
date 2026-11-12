@@ -7,6 +7,7 @@ import { visualSeason, seasonDay } from "./palette";
 import { WEST_POST_X, EAST_POST_X, EAST_EXPANDED_X, EXPANSION_MARKER_X, campEstablished } from "./campBoundary";
 import { MUSEUM_X } from "./museum";
 import { GROOTY_X } from "./guide";
+import { fireFuelCapacity63 } from "./fireCapacity63";
 
 // Translucent slate retains contrast while letting the real game sky,
 // weather and forest stay visible behind the resource panels.
@@ -221,12 +222,13 @@ export function drawCampHUD(ctx: any, g: any, meta: any) {
   }
 
   const warmth = clamp(Number(g.player.warmth) || 0, 0, 100);
-  const fuel = g.fireLit ? clamp(Number(g.fuel) || 0, 0, 100) : 0;
+  const fuelCap = fireFuelCapacity63(g);
+  const fuel = g.fireLit ? clamp(Number(g.fuel) || 0, 0, fuelCap) : 0;
   drawText(ctx,"WARMTH",7,21,"#eee1c7");
   meter(ctx,warmth,39,21,"#bc554a","#ef8a6b");
   drawText(ctx,String(Math.round(warmth)),94,21,warmth<25?"#ffae8d":"#e8d5ac");
   drawText(ctx,"FUEL",7,32,"#eee1c7");
-  meter(ctx,fuel,39,32,"#c77732","#ffc267");
+  meter(ctx,100 * fuel / fuelCap,39,32,"#c77732","#ffc267");
   drawText(ctx,String(Math.round(fuel)),94,32,fuel<25?"#ffab7e":"#e8d5ac");
 
   drawLivingThermometer(ctx,g);

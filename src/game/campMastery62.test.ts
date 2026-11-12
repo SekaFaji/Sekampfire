@@ -46,7 +46,7 @@ describe("Patch #62 - separate permanent camp masteries",()=>{
     const m=meta(),g=createEngine();
     g.shopTab=0;g.shopCategory60="camp";
     expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(
-      ["blue","legacy","hearth","fence","workshop","storage"]);
+      ["blue","legacy","hearth","fence","workshop","storage","firecap"]);
     const initial=m.ash;
     for(const id of ids){
       const def=UPGRADES.find(u=>u.id===id)!;
@@ -201,7 +201,7 @@ describe("Patch #62 - separate permanent camp masteries",()=>{
   it("shows four distinct pixel-art cards and scrolls the eleven real upgrades",()=>{
     const m=meta(),g=createEngine();
     g.ui="run";g.menu="shop";g.shopTab=0;g.menuSel=0;g.zones=[];
-    expect(shopRows(g,m)).toHaveLength(11);
+    expect(shopRows(g,m)).toHaveLength(12);
     expect(shopMaxScroll58(11)).toBe(44);
     const rects:any[]=[];
     let ink="";
@@ -226,6 +226,6 @@ describe("Patch #62 - separate permanent camp masteries",()=>{
     expect(rows.every((z:any)=>z.y>=SHOP_VIEW58.y && z.y+z.h<=SHOP_VIEW58.y+SHOP_VIEW58.h)).toBe(true);
     expect(g.zones.some((z:any)=>z.x===SHOP_BUY51.x&&z.y===SHOP_BUY51.y)).toBe(true);
     chooseShopCategory60(g,"camp");
-    expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["blue","legacy",...ids]);
+    expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["blue","legacy",...ids,"firecap"]);
   });
 });

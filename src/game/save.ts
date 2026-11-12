@@ -58,7 +58,7 @@ function captureRunSnapshot(g: any): any {
     "guideLevel","guideChops","guideStokes","guideStoredTen",
     "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
-    "fenceLeft","fenceRight","campExpansion","fenceTorches","fenceMastery62","heatSoak","cold","dampness"];
+    "fenceLeft","fenceRight","campExpansion","fenceTorches","fenceMastery62","fireCapacityTier63","heatSoak","cold","dampness"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
   // Keep the existing v1 checkpoint key/version. Persist only validated tier
@@ -67,6 +67,8 @@ function captureRunSnapshot(g: any): any {
   state.fenceTorches = normalizeFenceTorches(g.fenceTorches); // all 3 corners, unchanged v1 key
   state.fenceMastery62 = typeof g.fenceMastery62 === "number" && Number.isFinite(g.fenceMastery62)
     ? Math.max(0,Math.min(2,Math.floor(g.fenceMastery62))) : 0;
+  state.fireCapacityTier63 = typeof g.fireCapacityTier63 === "number" && Number.isFinite(g.fireCapacityTier63)
+    ? Math.max(0,Math.min(8,Math.floor(g.fireCapacityTier63))) : 0;
   state.campaignLevel = g.campaignLevel === 1 ? 1 : 0;
   state.campaignRunId = typeof g.campaignRunId === "string" && g.campaignRunId.length < 100
     ? g.campaignRunId : null;

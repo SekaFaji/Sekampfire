@@ -46,7 +46,7 @@ describe("Patch #62 - separate permanent camp masteries",()=>{
     const m=meta(),g=createEngine();
     g.shopTab=0;g.shopCategory60="camp";
     expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(
-      ["blue","legacy","hearth","fence","workshop","storage"]);
+      ["blue","legacy","hearth","fence","workshop","storage","firecap"]);
     const initial=m.ash;
     for(const id of ids){
       const def=UPGRADES.find(u=>u.id===id)!;

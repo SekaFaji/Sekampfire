@@ -46,12 +46,11 @@ function render(g:any,m:any,rows:any[]=shopRows(g,m)){
 function find(g:any,x:number,y:number){
  return [...g.zones].reverse().find((z:any)=>x>=z.x&&y>=z.y&&x<z.x+z.w&&y<z.y+z.h);
 }
-/** Overflow fixture is only for UI mechanics; the real seven upgrades are
- * never duplicated in the game. New permanent items will naturally use
- * this same scroll path once the Shop has more than eight cards. */
+/** UI stress fixture with exactly sixteen entries; the real eleven Ash
+ * upgrades already use this same clipped scrolling path. */
 function overflowing(g:any,m:any){
  const originals=shopRows(g,m);
- return [...originals,...originals,...originals.slice(0,2)]; // 16 cards
+ return [...originals,...originals].slice(0,16);
 }
 describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
  it("shows 4 x 2 complete 41-pixel squares beside a nonoverlapping sidebar",()=>{
@@ -66,10 +65,10 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
      SHOP_CARD51.x+SHOP_CARD51.w*4+SHOP_CARD51.colGap*3);
    expect(v.clips).toEqual([SHOP_VIEW58]);
    const cards=g.zones.filter((z:any)=>z.shopCardIndex58!==undefined);
-   expect(cards).toHaveLength(7);
+   expect(cards).toHaveLength(8);
    expect(cards.map((z:any)=>[z.x,z.y,z.w,z.h])).toEqual([
      [86,51,41,41],[132,51,41,41],[178,51,41,41],[224,51,41,41],
-     [86,95,41,41],[132,95,41,41],[178,95,41,41]
+     [86,95,41,41],[132,95,41,41],[178,95,41,41],[224,95,41,41]
    ]);
    expect(g.zones.filter((z:any)=>z.shopCategory60!==undefined)).toHaveLength(4);
    expect(cards.every((z:any)=>z.y>=51&&z.y+z.h<=136)).toBe(true);
@@ -93,11 +92,11 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    const g=world(),m=meta();render(g,m);
    const baseline=shopRows(g,m).map((r:any)=>[r.id,r.cost]);
    expect(baseline.map(x=>x[0])).toEqual(
-     ["blood","flint","pack","axe","blue","scarf","legacy"]);
+     ["blood","flint","pack","axe","blue","scarf","legacy","hearth","fence","workshop","storage"]);
    for(const [category,expected] of [
      ["survival",["blood","flint","scarf"]],
      ["equipment",["pack","axe"]],
-     ["camp",["blue","legacy"]]
+     ["camp",["blue","legacy","hearth","fence","workshop","storage"]]
    ] as const){
      chooseShopCategory60(g,category);
      expect(shopCategory60(g)).toBe(category);
@@ -111,7 +110,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    }
    chooseShopCategory60(g,"all");
    expect(shopRows(g,m).map((r:any)=>[r.id,r.cost])).toEqual(baseline);
-   expect(visibleShopUpgrades60(shopRows(g,m),"all")).toHaveLength(7);
+   expect(visibleShopUpgrades60(shopRows(g,m),"all")).toHaveLength(11);
  });
  it("the sidebar is interactive and switches categories without spending Ash",()=>{
    const g=world(),m=meta();g.ashEarned=999;
@@ -127,7 +126,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(g.shopVelocity).toBe(0);
    expect(m.ash).toBe(200);
    render(g,m);
-   expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["blue","legacy"]);
+   expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["blue","legacy","hearth","fence","workshop","storage"]);
    const card=g.zones.find((z:any)=>z.shopCardIndex58===1);
    card.onDown();
    expect(g.menuSel).toBe(1);
@@ -158,7 +157,7 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(find(g,SHOP_BUY51.x+5,SHOP_BUY51.y+6)).toBeDefined();
    expect(m.ash).toBe(200);
    g.shopTab=0;chooseShopCategory60(g,"all");render(g,m);
-   expect(shopRows(g,m)).toHaveLength(7);
+   expect(shopRows(g,m)).toHaveLength(11);
  });
  it("C keyboard shortcut cycles categories and Arrow navigation stays inside each",()=>{
    const g=world(),m=meta();render(g,m);

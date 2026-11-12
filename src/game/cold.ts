@@ -5,6 +5,7 @@ import { weatherIntensity } from "./weather";
 import { localTemperature } from "./thermometer";
 import { protectedByFenceTorches } from "./fenceTorches47";
 import { activePet } from "./companion";
+import { fenceProtection62 } from "./campMastery62";
 
 /** Cold represents environmental exposure (0-100), NOT a second life bar.
  * It replaces the weather-specific warmth drain additions in game.ts. */
@@ -36,6 +37,7 @@ export function coldProtection(g: any, meta?: any): number {
   const nearby = Number.isFinite(g?.player?.x) && Number.isFinite(g?.dog?.x)
     && Math.abs(g.player.x - g.dog.x) <= 25 && !g.dog.hidden;
   if (nearby && activePet(meta) === "dog") protection += COLD_PROTECTION.bingsu;
+  protection += fenceProtection62(g);
   return protection;
 }
 

@@ -1,5 +1,15 @@
 # Sekampfire - Ideas and Design Decisions
 
+## Patch #62 implemented (2026-11-12) - Permanent Camp Masteries
+
+**New upgrades (two tiers each):** Hearth Mastery 38/78 Ash restores real Fireplace station levels 1/2 on future runs; Fence Reinforcement 28/62 Ash grants +8/+16 Cold protection strictly within a physically claimed camp; Workshop Mastery 42/86 Ash restores Workbench tiers 1/2 when the workbench is actually built; Storage Mastery 32/72 Ash restores Log Storage tiers 1/2 when built. Existing station costs and bonuses are not rebalanced. With Storage mastery level 2, an actual built pile at stage 0 holds 52 logs, and stage 4 still adds the original Woodshed bonus.
+
+**No hidden construction or currency:** New station mastery levels are latent on unbuilt sites. Old Flint remains the only automatic fire-lighting Ash perk; Camp Legacy remains the only Ash perk that prebuilds stations/fence posts/expansion. These masteries grant no Pine Logs, stored resources, completed missions, fire fuel, lit torches, crafted recipes, Run Ash or bonus station-upgrade rewards. Fence Reinforcement is conditional on owning both genuine posts, does not create a forcefield beyond the established camp, and adds to Cold protection instead of inventing a second temperature meter.
+
+**Strict next-run boundary:** Permanent purchases save in existing up.hearth, up.fence, up.workshop and up.storage keys, capped at two. At new-run creation, the unlocked station tiers are copied into the existing campUpgrades state, and fence tier into the optional checkpoint field fenceMastery62. Resuming old runs always uses the checkpoint's original station/fence state, not newly purchased meta levels. Keep the existing save key/version unchanged.
+
+**Follow-up:** Real-phone Shop scroll and winter balance reviews are needed. Prioritize playable campaign Level 2 next, since richer repeat runs are now more important than additional Shop changes.
+
 ## Patch #61 implemented (2026-11-11) - real carrying tiers and Cold protection
 
 **Backpack economy:** Big Backpack now costs 16, 24, 34, 46 and 60 banked Ash at levels 1-5, each adding exactly +5 kg. Crafted Timber Pack remains +8 kg for the current run. The real combined maximum is 38 kg, including loaded/legacy Pine Log checkpoints. The permanent level-1 upgrade on existing profiles remains at level 1; the existing Shop purchase and save mechanism handles all five levels without new keys.

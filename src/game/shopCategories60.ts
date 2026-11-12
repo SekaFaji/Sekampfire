@@ -14,12 +14,14 @@ export const SHOP_SIDEBAR60={x:30,y:51,w:50,h:19,gap:3} as const;
  * show a short, complete (never clipped) name. */
 export const SHOP_TILE_NAME60:Record<string,string>={
   blood:"WARM",flint:"FLINT",pack:"BAG",axe:"AXE",
-  blue:"PLANS",scarf:"SCARF",legacy:"LEGACY"
+  blue:"PLANS",scarf:"SCARF",legacy:"LEGACY",
+  hearth:"HEARTH",fence:"FENCE",workshop:"WORK",storage:"STORE"
 };
 export const SHOP_UPGRADE_CATEGORY60:Record<string,Exclude<ShopCategory60,"all">>={
   blood:"survival",flint:"survival",scarf:"survival",
   pack:"equipment",axe:"equipment",
-  blue:"camp",legacy:"camp"
+  blue:"camp",legacy:"camp",
+  hearth:"camp",fence:"camp",workshop:"camp",storage:"camp"
 };
 export function shopCategory60(g:any):ShopCategory60 {
   const value=g?.shopCategory60;

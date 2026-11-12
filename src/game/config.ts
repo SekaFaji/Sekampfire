@@ -41,6 +41,10 @@ const UPGRADES = [
   { id: "scarf", name: "Everwarm Scarf", costs: [30], max: 1, desc: "+15 COLD PROTECTION. PASSIVE IN EVERY RUN." },
   { id: "dog", name: "Bingsu", costs: [40], max: 1, desc: "SWEET, CALM DOGO ARGENTINO. FETCHES 2 LOGS. +5 PROTECTION NEARBY." },
   { id: "legacy", name: "Camp Legacy", costs: [35, 60, 95, 140], max: 4, desc: "RESTORE CAMP BUILDINGS IN FUTURE RUNS" },
+  { id: "hearth", name: "Hearth Mastery", costs: [38, 78], max: 2, desc: "START NEW RUNS WITH HEARTH STATION TIERS" },
+  { id: "fence", name: "Fence Reinforcement", costs: [28, 62], max: 2, desc: "+8 COLD PROTECTION PER TIER INSIDE BUILT FENCES" },
+  { id: "workshop", name: "Workshop Mastery", costs: [42, 86], max: 2, desc: "START NEW RUNS WITH WORKBENCH STATION TIERS" },
+  { id: "storage", name: "Storage Mastery", costs: [32, 72], max: 2, desc: "START NEW RUNS WITH STORAGE STATION TIERS" },
 ];
 
 const WEATHER_TEXT: Record<string, string> = {

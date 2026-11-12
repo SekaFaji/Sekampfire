@@ -1,5 +1,22 @@
 # Sekampfire
 
+## Patch #62: Permanent Camp Masteries
+
+Four independent two-level Ash upgrades extend the existing Camp category and reuse the actual station systems rather than inventing new building versions. Costs and benefits are:
+
+| Upgrade | Level 1 | Level 2 |
+| --- | --- | --- |
+| Hearth Mastery | 38 Ash: new runs start with Fireplace station level 1 (12% slower fuel use) | 78 Ash: Fireplace level 2 (26% slower fuel use, stronger warmth recovery) |
+| Fence Reinforcement | 28 Ash: +8 Cold protection inside a completed fenced camp | 62 Ash: +16 Cold protection inside that camp |
+| Workshop Mastery | 42 Ash: Workbench station level 1 when built (kindling recipe) | 86 Ash: Workbench level 2 when built (lantern recipe and -2 wood per craft) |
+| Storage Mastery | 32 Ash: Log Storage level 1 when built (+20 stored logs) | 72 Ash: level 2 when built (+40 stored logs) |
+
+- **No duplicated foundations:** Hearth Mastery does not light the fire (Old Flint still does), Workshop/Storage Mastery do not create stations (Camp Legacy still does), and Fence Reinforcement never builds posts or lights torches.
+- **Next-run ownership snapshot:** buying any of these perks during a run leaves the active stations and fence unchanged. The new tiers apply when starting a fresh run; the existing station-tier checkpoint preserves these tiers after a resume. A new optional `fenceMastery62` run field persists the current run's fence bonus within the unchanged v1 save format. Old run snapshots default to zero, even if the player bought a perk afterward.
+- **Actual Cold protection:** the fence bonus is conditional on both real fence posts and being within the claimed camp bounds. It stacks with crafted boots, Everwarm Scarf and nearby Bingsu in the single Cold-protection calculation; lit fence torches retain their separate warmth-drain shield.
+- **Shop polish:** four new illustrated upgrade squares, concise tile labels, full next-level benefits and genuine separate BUY actions. All eleven upgrade cards scroll naturally in ALL; the six Camp-category cards fit without extra paging. Only banked Ash is spendable.
+- **QA:** regression tests cover all four two-level purchase paths, no freebies, legacy saves, checkpoint persistence, cold exposure, bounds/expansion, original station economy and scrolling. Real Android landscape and winter balance should still be reviewed.
+
 ## Patch #61: five-level backpack and real Cold protection
 
 - **Permanent Big Backpack:** five Ash levels cost 16 / 24 / 34 / 46 / 60. Every owned level adds exactly **+5 kg** to carrying capacity; level 5 adds +25 kg. The crafted Timber Pack still independently adds +8 kg, so carry capacity ranges from 5 kg to 38 kg. Old one-level ownership remains level 1, never wiped or silently promoted.

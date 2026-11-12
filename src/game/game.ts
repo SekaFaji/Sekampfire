@@ -7,6 +7,7 @@ import { clamp } from "./math";
 import { MAX_CARRY_KG, carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
 import { useOneFireLog52 } from "./firewood52";
 import { applyCampLegacy53, campLegacyNextBenefit53 } from "./campLegacy53";
+import { applyCampMastery62, campMasteryNextBenefit62 } from "./campMastery62";
 import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
@@ -105,6 +106,8 @@ function resumeRun(g: any, data: any, meta?: any) {
   g.campUpgrades = Object.fromEntries(stationIds.map(id => [
     id, Math.floor(finiteRange(data.campUpgrades?.[id], 0, 2, 0))
   ]));
+  // Recorded for this particular run. New purchases cannot retrofit resumed camps.
+  g.fenceMastery62 = Math.floor(n("fenceMastery62", 0, 2, 0));
   g.stored = n("stored", 0, 80, 0);
   g.trees = data.trees.slice(0, 150).filter((t: any) =>
     t && typeof t === "object" && Number.isFinite(t.x) && Number.isFinite(t.y)
@@ -221,7 +224,7 @@ function createEngine(): any {
     fenceTorches: {left:0,right:0,outer:0},
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
     stationId: "hearth", stationFrom: false, selectedStation: null,
-    campUpgrades: { hearth: 0, bench: 0, pile: 0 }, buildConfirm: null,
+    campUpgrades: { hearth: 0, bench: 0, pile: 0 }, fenceMastery62: 0, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
@@ -279,6 +282,7 @@ function startRunEngine(g: any, meta: any) {
   g.equippedAxe = defaultPermanentAxe(meta);
   g.campaignLevel = 1; // fresh campaigns; old saved runs remain legacy
   const legacyLevel=applyCampLegacy53(g,meta);
+  applyCampMastery62(g,meta); // tiers are run-owned; future Ash purchases do not mutate an active run
   genScenery(g, Math.floor(Math.random() * 1e9));
   g.campaignRunId = "lv1-" + g.scenerySeed + "-" + Date.now();
   spawnTrees(g, 26);
@@ -1394,6 +1398,7 @@ function shopRows(g:any,meta:any) {
         label:u.name.toUpperCase()+(u.max>1?" "+lvl+"/"+u.max:""),
         right:maxed?"OWNED":confirm?"BUY?":cost+" ASH",
         desc:u.id==="legacy"?campLegacyNextBenefit53(lvl)
+          :["hearth","fence","workshop","storage"].includes(u.id)?campMasteryNextBenefit62(u.id,lvl)
           :u.id==="dog" && maxed?"OWNED. EQUIP OR UNEQUIP IN INVENTORY."
           :maxed?u.desc:confirm?"PRESS AGAIN TO CONFIRM":u.desc,
         h:15,enabled:(u.id==="dog"&&maxed)||canBuy,

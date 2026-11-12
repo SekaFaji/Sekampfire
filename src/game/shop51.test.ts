@@ -68,11 +68,11 @@ describe("Patch #51 / #58: scrollable illustrated Ash Shop cards",()=>{
  it("renders two rows of four compact square cards, with fixed tabs and inspector",()=>{
   const g=world(),m=meta(),v=render(g,m);
   const cardZones=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);
-  expect(cardZones).toHaveLength(7);
+  expect(cardZones).toHaveLength(8);
   expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
   expect(cardZones.map((z:any)=>[z.x,z.y])).toEqual([
    [86,51],[132,51],[178,51],[224,51],
-   [86,95],[132,95],[178,95]
+   [86,95],[132,95],[178,95],[224,95]
   ]);
   const close=g.zones.find((z:any)=>z.x===278&&z.y===13);
   expect(close).toBeDefined();
@@ -81,7 +81,7 @@ describe("Patch #51 / #58: scrollable illustrated Ash Shop cards",()=>{
   expect(tabs.every((z:any)=>z.y>=close.y+close.h)).toBe(true);
   expect(SHOP_DETAILS51.y).toBeGreaterThan(SHOP_VIEW58.y+SHOP_VIEW58.h);
   expect(v.pixels.every(r=>r.x>=24&&r.y>=8&&r.x+r.w<=296&&r.y+r.h<=172)).toBe(true);
-  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // 7 upgrade icons plus Bingsu
+  expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(12); // 11 upgrade icons plus Bingsu
   expect(Object.values(SHOP_CARD_BENEFIT51).every(s=>s.length>10)).toBe(true);
  });
  it("tapping a card ONLY selects details and cannot spend banked or run Ash",()=>{

@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a game, usability or quality-of-life improvement.
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the player-facing problem first. We prefer small, testable changes that fit Sekampfire's survival loop.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should this solve?
+      placeholder: "As a player, I have trouble..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the gameplay or interface behavior you want.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and tradeoffs
+      description: Optional balance, mobile UI or progression considerations.
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Optional screenshots, mockups or related issues. Label mockups clearly.
+    validations:
+      required: false

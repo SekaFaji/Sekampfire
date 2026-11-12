@@ -1,68 +1,74 @@
-# Architecture and engineering policy
+# Architecture
 
-## Overview
-Sekampfire is a portrait-safe, landscape-oriented 320×180 Canvas 2D survival game. React owns the browser shell and input subscriptions; the custom immediate-mode game remains the same simulation and renderer. The original single HTML file has been migrated to a TypeScript/Vite **source** project with no runtime TSX compiler or CDN dependencies.
+Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **React** manages the browser shell while the custom **TypeScript game engine** owns gameplay state, rendering and pixel-native menus. **Vite** bundles the site; **Vitest** provides regression tests.
 
-## Current source layout
-- `src/main.tsx` — application entry, styles and React mount
-- `src/App.tsx` — Canvas lifecycle, viewport container, pointer/keyboard events, animation and checkpoint scheduling
-- `src/game/config.ts` — stage, crafting, upgrade and world constants
-- `src/game/companion.ts` — conservative real-drop retrieval by equipped Good Dog, with carry and delivery rules
-- `src/game/museum.ts` — permanent collectible definitions, discovery rolls and original pixel-art museum rendering
-- `src/game/guide.ts` - pure run-local tutorial objectives, Grooty's permanent world sprite, dialogue and small question-mark shortcut
-- `src/game/statusMessages.ts` - bounded sequential status queue and centered, fade-out-safe message strip
-- `src/game/campBoundary.ts` - physical two-post and east-expansion actions, claimed-land tree exclusion and native-resolution procedural palisade/cleared-ground drawing. Checkpoint fields are run-local and older progress is grandfathered.
-- `src/game/cold.ts` - pure exposure target, rain dampness, clothing/shelter modifiers and frame-rate-independent Cold interpolation; sole source of weather-related ambient warmth drain.
-- `src/game/warmth.ts` - pure, frame-rate-independent heat absorption and gradual loss of the retained warming bonus away from a lit fire.
-- `src/game/guidance.ts` - pure guide-target selection from objective IDs plus original pixel-light markers for world/minimap/menu without hit zones.
-- `src/game/inventory.ts` - run-scoped item stack model, registry, separate bag-slot and carried-weight limits, save normalization and direct player.wood adapter for all legacy gameplay systems.
-- `src/game/inventoryMenu.ts` - native 320x180 pixel-art MMO backpack/equipment modal, read-only item inspector and safe menu-owned touch zones.
-- `src/game/stationPopup.ts` - original small native pixel-art Workbench/Storage/Fireplace level and action modal, action hit-zone geometry and hand-painted structure icons. Game actions stay in `game.ts`; the canonical costs and upgrades remain in `campProgress.ts`.
-- `src/game/bingsu.ts` - original tiny white Dogo Argentino character portrait and companion lore in the persistent Pet Shop. Behavior stays in `companion.ts`, and the in-world pixel dog sprite stays in `renderSprites.ts`; persistent purchase key `up.dog` is unchanged.
-- `src/game/quickSlots.ts` - two lightweight run-scoped equipment slots, validated IDs and existing Fire Ember action, native-resolution socket art and game-tick-driven 0.5s long press. Input adapter owns pointer capture, run checkpoint stores only known IDs, menu has no background click-through.
-- `src/game/hud.ts` (#39) - four native 23px wooden plaque geometries with pixel-safe margins; temporary wood-only carried-capacity currency and run Ash panel while next inventory patch adds true slots.
-- `src/game/thermometer.ts` - deterministic ambient season/time/weather Celsius model, smooth nonpersisted display settling and original 105x23 brass/glass pixel instrument renderer. Does not influence Cold/warmth gameplay.
-- `src/game/hud.ts` - native 320x180 wooden resource panels and a minimap from real tree/player coordinates; render-only
-- `src/game/campProgress.ts` — run-scoped station upgrades, costs, progression requirements and safe wood debit
-- `src/game/nightSky.ts` — independently tested aurora and meteor parade rendering/probabilities
-- `src/game/rules.ts` — extracted pure carry/storage rules with unit tests
-- `src/game/math.ts` — common math helpers and tests
-- `src/game/audio.ts` — browser-safe procedural sounds and configurable mixer
-- `src/game/weather.ts` — independently testable weather intensity calculations
-- `src/game/graphics.ts` — visual-quality preference
-- `src/game/input.ts` — UI-callback-injected pointer, multi-touch and keyboard adapter
-- `src/ui/viewport.ts` — pure aspect-preserving safe-area fit calculation
-- `src/game/save.ts` — versioned run snapshots, permanent progress, legacy fallback
-- `src/game/palette.ts` — tested 7-day four-season calendar and blended palette transitions
-- `src/game/wildlife.ts` — season-to-species mappings with compatible ambient motion types
-- `src/game/renderWildlife.ts` — species-specific cosmetic sprites
-- `src/game/water.ts` — bounded tidal wash and sparse foam calculations
-- `docs/SEASONS.md` — seasonal ecology and visual-only balance policy
-- `src/game/font.ts` — independent pixel text system
-- `src/game/renderUtils.ts` — shared primitive/color helpers
-- `src/game/renderAtmosphere.ts` — deterministic mixed woodland parallax, world-anchored ground vegetation, bounded sky/horizon haze
-- `src/game/renderSprites.ts` — player/camp/wildlife composition and sprites
-- `src/game/playerLegs.ts` — tested direction-aware side-view gait, boots and toe silhouettes
-- `src/game/game.ts` — **temporary migration module** containing remaining scene renderer, simulation, input and in-canvas UI. Still large and being extracted in reviewed slices, not rewritten wholesale.
-- `public/privacy.html` — published policy (Vite copies public files into `dist/`)
-- `.github/workflows/` — reproducible test and static Pages deployment
+## Source map
 
-## Product and portability constraints
-1. Game simulation must remain separate from browser-specific packaging. Do not introduce Android or iOS bridge calls into the simulation.
-2. Maintain the original 320×180 logical coordinate system; adapt display scaling around it.
-3. Browser build must remain fully standalone/offline-asset compatible: no runtime Babel, React CDN or Tailwind CDN.
-4. Keep existing localStorage key names and checkpoint versions unchanged unless explicitly implementing tested migrations. Tutorial progress belongs to a run snapshot, not permanent meta; old v1 snapshots must resume. Do not silently invalidate existing saves.
-5. Source changes must not alter unrelated game balance or art. Make focused PRs with a list of affected files, behaviour and test evidence.
-6. Never claim a device/browser playtest that was not performed. Add real-device test notes separately.
-7. Keep the public privacy policy accurate if new analytics, SDKs or networking are introduced.
+| Path | Responsibility |
+| --- | --- |
+| `src/main.tsx` and `src/App.tsx` | React startup, Canvas, animation loop, input and checkpoint scheduling |
+| `src/ui/viewport.ts` | Aspect-preserving canvas fitting and safe areas |
+| `src/game/game.ts` | Main state engine and remaining scene/simulation integration; intentionally still large |
+| `src/game/config.ts` and `rules.ts` | Stages, recipes, upgrade data and core carrying/storage formulas |
+| `src/game/input.ts`, `menuScreens.ts`, `inventoryMenu.ts` | Input routing and native-resolution menus |
+| `src/game/shopCategories60.ts`, `shopCards51.ts`, `shopScroll58.ts` | Ash Shop categories, card art, movement and selection |
+| `src/game/campBoundary.ts`, `campProgress.ts` | Physical camp placement and run-scoped station upgrades |
+| `src/game/campLegacy53.ts`, `campMastery62.ts` | Permanent prebuilt foundations and masteries for new runs |
+| `src/game/firewood52.ts`, `fireCapacity63.ts` | Wood fuel rolls, consumption, maximum fuel and heat strength |
+| `src/game/cold.ts`, `warmth.ts`, `thermometer.ts` | Cold exposure, Warmth recovery and local air temperature |
+| `src/game/inventory.ts`, `equipment50.ts`, `companion.ts` | Items, equipment and Bingsu's real-log delivery |
+| `src/game/save.ts` | Permanent meta storage, validation and unfinished-run checkpoints |
+| `src/game/render*.ts`, `hud.ts`, `font.ts`, `palette.ts` | World art, HUD, pixel font and seasonal palettes |
+| `src/game/audio.ts`, `graphics.ts` | Audio and visual preferences |
+| `public/privacy.html` | Privacy information published with the game |
 
-## Next extraction slices
-- Further save schema validation and migration coverage (core serializer now isolated)
-- Further input/gameplay boundary separation and advanced gesture coverage (keyboard, multi-touch, hit zones now extracted and tested)
-- World simulation, weather and tree/chop logic
-- Remaining scene composition, lighting, UI overlays, and water reflections (individual sprite renderers extracted)
-- In-canvas screens/menus
-- Procedural audio engine and audio preferences
+Most gameplay modules have matching `*.test.ts` files under `src/game/`. Keep related tests adjacent to the code they cover.
 
-## Build gates
-Use `npm ci`, `npm run check`, `npm run test`, and `npm run build` in CI. The web deploy must upload **dist/**, never the source tree. A successful build does not imply visual or store-review readiness.
+## State and data flow
+
+1. The React application creates and drives the engine.
+2. The engine updates a run using player inputs, elapsed time and the permanent upgrade snapshot.
+3. Gameplay modules calculate actual resources, status, survival and environment behavior.
+4. Canvas rendering uses the resulting state; menus register bounded touch/keyboard actions.
+5. `save.ts` stores permanent Ash upgrades separately from active-run checkpoints.
+
+### Save compatibility
+
+- Permanent save key: `sekampfire-meta-v1`.
+- Unfinished-run checkpoint: `sekampfire-run-v1`.
+- Purchasing permanent upgrades during a run must not silently retrofit its existing run snapshot.
+- New optional run fields must default safely when older checkpoint data lacks them.
+- Never change storage keys or save versions without an explicit, tested migration.
+
+## Browser and deployment boundaries
+
+- The production build has no runtime TypeScript compiler, React CDN or Tailwind CDN.
+- Vite's relative asset base supports the GitHub Pages `/Sekampfire/` path.
+- Android and iOS projects are **not** currently present. Follow the [mobile plan](MOBILE.md) before beginning native packaging.
+- Deployment builds and publishes `dist/`, not the repository source files.
+
+## Quality gates
+
+```bash
+npm ci
+npm run check
+npm run test
+npm run build
+```
+
+The combined command is `npm run validate`. The [CI workflow](../.github/workflows/ci.yml) checks type safety, tests and build; the [Pages workflow](../.github/workflows/pages.yml) deploys the public game.
+
+A green CI check does not establish visual quality, mobile usability or store review readiness. Physical-device QA remains separate.
+
+## Engineering policy
+
+- One focused behavioral change per pull request; do not rewrite large unrelated modules.
+- Preserve genuine gameplay values, resources and checkpoint behavior unless the change is explicitly approved.
+- Keep Canvas geometry based on the same 320 x 180 logical resolution.
+- Keep browser APIs and future native integrations outside pure simulation wherever practical.
+- Add focused tests for balance, purchases, hitboxes, saving and user-facing regressions.
+- Record decisions and outstanding work in [design notes](IDEAS.md) and the [current backlog](BACKLOG.md); preserve old investigations in the [archives](README.md).
+
+## Incremental extraction plan
+
+The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for world simulation, rendering and scene routing. Do not begin a broad architecture rewrite as part of a visual patch.

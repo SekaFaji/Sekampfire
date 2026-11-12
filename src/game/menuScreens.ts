@@ -215,7 +215,7 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
   const id=selected.id as ShopId51;
   const name=shopCardLabel51(selected);
   const level=Number(selected.level)||0,max=Number(selected.max)||1;
-  const benefit=id==="legacy"?selected.desc:
+  const benefit=["legacy","hearth","fence","workshop","storage"].includes(id)?selected.desc:
     (SHOP_CARD_BENEFIT51[id]||selected.desc||"PERMANENT UPGRADE.");
   if(compact){
     // Two-line maximum under the selected name so everything fits y138-165.

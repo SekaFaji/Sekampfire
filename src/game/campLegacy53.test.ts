@@ -228,21 +228,21 @@ describe("Patch #53: four permanent Camp Legacy levels",()=>{
   });
 });
 
-describe("Patch #58: the seven-upgrade Ash Shop scrolls instead of paging",()=>{
-  it("scrolls all seven cards while keeping the separate BUY area fixed",()=>{
+describe("Patch #58 / #62: the expanded Ash Shop scrolls instead of paging",()=>{
+  it("scrolls all eleven cards while keeping the separate BUY area fixed",()=>{
     const m=meta(),g=createEngine();
     g.ui="run";g.menu="shop";g.shopTab=0;g.menuSel=0;
-    expect(shopRows(g,m).length).toBe(7);
+    expect(shopRows(g,m).length).toBe(11);
     expect(SHOP_CARD51.cols).toBe(4);
     expect(SHOP_CARD51.w).toBe(SHOP_CARD51.h);
-    expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(8); // including pet
+    expect(Object.keys(SHOP_CARD_LABEL51)).toHaveLength(12); // including pet
     const pageOne=drawShop(g,m);
     const cards=g.zones.filter((z:any)=>z.w===SHOP_CARD51.w&&z.h===SHOP_CARD51.h);
-    expect(cards).toHaveLength(7);
+    expect(cards).toHaveLength(8); // first two visible rows of eleven
     expect(pageOne.every(p=>p.x>=24&&p.x+p.w<=296&&p.y>=8&&p.y+p.h<=172)).toBe(true);
     expect(SHOP_VIEW58.h).toBe(85);
-    expect(shopMaxScroll58(7)).toBe(0); // both rows fit without scrolling
-    moveShopScroll58(g,999,7);
+    expect(shopMaxScroll58(11)).toBe(44); // third row requires scrolling
+    moveShopScroll58(g,999,11);
     expect(g.menuSel).toBe(0); // scrolling does NOT change selection
     expect(m.ash).toBe(1000);
     const bottom=drawShop(g,m);
@@ -256,7 +256,7 @@ describe("Patch #58: the seven-upgrade Ash Shop scrolls instead of paging",()=>{
     tap(g,SHOP_BUY51.x+10,SHOP_BUY51.y+10);
     expect(m.up.legacy).toBe(1);
     expect(m.ash).toBe(965);
-    moveShopScroll58(g,-999,7);
+    moveShopScroll58(g,-999,11);
     drawShop(g,m);
     expect(g.menuSel).toBe(6); // scroll position is independent of selection
     expect(m.ash).toBe(965);

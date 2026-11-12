@@ -58,13 +58,15 @@ function captureRunSnapshot(g: any): any {
     "guideLevel","guideChops","guideStokes","guideStoredTen",
     "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
-    "fenceLeft","fenceRight","campExpansion","fenceTorches","heatSoak","cold","dampness"];
+    "fenceLeft","fenceRight","campExpansion","fenceTorches","fenceMastery62","heatSoak","cold","dampness"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
   // Keep the existing v1 checkpoint key/version. Persist only validated tier
   // numbers; old checkpoints simply load all station levels as zero.
   state.ashLedger = validatedAshLedger(g.ashLedger);
   state.fenceTorches = normalizeFenceTorches(g.fenceTorches); // all 3 corners, unchanged v1 key
+  state.fenceMastery62 = typeof g.fenceMastery62 === "number" && Number.isFinite(g.fenceMastery62)
+    ? Math.max(0,Math.min(2,Math.floor(g.fenceMastery62))) : 0;
   state.campaignLevel = g.campaignLevel === 1 ? 1 : 0;
   state.campaignRunId = typeof g.campaignRunId === "string" && g.campaignRunId.length < 100
     ? g.campaignRunId : null;

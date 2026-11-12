@@ -2,7 +2,7 @@
  * Every Shop item uses its real UPGRADES ID, cap and price in config.ts.
  * No emoji, offscreen scaled image, extra Ash resource or invented effect.
  */
-export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog"|"legacy";
+export type ShopId51 = "blood"|"flint"|"pack"|"axe"|"blue"|"scarf"|"dog"|"legacy"|"hearth"|"fence"|"workshop"|"storage";
 export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
   blood:"WARM BLOOD",
   flint:"OLD FLINT",
@@ -11,7 +11,11 @@ export const SHOP_CARD_LABEL51:Record<ShopId51,string>={
   blue:"BLUEPRINTS",
   scarf:"WARM SCARF",
   dog:"BINGSU",
-  legacy:"CAMP LEGACY"
+  legacy:"CAMP LEGACY",
+  hearth:"HEARTH MASTERY",
+  fence:"FENCE REINFORCEMENT",
+  workshop:"WORKSHOP MASTERY",
+  storage:"STORAGE MASTERY"
 };
 export const SHOP_CARD_BENEFIT51:Record<ShopId51,string>={
   blood:"COLD DRAINS WARMTH MORE SLOWLY.",
@@ -21,7 +25,11 @@ export const SHOP_CARD_BENEFIT51:Record<ShopId51,string>={
   blue:"ALL BUILDINGS COST 20 PERCENT LESS.",
   scarf:"PERMANENT +15 COLD PROTECTION.",
   dog:"SHE FETCHES 2 LOGS AND WARMS YOU NEARBY.",
-  legacy:"START FUTURE RUNS WITH BUILT STRUCTURES."
+  legacy:"START FUTURE RUNS WITH BUILT STRUCTURES.",
+  hearth:"START NEW RUNS WITH FIREPLACE STATION TIERS.",
+  fence:"REDUCE COLD INSIDE YOUR ESTABLISHED CAMP.",
+  workshop:"START NEW RUNS WITH WORKBENCH STATION TIERS.",
+  storage:"START NEW RUNS WITH STORAGE STATION TIERS."
 };
 export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{
   const p=(a:number,b:number,w:number,h:number,c:string)=>{
@@ -64,6 +72,28 @@ export function drawShopCardIcon51(ctx:any,id:ShopId51,x:number,y:number):void{
     p(2,6,9,2,"#5b3c2c");p(4,3,5,3,"#b88b57");
     p(5,1,3,3,"#d7aa70");p(5,9,2,4,"#453629");
     p(3,13,7,1,"#9ba68f");
+  }else if(id==="hearth"){
+    // A real warm fireplace bowl and visible flame.
+    p(1,8,11,5,"#72513a");p(2,6,9,3,"#a77e55");
+    p(3,3,7,4,"#ef913f");p(5,0,3,6,"#ffda7b");
+    p(5,8,3,3,"#ffbe61");p(2,12,9,2,"#49382c");
+  }else if(id==="fence"){
+    // Twin palisade stakes joined by a visible timber crossbeam.
+    p(2,2,3,12,"#a78056");p(8,2,3,12,"#a78056");
+    p(3,0,1,2,"#e3c18a");p(9,0,1,2,"#e3c18a");
+    p(1,5,11,2,"#73513b");p(1,10,11,2,"#73513b");
+    p(3,4,1,9,"#e0b67b");p(9,4,1,9,"#e0b67b");
+  }else if(id==="workshop"){
+    // Hammer over a sturdy woodworking block.
+    p(3,1,8,3,"#b8ccd0");p(4,0,6,1,"#f0e4c8");
+    p(6,3,2,7,"#856346");p(2,9,9,3,"#a87d52");
+    p(3,12,2,2,"#665039");p(9,12,2,2,"#665039");
+  }else if(id==="storage"){
+    // Three neatly piled logs with warm end-grain rings.
+    p(2,3,9,4,"#78543d");p(3,2,7,4,"#b48454");
+    p(1,8,6,5,"#926847");p(7,8,5,5,"#926847");
+    p(2,9,3,3,"#d6ab72");p(8,9,3,3,"#d6ab72");
+    p(3,10,1,1,"#895f42");p(9,10,1,1,"#895f42");
   }else if(id==="dog"){
     p(1,5,8,5,"#cdd8d6");p(2,4,8,5,"#f7f6ed");
     p(8,2,4,6,"#e9ede8");p(9,1,2,3,"#b5c3c3");

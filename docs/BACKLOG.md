@@ -1,5 +1,16 @@
 # Sekampfire — outstanding requests and quality backlog
 
+## Patch #62 - independent permanent camp mastery upgrades
+- [x] Hearth Mastery: permanent level 1/2 station tiers on fresh runs, with existing fuel and warmth effects.
+- [x] Fence Reinforcement: +8/+16 Cold protection within real established fence boundaries, including expanded land.
+- [x] Workshop Mastery: pre-owned station tier 1/2 for the physically built Workbench, no free station.
+- [x] Storage Mastery: pre-owned station tier 1/2 for real Log Storage, no free logs or station.
+- [x] Reuse existing Save v1 camp tiers, record the run-specific fence tier and avoid retroactive mutation when buying during a run.
+- [x] Add four pixel-art Shop cards to the left-sidebar CAMP filter, preserving single BUY, touch scrolling and prices.
+- [x] New regression tests for costs, progress, UI overflow, old saves, Cold protection and station-level effects.
+- [ ] Landscape Android visual QA, especially third-row Shop scrolling, icon clarity, and full winter shelter balance.
+- [ ] Next: playable Level 2 campaign missions and progression, with the newly expanded permanent upgrade economy.
+
 ## Patch #61 - permanent backpack tiers and clothing protection
 - [x] Change Big Backpack to five permanent Ash levels at +5 kg each; keep crafted Timber Pack's +8 kg independent.
 - [x] Keep old owned levels and banked Ash in the same permanent save schema, with five real prices.

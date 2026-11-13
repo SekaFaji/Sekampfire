@@ -49,7 +49,7 @@ npm run validate
 npm run preview
 ```
 
-The available individual commands are `npm run check` (TypeScript), `npm run test` (Vitest), and `npm run build` (output in `dist/`). The production site is deployed from `main` through GitHub Actions to GitHub Pages.
+The available individual commands are `npm run repo:check` (repository structure and local documentation links), `npm run check` (TypeScript), `npm run test` (Vitest), and `npm run build` (output in `dist/`). The production site is deployed from `main` through GitHub Actions to GitHub Pages.
 
 ## Project layout
 
@@ -73,6 +73,7 @@ The game uses **TypeScript, React, Vite, Canvas 2D and Vitest**. Rendering uses 
 | [Current backlog](docs/BACKLOG.md) | Next priorities and outstanding QA |
 | [Design notes](docs/IDEAS.md) | Gameplay direction and decisions still open |
 | [Mobile plan](docs/MOBILE.md) | Android-first packaging roadmap |
+| [Changelog](CHANGELOG.md) | Concise recent milestones and links to verified pull requests |
 | [Development history](docs/DEVELOPMENT_HISTORY.md) | Full archived patch-by-patch README history |
 | [Contributing](CONTRIBUTING.md) | How to report issues and propose changes |
 | [Privacy policy](public/privacy.html) | Published browser-game privacy information |

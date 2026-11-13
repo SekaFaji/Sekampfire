@@ -4,34 +4,36 @@ import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLocked
 import { revealShopCard58 } from "./shopScroll58";
 import { visibleShopUpgrades60,shopCategory60 } from "./shopCategories60";
 import { clamp } from "./math";
-import { MAX_CARRY_KG, carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
+import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
 import { useOneFireLog52 } from "./firewood52";
 import { applyCampLegacy53, campLegacyNextBenefit53 } from "./campLegacy53";
 import { applyCampMastery62, campMasteryNextBenefit62 } from "./campMastery62";
-import { fireFuelCapacity63, fireHeatRadius63, seedFireCapacity63, fireCapacityNextBenefit63, FIRE_MAX_LEVEL63 } from "./fireCapacity63";
-import { defaultPermanentAxe, normalizeEquippedAxe } from "./equipment50";
+import { fireHeatRadius63, seedFireCapacity63, fireCapacityNextBenefit63 } from "./fireCapacity63";
+import { defaultPermanentAxe } from "./equipment50";
 import { AUDIO } from "./audio";
 import { GRAPHICS } from "./graphics";
 import { weatherIntensity } from "./weather";
-import { coldTarget, advanceCold, coldWarmthDrain } from "./cold";
+import { advanceCold, coldWarmthDrain } from "./cold";
 import { completedNights, visualSeason, visualPalette, seasonDay } from "./palette";
 import { wildlifeForSeason, wildlifeMovementType } from "./wildlife";
 import { shorelineWaveOffset, shorelineFoam, reflectionOffset, reflectionOpacity, waterGlint } from "./water";
 import { drawText, textW, drawTextC, drawTextO, drawTextWrap, drawBig } from "./font";
-import { mulberry32, hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
-import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot, finiteRange, WEATHER_IDS } from "./save";
+import { hexToRgb, lerpHex, lightenHex, px } from "./renderUtils";
+import { genScenery, spawnTrees } from "./worldGeneration";
+import { hydrateSavedRun } from "./runHydration";
+import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot } from "./save";
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 import { rollNightSkyEvent, drawNightSkyEvent, updateShootingStarParade } from "./nightSky";
-import { CAMP_STATIONS, stationIds, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
+import { CAMP_STATIONS, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
 import { updateDogCompanion } from "./companion";
 import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { trackNightScout, drawScoutGrove } from "./campaign43";
-import { grantRunAsh, validatedAshLedger, ashSummary, beginFirstSettlementCompletion, drawCampaignResult, unlockedCampaignLevel } from "./campaign44";
+import { grantRunAsh, ashSummary, beginFirstSettlementCompletion, drawCampaignResult, unlockedCampaignLevel } from "./campaign44";
 import { addStatusMessage, tickStatusMessages, drawStatusMessages } from "./statusMessages";
 import { drawCampHUD, drawCampMinimap, ASH_PANEL_RECT } from "./hud";
-import { FENCE_TORCH_LIGHT_RADIUS, normalizeFenceTorches, nearestFenceTorchPost,
+import { FENCE_TORCH_LIGHT_RADIUS, nearestFenceTorchPost,
   activeFenceTorch, buildFenceTorch, advanceFenceTorchDawn, fenceTorchLights, drawFenceTorches,
   torchPostX,
   } from "./fenceTorches47";
@@ -42,161 +44,11 @@ import { drawStationPopup } from "./stationPopup";
 import { nearbyStation, selectedStation, selectStation, dismissStationSelection, drawStationBubbles, drawBackpackButton45, type NearbyStation, type StationAction } from "./proximity45";
 import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { localTemperature, settleThermometer } from "./thermometer";
-import { HEAT_SOAK_SECONDS, advanceHeatSoak, fireWarmthRate } from "./warmth";
+import { advanceHeatSoak, fireWarmthRate } from "./warmth";
 import { guideTarget, drawWorldFireflies, drawOffscreenGuide, drawScreenFireflies } from "./guidance";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
-  campEstablished, campClaimBounds, isCampTreeExcluded, clearClaimedTrees, placeFencePost,
+  campEstablished, campClaimBounds, placeFencePost,
   expandCamp, keepFencePostsClear, drawCampGround, drawCampFence } from "./campBoundary";
-
-function resumeRun(g: any, data: any, meta?: any) {
-  if (!data) return;
-  // Reset transient objects without dropping bound end-of-run/fullscreen
-  // callbacks. These are attached once by the React shell.
-  const cb = g.cb, fsToggle = g.fsToggle;
-  Object.assign(g, createEngine());
-  installInventory(g,null,0);
-  g.cb = cb; g.fsToggle = fsToggle;
-  g.museumBuilt = !!meta?.museumBuilt;
-  const n = (key: string, lo: number, hi: number, fallback: number) =>
-    finiteRange(data[key], lo, hi, fallback);
-  const flag = (key: string) => data[key] === true;
-  const seed = n("scenerySeed", 1, 1e9, 777);
-  genScenery(g, seed);
-  g.player.x = finiteRange(data.player.x, 10, WORLD_W - 10, CX + 26);
-  g.player.dir = data.player.dir === -1 ? -1 : 1;
-  g.player.wood = finiteRange(data.player.wood, 0, MAX_CARRY_KG, 0);
-  g.player.warmth = finiteRange(data.player.warmth, 1, 100, 100);
-  g.heatSoak = n("heatSoak", 0, HEAT_SOAK_SECONDS, 0);
-  g.player.torchT = finiteRange(data.player.torchT, 0, 60, 0);
-  g.time = n("time", 0, DAY_LEN + LONG_NIGHT_LEN - 0.01, 10);
-  g.night = Math.floor(n("night", 0, 100000, 0));
-  g.isNight = g.time >= DAY_LEN;
-  g.weather = WEATHER_IDS.includes(data.weather) ? data.weather : "clear";
-  g.previousWeather = g.weather;
-  g.weatherBlend = 1;
-  g.dampness = n("dampness", 0, 100, 0);
-  // Old v1 checkpoints never stored Cold. Derive the appropriate exposure
-  // from their real time/weather/equipment once the run state is restored.
-  g.aurora = flag("aurora");
-  g.nightSkyEvent = data.nightSkyEvent === "parade" ? "parade" : g.aurora ? "aurora" : "none";
-  g.paradeTimer = 0;
-  g.fireCapacityTier63 = Math.floor(n("fireCapacityTier63", 0, FIRE_MAX_LEVEL63, 0));
-  g.fuel = n("fuel", 0, fireFuelCapacity63(g), 0);
-  g.fireLit = flag("fireLit") && g.fuel > 0;
-  g.everLit = flag("everLit") || g.fireLit;
-  g.firestarter = n("firestarter", 0, 1, 0);
-  g.stage = Math.floor(n("stage", 0, 6, 0));
-  g.longNightPending = flag("longNightPending");
-  g.longNightActive = flag("longNightActive");
-  g.endlessMode = flag("endlessMode");
-  g.endlessN = Math.floor(n("endlessN", 0, 100000, 0));
-  g.ashEarned = n("ashEarned", 0, 10000000, 0);
-  g.ashLedger = validatedAshLedger(data.ashLedger);
-  // Unmarked v1 checkpoints remain on their original five-group Long Night
-  // journey; only new P44 campaign runs enter the new completion flow.
-  g.campaignLevel = data.campaignLevel === 1 ? 1 : 0;
-  g.campaignRunId = typeof data.campaignRunId === "string" && data.campaignRunId.length < 100
-    ? data.campaignRunId : null;
-  g.victoryPending = flag("victoryPending");
-  g.depth = n("depth", 0, 10000, 0);
-  g.builtBench = flag("builtBench");
-  g.builtPile = flag("builtPile");
-  g.benchLogs = n("benchLogs", 0, SITE_COST, 0);
-  g.pileLogs = n("pileLogs", 0, SITE_COST, 0);
-  g.benchBuildT = n("benchBuildT", -1, BUILD_TIME, -1);
-  g.pileBuildT = n("pileBuildT", -1, BUILD_TIME, -1);
-  g.campUpgrades = Object.fromEntries(stationIds.map(id => [
-    id, Math.floor(finiteRange(data.campUpgrades?.[id], 0, 2, 0))
-  ]));
-  // Recorded for this particular run. New purchases cannot retrofit resumed camps.
-  g.fenceMastery62 = Math.floor(n("fenceMastery62", 0, 2, 0));
-  g.stored = n("stored", 0, 80, 0);
-  g.trees = data.trees.slice(0, 150).filter((t: any) =>
-    t && typeof t === "object" && Number.isFinite(t.x) && Number.isFinite(t.y)
-      && Number.isFinite(t.id)).map((t: any) => ({
-    x:finiteRange(t.x,10,WORLD_W-10,20), y:finiteRange(t.y,132,165,145),
-    id:Math.floor(finiteRange(t.id,1,1000000,1)),
-    tier:Math.floor(finiteRange(t.tier,0,2,0)),
-    variant:Math.floor(finiteRange(t.variant,0,2,0)),
-    hp:Math.floor(finiteRange(t.hp,1,3,1)), hitT:0
-  }));
-  g.falling = (Array.isArray(data.falling) ? data.falling : []).slice(0, 150)
-    .filter((t: any) => t && Number.isFinite(t.x) && Number.isFinite(t.y)
-      && Number.isFinite(t.id)).map((t: any) => ({
-      x:finiteRange(t.x,0,WORLD_W,0),y:finiteRange(t.y,132,165,145),
-      id:Math.floor(finiteRange(t.id,1,1000000,1)),
-      tier:Math.floor(finiteRange(t.tier,0,2,0)),
-      variant:Math.floor(finiteRange(t.variant,0,2,0)),
-      wood:Math.floor(finiteRange(t.wood,1,3,1)),
-      t:finiteRange(t.t,0,0.55,0),
-      dir:t.dir === -1 ? -1 : 1,hitT:0
-    }));
-  g.treeId = Math.max(Math.floor(n("treeId", 1, 1000001, 1)),
-    ...g.trees.map((t: any) => t.id + 1),
-    ...g.falling.map((t: any) => t.id + 1));
-  g.pickups = data.pickups.slice(0, 200).filter((p: any) => p &&
-    Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.w))
-    .map((p: any) => ({
-      x:finiteRange(p.x,0,WORLD_W,0),
-      y:finiteRange(p.y,130,170,145),
-      w:Math.floor(finiteRange(p.w,1,12,1))
-    }));
-  g.crafts = {};
-  for (const c of CRAFTS) if (data.crafts && data.crafts[c.id] === true) g.crafts[c.id] = true;
-  g.equippedAxe = normalizeEquippedAxe(data.equippedAxe,g,meta);
-  // Import sanitized canonical Pine Logs from new runs, or upgrade older
-  // wood-only checkpoints without modifying their version-one save key.
-  installInventory(g,data.inventory,finiteRange(data.player.wood,0,MAX_CARRY_KG,0));
-  g.cold = n("cold", 0, 100, coldTarget(g, meta));
-  g.quickSlots = normalizeQuickSlots(data.quickSlots);
-  // The instrument is display-only. Its reading is derived from the
-  // restored world weather/season, not from player insulation or Cold.
-  g.thermometerTemp = localTemperature(g);
-  // New optional fields keep old version-one checkpoints compatible.
-  const legacyGuideLevel = g.stage >= 5 ? 4 : g.stage >= 2 ? 3
-    : g.builtBench && g.crafts.pack ? 2 : g.builtPile ? 1 : 0;
-  g.guideLevel = Math.floor(finiteRange(data.guideLevel,0,5,legacyGuideLevel));
-  g.levelCompletePending = g.campaignLevel === 1 && flag("levelCompletePending") && g.guideLevel >= 3;
-  g.guideChops = Math.floor(finiteRange(data.guideChops,0,100000,g.night>0?1:0));
-  g.guideStokes = Math.floor(finiteRange(data.guideStokes,0,100000,g.night>0?1:0));
-  g.guideStoredTen = data.guideStoredTen===true || g.stored>=10;
-  // Old runs already past the first mission group remain completed. Optional
-  // boolean fields extend v1 without invalidating existing checkpoints.
-  g.guideTalked = flag("guideTalked") || g.guideLevel > 0;
-  g.scoutVisited = flag("scoutVisited") || g.guideLevel > 0;
-  g.scoutReturned = flag("scoutReturned") || g.guideLevel > 0;
-  // Missing fields indicate a pre-#31 checkpoint. Completed structures or
-  // past tutorial levels are grandfathered, avoiding an impossible build gate.
-  const legacyFence = g.stage > 0 || g.builtBench || g.builtPile || g.guideLevel > 0;
-  g.fenceLeft = data.fenceLeft === undefined ? legacyFence : data.fenceLeft === true;
-  g.fenceRight = data.fenceRight === undefined ? legacyFence : data.fenceRight === true;
-  g.campExpansion = Math.floor(finiteRange(data.campExpansion,0,1,0));
-  if (g.campExpansion && !campEstablished(g)) g.campExpansion = 0;
-  g.fenceTorches = campEstablished(g)
-    ? normalizeFenceTorches(data.fenceTorches,g.campExpansion>=1)
-    : normalizeFenceTorches(null);
-  clearClaimedTrees(g);
-  keepFencePostsClear(g);
-  if (data.dog && typeof data.dog === "object" && Number.isFinite(data.dog.x)) {
-    g.dog = {
-      x:finiteRange(data.dog.x,10,WORLD_W-10,g.player.x),y:PLAYER_Y,
-      dir:data.dog.dir === -1 ? -1 : 1,
-      wood:Math.floor(finiteRange(data.dog.wood,0,2,0)),
-      phase:"idle",gait:0,motion:0
-    };
-  }
-  g.ui = g.victoryPending ? "win" : g.levelCompletePending ? "levelComplete" : "run";
-  if (g.victoryPending) g.lastResult = {kind:"won",nights:g.night,ash:Math.floor(g.ashEarned)};
-  g.won = flag("won") || g.victoryPending;
-  g.menu = null;
-  g.resumeData = null;
-  g.keys = {};
-  g.pointers = {};
-  g.pleft = false; g.pright = false;
-  toast(g, "Run restored. The fire is waiting.");
-}
-
-
 
 function toast(g: any, text: string) {
   addStatusMessage(g, text);
@@ -239,40 +91,6 @@ function createEngine(): any {
   };
   installInventory(state,null,0);
   return state;
-}
-
-function genScenery(g: any, seed: number) {
-  g.scenerySeed = seed;
-  const rnd = mulberry32(seed);
-  g.mts = []; g.mts2 = []; g.stars = []; g.sparkles = [];
-  let x = -100;
-  while (x < WORLD_W * 0.5 + W + 100) { g.mts.push({ x, w: 50 + rnd() * 90, h: 26 + rnd() * 44 }); x += 34 + rnd() * 70; }
-  x = -100;
-  while (x < WORLD_W * 0.75 + W + 100) { g.mts2.push({ x, w: 40 + rnd() * 70, h: 16 + rnd() * 30 }); x += 28 + rnd() * 58; }
-  for (let i = 0; i < 45; i++) g.stars.push({ x: rnd() * W, y: rnd() * 90, tw: rnd() * 6 });
-  for (let i = 0; i < 320; i++) g.sparkles.push({ x: rnd() * WORLD_W, y: GROUND + 4 + rnd() * (H - GROUND - 8), c: rnd() > 0.5 ? "#eef6fc" : "#c4d2e2" });
-  g.snow = []; // Start in snow-free autumn; winter fills snowfall particles naturally.
-}
-
-function treeTierFor(x: number): number {
-  const d = Math.abs(x - CX);
-  return d < 90 ? 0 : d < 220 ? 1 : 2;
-}
-
-function spawnTrees(g: any, count: number) {
-  for (let n = 0; n < count; n++) {
-    for (let attempt = 0; attempt < 60; attempt++) {
-      const x = 16 + Math.random() * (WORLD_W - 32);
-      if (isCampTreeExcluded(g, x)) continue;
-      if (g.museumBuilt && Math.abs(x - MUSEUM_X) < 25) continue;
-      if (g.trees.some((t: any) => Math.abs(t.x - x) < 16)) continue;
-      const y = 136 + Math.random() * 18; // Keep pickups clear of foreground water.
-      const tier = treeTierFor(x);
-      const variant = Math.floor(Math.random() * 3);
-      g.trees.push({ id: g.treeId++, x, y, tier, variant, hp: [1, 2, 3][tier], hitT: 0 });
-      break;
-    }
-  }
 }
 
 function startRunEngine(g: any, meta: any) {
@@ -1923,7 +1741,7 @@ function drawSideArrows(ctx: any, g: any) {
 function titleActions(g: any, meta: any): any[] {
   const run = [
     ...(g.resumeData ? [{
-      label: "CONTINUE RUN", act: () => resumeRun(g, g.resumeData, meta)
+      label: "CONTINUE RUN", act: () => hydrateSavedRun(g, g.resumeData, meta, createEngine)
     }, {
       label: "NEW RUN", act: () => startRun(g, meta)
     }] : [{

@@ -1,7 +1,7 @@
 name: Build and test
 on:
   push:
-    branches: [main, foundation/vite-typescript-mobile-ready-20261030]
+    branches: [main]
   pull_request:
     branches: [main]
 permissions:
@@ -20,6 +20,8 @@ jobs:
           cache: npm
       - name: Install from lockfile
         run: npm ci --no-audit --no-fund
+      - name: Repository hygiene
+        run: npm run repo:check
       - name: Typecheck
         run: npm run check
       - name: Unit tests

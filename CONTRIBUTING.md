@@ -24,7 +24,7 @@ Before requesting a review, run:
 npm run validate
 ```
 
-This executes TypeScript checks, Vitest tests and a production build. CI runs the same gates on pull requests.
+This checks repository structure/local documentation links, TypeScript, Vitest tests and a production build. CI runs the same gates on pull requests.
 
 ## Pull requests
 

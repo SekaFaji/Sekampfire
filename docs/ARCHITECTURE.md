@@ -8,7 +8,9 @@ Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **Re
 | --- | --- |
 | `src/main.tsx` and `src/App.tsx` | React startup, Canvas, animation loop, input and checkpoint scheduling |
 | `src/ui/viewport.ts` | Aspect-preserving canvas fitting and safe areas |
-| `src/game/game.ts` | Main state engine and remaining scene/simulation integration; intentionally still large |
+| `src/game/game.ts` | Main state engine and remaining scene/simulation integration; still being extracted in tested slices |
+| `src/game/worldGeneration.ts` | Seeded mountain, star and sparkle creation, plus bounded woodland spawning and tree tiers |
+| `src/game/runHydration.ts` | Run checkpoint restoration and safe v1 fallback values, without an import cycle into the main engine |
 | `src/game/config.ts` and `rules.ts` | Stages, recipes, upgrade data and core carrying/storage formulas |
 | `src/game/input.ts`, `menuScreens.ts`, `inventoryMenu.ts` | Input routing and native-resolution menus |
 | `src/game/shopCategories60.ts`, `shopCards51.ts`, `shopScroll58.ts` | Ash Shop categories, card art, movement and selection |
@@ -56,7 +58,7 @@ npm run test
 npm run build
 ```
 
-The combined command is `npm run validate`. The [CI workflow](../.github/workflows/ci.yml) checks type safety, tests and build; the [Pages workflow](../.github/workflows/pages.yml) deploys the public game.
+The combined command is `npm run validate`. Run `npm run repo:check` for fast repository-structure and local-documentation-link verification (the historical archives are excluded from link linting). The [CI workflow](../.github/workflows/ci.yml) checks repository hygiene, type safety, tests and build; the [Pages workflow](../.github/workflows/pages.yml) deploys the public game.
 
 A green CI check does not establish visual quality, mobile usability or store review readiness. Physical-device QA remains separate.
 
@@ -71,4 +73,4 @@ A green CI check does not establish visual quality, mobile usability or store re
 
 ## Incremental extraction plan
 
-The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for world simulation, rendering and scene routing. Do not begin a broad architecture rewrite as part of a visual patch.
+The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation and checkpoint hydration have already been isolated with deterministic and save-compatibility tests. Do not begin a broad architecture rewrite as part of a visual patch.

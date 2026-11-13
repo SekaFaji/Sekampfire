@@ -18,6 +18,8 @@ Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **Re
 | `src/game/settingsMenu.ts` | Settings and Audio option definitions and persistent preference actions; receives close callback from the engine |
 | `src/game/craftingMenu.ts` | Run-scoped workbench recipes, confirmation gates, real wood payments and equipped-axe protection |
 | `src/game/buildingMenu.ts` | Station upgrade confirmation, build-plan actions, camp construction and permanent Log Museum ownership |
+| `src/game/stationActions.ts` | Physical station reach checks, fireplace/storage interaction and station action routing |
+| `src/game/menuNavigation.ts` | Shared Back behavior, keyboard menu selection and confirmation reset rules |
 | `src/game/shopCategories60.ts`, `shopCards51.ts`, `shopScroll58.ts` | Ash Shop categories, card art, movement and selection |
 | `src/game/campBoundary.ts`, `campProgress.ts` | Physical camp placement and run-scoped station upgrades |
 | `src/game/campLegacy53.ts`, `campMastery62.ts` | Permanent prebuilt foundations and masteries for new runs |
@@ -78,4 +80,4 @@ A green CI check does not establish visual quality, mobile usability or store re
 
 ## Incremental extraction plan
 
-The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation, checkpoint hydration and the ambient-effects updater have already been isolated with focused regression tests. The run simulation, station selection, Ash Shop, general menu routing and scene rendering remain in `game.ts` for future careful extraction. Workbench recipes and construction/upgrade row actions are now independent modules. Settings/Audio option rows and shared list-menu painting are now independently maintained, while the Ash Shop and other panels keep their existing opacity. Do not begin a broad architecture rewrite as part of a visual patch.
+The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation, checkpoint hydration and the ambient-effects updater have already been isolated with focused regression tests. The run simulation, world station selection and interaction triggers, Ash Shop, menu-row composition and scene rendering remain in `game.ts` for future careful extraction. Physical station actions and general Back/selection logic now live in their own modules. Workbench recipes and construction/upgrade row actions are now independent modules. Settings/Audio option rows and shared list-menu painting are now independently maintained, while the Ash Shop and other panels keep their existing opacity. Do not begin a broad architecture rewrite as part of a visual patch.

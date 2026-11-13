@@ -2,6 +2,13 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-13 - Station interactions and navigation cleanup (Patch #69)
+
+- Moved physical station entry, fireplace/stored-wood actions and station action rows into `src/game/stationActions.ts`.
+- Moved menu close/Back transitions and selection handling into `src/game/menuNavigation.ts`, while keeping the old `game.ts` exports and input adapter callbacks.
+- Added focused tests for physical reach, STORE vs TAKE, upgrade confirmations and run Ash, nested menu navigation, and keyboard selection.
+- Preserved the existing UI, balance, save schema and player progression without adding dependencies.
+
 ## 2026-11-13 - Crafting and construction cleanup (Patch #68)
 
 - Extracted workbench recipe rows into `src/game/craftingMenu.ts` and building/station upgrade actions into `src/game/buildingMenu.ts`, while retaining the existing `game.ts` exports and on-screen menu routing.

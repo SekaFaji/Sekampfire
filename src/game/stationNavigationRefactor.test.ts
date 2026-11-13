@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createEngine, openStation as engineOpenStation, accessStorage as engineAccessStorage,
   performStationAction as engineStationAction, stationRows as engineStationRows,
-  closeMenu as engineCloseMenu, moveSel, activateSel
+  closeMenu as engineCloseMenu, moveSel, handleKey
 } from "./game";
 import { CX, BENCH_X, PILE_X } from "./config";
 import { openStation, accessStorage, performStationAction, stationRows } from "./stationActions";
@@ -172,9 +172,9 @@ describe("station and navigation extraction", () => {
     g.menu = "bench";g.craftTab = 0;g.menuSel = 2;g.player.wood = 10;
     moveSel(g,m,1);
     expect(g.menuSel).toBe(0);
-    activateSel(g,m);
+    handleKey(g,m,"enter",true);
     expect(g.craftConfirm).toBe("pack");
-    activateSel(g,m);
+    handleKey(g,m,"enter",true);
     expect(g.crafts.pack).toBe(true);
     expect(g.player.wood).toBe(4);
   });

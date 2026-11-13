@@ -1,5 +1,7 @@
 import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, STAGES, CRAFTS, UPGRADES, WEATHER_TEXT } from "./config";
 import { createInputHandlers } from "./input";
+import { panel, drawListMenuFrame, isSettingsFamily, SETTINGS_VEIL_INK } from "./listMenuRenderer";
+import { createSettingsRows, createAudioRows } from "./settingsMenu";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
 import { revealShopCard58 } from "./shopScroll58";
 import { visibleShopUpgrades60,shopCategory60 } from "./shopCategories60";
@@ -603,20 +605,6 @@ function skyColor(q: number): string {
 
 // ============ HUD ============
 // ============ in-canvas UI ============
-function panel(ctx: any, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = "rgba(8,12,26,0.75)";
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = "#6a4a26";
-  ctx.fillRect(x, y, w, 1);
-  ctx.fillRect(x, y + h - 1, w, 1);
-  ctx.fillRect(x, y, 1, h);
-  ctx.fillRect(x + w - 1, y, 1, h);
-  ctx.fillStyle = "#c9a86a";
-  ctx.fillRect(x + 1, y + 1, w - 2, 1);
-  px(ctx, x + 1, y + 1, 1, 1, "#e8d4a8");
-  px(ctx, x + w - 2, y + 1, 1, 1, "#e8d4a8");
-}
-
 function uiButton(ctx: any, g: any, x: number, y: number, w: number, h: number, label: string, opts: any = {}) {
   const enabled = opts.enabled !== false;
   const sel = !!opts.sel;
@@ -1121,64 +1109,7 @@ function doBuildAction(g: any, meta: any) {
 }
 
 function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[]) {
-  const n = rows.length, tabs = g.menu === "bench";
-  const pw = 272, ph = 32 + n * 15 + 12 + (tabs ? 18 : 0);
-  const x0 = Math.round((W - pw) / 2);
-  const y0 = Math.max(8, Math.round((H - ph) / 2) - 4);
-  g.menuRect = {x:x0,y:y0,w:pw,h:ph};
-  panel(ctx, x0, y0, pw, ph);
-  drawText(ctx, title, x0 + 6, y0 + 5, "#ffd98a");
-  drawText(ctx, right, x0 + pw - 24 - textW(right), y0 + 5, "#cfc2f0");
-  closeZone(ctx, g, x0 + pw - 12, y0 + 5);
-  let y = y0 + 16;
-  if (tabs) {
-    const isBuild = g.menu === "build";
-    const active = isBuild ? g.buildTab : g.craftTab;
-    const labels = isBuild ? ["STRUCTURES","UPGRADES"] : ["TOOLS","SUPPLIES"];
-    for (let t = 0; t < 2; t++) {
-      const tx = x0 + 7 + t * 129;
-      px(ctx, tx, y, 124, 15, t===active ? "#77502e" : "#29394b");
-      px(ctx, tx, y, 124, 1, t===active ? "#d4ad74" : "#657389");
-      drawTextC(ctx, labels[t], tx + 62, y + 4, "#ffe6ba");
-      const index = t;
-      g.zones.push({x:tx,y,w:124,h:15,onDown:()=>{
-        if (isBuild) g.buildTab=index; else g.craftTab=index;
-        g.menuSel=0;g.buildConfirm=null;g.craftConfirm=null;
-      }});
-    }
-    y += 18;
-  }
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
-    if (i === g.menuSel) {
-      px(ctx, x0 + 3, y, pw - 6, r.h,
-        r.red ? "rgba(211,65,65,0.22)" : "rgba(255,217,138,0.11)");
-      px(ctx, x0 + 3, y + 1, 2, Math.max(1, r.h - 2),
-        r.red ? "#f37e70" : "#dcb779");
-    }
-    drawText(ctx, r.label, x0 + 9, y + 1, !r.enabled ? "#5a6480" : r.red ? "#ff7272" : "#ffe9c8");
-    drawText(ctx, r.right, x0 + pw - 9 - textW(r.right), y + 1, !r.enabled ? "#5a6480" : r.red ? "#ff7272" : "#d9c9a0");
-    drawText(ctx, r.desc, x0 + 9, y + 8, "#a4acc0");
-    if (r.volumeKey) {
-      const level = AUDIO.getLevel(r.volumeKey);
-      ctx.fillStyle = "rgba(41,53,71,0.92)";
-      ctx.fillRect(x0 + 191, y + 10, 49, 3);
-      if (level > 0) {
-        ctx.fillStyle = "#caa46b";
-        ctx.fillRect(x0 + 191, y + 10, Math.round(level * 49 / 100), 3);
-      }
-    }
-    const idx = i;
-    g.zones.push({ x: x0 + 3, y, w: pw - 6, h: r.h, onDown: () => { g.menuSel = idx; rows[idx].onDown(); } });
-    if (r.onAdjust) {
-      // Separate +/- touch targets; full row still increments for convenience.
-      g.zones.push({ x: x0 + pw - 39, y, w: 12, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(-1); } });
-      g.zones.push({ x: x0 + pw - 17, y, w: 12, h: r.h, onDown: () => { g.menuSel = idx; r.onAdjust(1); } });
-    }
-    y += r.h;
-  }
-  const foot = "W/S PICK - E SELECT - ESC CLOSE";
-  drawText(ctx, foot, Math.round(W / 2 - textW(foot) / 2), y + 4, "#5a6480");
+  drawListMenuFrame(ctx, g, title, right, rows, () => closeMenu(g));
 }
 
 function buildRows(g: any, meta: any) {
@@ -1266,72 +1197,10 @@ function resetAllProgress(g: any, meta: any) {
   g.titleSel = 0;
 }
 function settingsRows(g: any, meta: any) {
-  return [
-    {
-      label: "AUDIO", right: "", desc: "MASTER AMBIENCE AND EFFECTS VOLUME",
-      h: 15, enabled: true,
-      onDown: () => { g.menu = "audio"; g.menuSel = 0; }
-    },
-    {
-      label: "FULLSCREEN", right: g.fs ? "ON" : "OFF",
-      desc: "TAP HERE OR PRESS F TO TOGGLE", h: 15, enabled: true,
-      onDown: () => { if (g.fsToggle) g.fsToggle(); }
-    },
-    {
-      label: "GUIDING FIREFLIES", right: meta.guideFx === false ? "OFF" : "ON",
-      desc: "SHOW OR HIDE GROOTYS NEXT OBJECTIVE GLOW",
-      h: 15, enabled: true,
-      onDown: () => { meta.guideFx = meta.guideFx === false; saveMeta(meta); }
-    },
-    {
-      label: "VISUAL FX", right: GRAPHICS.high ? "HIGH" : "LOW",
-      desc: "LOW USES FEWER PARTICLES/REFLECTIONS", h: 15, enabled: true,
-      onDown: () => GRAPHICS.toggle()
-    },
-    {
-      label: "PRIVACY POLICY", right: "", desc: "LOCAL SAVES AND THIRD PARTY HOSTING",
-      h: 15, enabled: true,
-      onDown: () => { g.menu = "privacy"; g.menuSel = 0; }
-    },
-    {
-      label: "CREDITS", right: "", desc: "MAKERS AND SOFTWARE LIBRARIES",
-      h: 15, enabled: true,
-      onDown: () => { g.menu = "credits"; g.menuSel = 0; }
-    },
-    {
-      label: "RESET SAVE", right: "!", desc: "PERMANENTLY ERASE ALL GAME PROGRESS",
-      h: 15, enabled: true, red: true,
-      onDown: () => { g.menu = "reset1"; g.menuSel = 1; }
-    },
-    {
-      label: "BACK", right: "", desc: "RETURN TO PREVIOUS SCREEN",
-      h: 15, enabled: true,
-      onDown: () => closeMenu(g)
-    },
-  ];
+  return createSettingsRows(g, meta, () => closeMenu(g));
 }
 function audioRows(g: any) {
-  return [
-    {
-      label: "SOUND", right: AUDIO.enabled ? "ON" : "OFF",
-      desc: "ALL GAME AUDIO ON OR OFF", h: 15, enabled: true,
-      onDown: () => AUDIO.setEnabled(!AUDIO.enabled)
-    },
-    ...[
-      { key: "master", label: "MASTER", desc: "OVERALL GAME LOUDNESS" },
-      { key: "ambience", label: "AMBIENCE", desc: "WIND BACKGROUND AUDIO" },
-      { key: "effects", label: "EFFECTS", desc: "STEPS CHOPPING BUILDING AND MORE" }
-    ].map((v: any) => ({
-      label: v.label, right: "- " + AUDIO.getLevel(v.key) + "% +",
-      desc: v.desc, h: 15, enabled: true, volumeKey: v.key,
-      onAdjust: (dir: number) => AUDIO.adjust(v.key, dir),
-      onDown: () => AUDIO.adjust(v.key, 1)
-    })),
-    {
-      label: "BACK", right: "", desc: "RETURN TO SETTINGS",
-      h: 15, enabled: true, onDown: () => closeMenu(g)
-    }
-  ];
+  return createAudioRows(g, () => closeMenu(g));
 }
 function resetRows(g: any, meta: any) {
   if (g.menu === "reset1") {
@@ -1405,7 +1274,7 @@ function drawMenu(ctx: any, g: any, meta: any) {
   } else if (g.menu === "privacy" || g.menu === "credits") {
     g.menuRect = {x:23,y:10,w:274,h:160};
   }
-  ctx.fillStyle = "rgba(4,6,16,0.25)";
+  ctx.fillStyle = isSettingsFamily(g.menu) ? SETTINGS_VEIL_INK : "rgba(4,6,16,0.25)";
   ctx.fillRect(0, 0, W, H);
   if (g.menu === "inventory") {
     drawInventoryMenu(ctx,g,meta,()=>closeMenu(g));

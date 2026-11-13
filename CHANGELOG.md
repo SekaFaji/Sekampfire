@@ -2,6 +2,12 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-13 - Settings transparency and menu cleanup (Patch #67)
+
+- Matched the Settings family visually to the lighter title-menu aesthetic: reduced stacked modal veil, panel fill, selected-row highlight and Audio slider background opacity. Kept the Ash Shop and all other modal palettes unchanged.
+- Moved shared list-menu drawing and Settings/Audio option rows into dedicated modules, preserving on-screen hit zones, keyboard navigation, preferences and two-step save-reset protection.
+- Added visual geometry/opacity regression checks and navigation safeguards. No save schema or gameplay economy changes.
+
 ## 2026-11-13 - Incremental engine cleanup (Patch #66)
 
 - Moved the ambient update loop and woodland event scheduler into `src/game/ambientUpdate.ts`, preserving existing time progression, particle/snow effects, random events and the Canvas loop exports.

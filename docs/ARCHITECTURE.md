@@ -11,6 +11,7 @@ Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **Re
 | `src/game/game.ts` | Main state engine and remaining scene/simulation integration; still being extracted in tested slices |
 | `src/game/worldGeneration.ts` | Seeded mountain, star and sparkle creation, plus bounded woodland spawning and tree tiers |
 | `src/game/runHydration.ts` | Run checkpoint restoration and safe v1 fallback values, without an import cycle into the main engine |
+| `src/game/ambientUpdate.ts` | Animation timers, particles, snow, critters and woodland events, maintained independently of active gameplay |
 | `src/game/config.ts` and `rules.ts` | Stages, recipes, upgrade data and core carrying/storage formulas |
 | `src/game/input.ts`, `menuScreens.ts`, `inventoryMenu.ts` | Input routing and native-resolution menus |
 | `src/game/shopCategories60.ts`, `shopCards51.ts`, `shopScroll58.ts` | Ash Shop categories, card art, movement and selection |
@@ -73,4 +74,4 @@ A green CI check does not establish visual quality, mobile usability or store re
 
 ## Incremental extraction plan
 
-The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation and checkpoint hydration have already been isolated with deterministic and save-compatibility tests. Do not begin a broad architecture rewrite as part of a visual patch.
+The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation, checkpoint hydration and the ambient-effects updater have already been isolated with focused regression tests. The run simulation, menu actions and scene rendering remain in `game.ts` for future careful extraction. Do not begin a broad architecture rewrite as part of a visual patch.

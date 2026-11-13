@@ -2,7 +2,12 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
-## 2026-11-13 - Codebase maintenance
+## 2026-11-13 - Incremental engine cleanup (Patch #66)
+
+- Moved the ambient update loop and woodland event scheduler into `src/game/ambientUpdate.ts`, preserving existing time progression, particle/snow effects, random events and the Canvas loop exports.
+- Added focused checks for status timing, quick-slot holds, woodland spawns and seasonal effects. No save schema, game balancing or artwork changes.
+
+## 2026-11-13 - Codebase maintenance (Patch #65)
 
 - Extracted seeded scenery and tree generation from the main game module.
 - Extracted version-one run restoration into a dedicated hydration module.

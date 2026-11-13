@@ -14,6 +14,8 @@ Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **Re
 | `src/game/ambientUpdate.ts` | Animation timers, particles, snow, critters and woodland events, maintained independently of active gameplay |
 | `src/game/config.ts` and `rules.ts` | Stages, recipes, upgrade data and core carrying/storage formulas |
 | `src/game/input.ts`, `menuScreens.ts`, `inventoryMenu.ts` | Input routing and native-resolution menus |
+| `src/game/listMenuRenderer.ts` | Shared native-pixel list menu frame, hit zones, row rendering and Settings-specific translucent palette |
+| `src/game/settingsMenu.ts` | Settings and Audio option definitions and persistent preference actions; receives close callback from the engine |
 | `src/game/shopCategories60.ts`, `shopCards51.ts`, `shopScroll58.ts` | Ash Shop categories, card art, movement and selection |
 | `src/game/campBoundary.ts`, `campProgress.ts` | Physical camp placement and run-scoped station upgrades |
 | `src/game/campLegacy53.ts`, `campMastery62.ts` | Permanent prebuilt foundations and masteries for new runs |
@@ -74,4 +76,4 @@ A green CI check does not establish visual quality, mobile usability or store re
 
 ## Incremental extraction plan
 
-The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation, checkpoint hydration and the ambient-effects updater have already been isolated with focused regression tests. The run simulation, menu actions and scene rendering remain in `game.ts` for future careful extraction. Do not begin a broad architecture rewrite as part of a visual patch.
+The remaining `src/game/game.ts` module should be separated carefully into reviewed, tested units for rendering and scene routing. World generation, checkpoint hydration and the ambient-effects updater have already been isolated with focused regression tests. The run simulation, general menu actions and scene rendering remain in `game.ts` for future careful extraction. Settings/Audio option rows and shared list-menu painting are now independently maintained, while the Ash Shop and other panels keep their existing opacity. Do not begin a broad architecture rewrite as part of a visual patch.

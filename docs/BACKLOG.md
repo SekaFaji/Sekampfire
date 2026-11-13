@@ -11,7 +11,7 @@ This is the **current planning view**, not a historical list of every completed 
 | High | Test Fire Capacity levels and Cold/Warmth balancing in winter and Long Night play | Needs gameplay QA |
 | Medium | Polish the visual scale of heavily fueled fires and check their impact on the camp scene | Review |
 | Medium | Test inventory, pet actions, carry weight and restore-from-checkpoint after longer runs | Needs QA |
-| Medium | Extract remaining in-canvas menu actions and focused run-simulation logic from `src/game/game.ts`, with tests; Settings/Audio rows and list rendering are now isolated | Ongoing |
+| Medium | Continue extracting station routing, general menu actions and focused run-simulation logic from `src/game/game.ts`, with tests; workbench crafting and construction menus have been isolated | Ongoing |
 | Later | Add Android packaging and native lifecycle/save testing | Not started |
 | Later | Plan iOS packaging after Android viability and device testing | Not started |
 

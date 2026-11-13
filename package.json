@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
+    "repo:check": "node scripts/check-repository.mjs",
     "test": "vitest run --maxWorkers=1 --no-file-parallelism --reporter=dot",
-    "validate": "npm run check && npm run test && npm run build"
+    "validate": "npm run repo:check && npm run check && npm run test && npm run build"
   },
   "dependencies": {
     "react": "18.3.1",

@@ -19,6 +19,7 @@ These preserve the original working history without letting it overwhelm the pub
 
 | Document | Content |
 | --- | --- |
+| [Changelog](../CHANGELOG.md) | Concise release and maintenance highlights |
 | [Development history](DEVELOPMENT_HISTORY.md) | Every patch section previously in the 77 KB root README |
 | [Backlog archive](BACKLOG_ARCHIVE.md) | Original detailed, patch-by-patch task history |
 | [Design archive](DESIGN_ARCHIVE.md) | Original iterative design notes and decisions |

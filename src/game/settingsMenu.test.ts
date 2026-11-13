@@ -73,7 +73,7 @@ describe("Settings opacity and native list rendering", () => {
     const audioRows=createAudioRows(g,()=>closeMenu(g));
     expect(audioRows.map((r:any)=>r.label)).toEqual(["SOUND","MASTER","AMBIENCE","EFFECTS","BACK"]);
     expect(audioRows.filter((r:any)=>r.volumeKey)).toHaveLength(3);
-    audioRows.at(-1).onDown();
+    audioRows[audioRows.length - 1]!.onDown();
     expect(g.menu).toBe("settings");
     close.onDown();
     expect(g.menu).toBe(null);
@@ -83,7 +83,7 @@ describe("Settings opacity and native list rendering", () => {
   it("retains two-step reset and prevents a simple Settings back action from erasing progress", () => {
     const g=createEngine(),m=meta();g.menu="settings";g.settingsFrom="pause";
     const rows=createSettingsRows(g,m,()=>closeMenu(g));
-    rows.at(-1).onDown();
+    rows[rows.length - 1]!.onDown();
     expect(g.menu).toBe("pause");
     expect(m.ash).toBe(20);
     g.menu="settings";

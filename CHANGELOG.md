@@ -2,6 +2,12 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-13 - Crafting and construction cleanup (Patch #68)
+
+- Extracted workbench recipe rows into `src/game/craftingMenu.ts` and building/station upgrade actions into `src/game/buildingMenu.ts`, while retaining the existing `game.ts` exports and on-screen menu routing.
+- Preserved two-tap crafting, upgrade and building confirmations, original wood costs, real Ash grants, axe ownership, final-cabin gates and persistent Log Museum progress.
+- Added focused regression tests for exact payments, locked recipes, real station upgrades, campaign construction and museum save data. No graphics, gameplay balance or save schema changes.
+
 ## 2026-11-13 - Settings transparency and menu cleanup (Patch #67)
 
 - Matched the Settings family visually to the lighter title-menu aesthetic: reduced stacked modal veil, panel fill, selected-row highlight and Audio slider background opacity. Kept the Ash Shop and all other modal palettes unchanged.

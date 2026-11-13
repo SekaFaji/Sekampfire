@@ -1,5 +1,7 @@
-import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, STAGES, CRAFTS, UPGRADES, WEATHER_TEXT } from "./config";
+import { W, H, GROUND, PLAYER_Y, SCENE_LIFT, WATER_Y, WORLD_W, CX, DAY_LEN, NIGHT_LEN, LONG_NIGHT_LEN, META_KEY, LEGACY_KEYS, SHED_X, BENCH_X, PILE_X, SITE_COST, BUILD_TIME, UPGRADES, WEATHER_TEXT } from "./config";
 import { createInputHandlers } from "./input";
+import { benchRows } from "./craftingMenu";
+import { stationUpgradeRow, buildRows } from "./buildingMenu";
 import { panel, drawListMenuFrame, isSettingsFamily, SETTINGS_VEIL_INK } from "./listMenuRenderer";
 import { createSettingsRows, createAudioRows } from "./settingsMenu";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
@@ -27,9 +29,9 @@ import { loadMeta, saveMeta, clearRunSnapshot, saveRunSnapshot, loadRunSnapshot 
 import { drawFlame, drawTree, drawFallingTree, drawBackpack, drawPlayer, drawDog, drawFire, drawBench, drawPile, drawSite, drawConstruction, drawStructures, drawLog, drawPickups, drawMountainRange, drawHillRange, drawForestLayer, drawCritter } from "./renderSprites";
 import { drawGroundAccents, drawSkyHaze, drawHorizonHaze } from "./renderAtmosphere";
 import { rollNightSkyEvent, drawNightSkyEvent } from "./nightSky";
-import { CAMP_STATIONS, stationLevel, stationCost, stationAvailable, stationFuelFactor, stationTorchBonus, stationCraftCost, canCompleteCabin, purchaseStation } from "./campProgress";
+import { stationLevel, stationCost, stationFuelFactor, stationTorchBonus, purchaseStation } from "./campProgress";
 import { updateDogCompanion } from "./companion";
-import { LOG_COLLECTION, MUSEUM_COST, MUSEUM_X, cleanLogCollection, museumCount, discoverLog, drawMuseumPage } from "./museum";
+import { LOG_COLLECTION, MUSEUM_X, cleanLogCollection, discoverLog, drawMuseumPage } from "./museum";
 import { GROOTY_X, drawGrooty, advanceGuide, drawGuideShortcut, drawGuideDialog } from "./guide";
 import { trackNightScout, drawScoutGrove } from "./campaign43";
 import { grantRunAsh, ashSummary, beginFirstSettlementCompletion, drawCampaignResult, unlockedCampaignLevel } from "./campaign44";
@@ -909,74 +911,6 @@ function quickSlotRows(g:any):any[] {
   ];
 }
 
-function stationUpgradeRow(g: any, id: "hearth" | "bench" | "pile") {
-  const info = CAMP_STATIONS[id], level = stationLevel(g, id);
-  const fenced = campEstablished(g);
-  const available = fenced && stationAvailable(g, id);
-  const maxed = level >= 2, cost = stationCost(g, id);
-  const total = g.player.wood + g.stored;
-  const confirming = g.buildConfirm === id && available && !maxed && total >= cost;
-  return {
-    label: info.label + " LV" + level + (maxed ? " MAX" : " -> LV" + (level + 1)),
-    right: maxed ? "MAX" : !fenced ? "BUILD FENCE" : !available ? "BUILD FIRST" : confirming ? "CONFIRM?" : cost + " WOOD",
-    desc: maxed ? "FULLY UPGRADED" : !fenced ? "BUILD BOTH CAMP POSTS FIRST" : !available ? "BUILD THIS STATION FIRST"
-      : confirming ? "TAP AGAIN TO UPGRADE" : info.benefits[level],
-    h: 15, enabled: available && !maxed && total >= cost,
-    onDown: () => {
-      if (!fenced) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
-      if (!available) { g.buildConfirm = null; toast(g, "BUILD THE " + info.label + " FIRST."); return; }
-      if (maxed) { g.buildConfirm = null; toast(g, info.label + " IS MAX LEVEL."); return; }
-      if (g.player.wood + g.stored < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
-      if (g.buildConfirm !== id) { g.buildConfirm = id; return; }
-      g.buildConfirm = null;
-      if (!purchaseStation(g, id)) { toast(g, "NOT ENOUGH WOOD."); return; }
-      grantRunAsh(g,"stations",2);
-      AUDIO.effect("build");
-      toast(g, info.label + " NOW LEVEL " + stationLevel(g, id) + ".");
-    }
-  };
-}
-
-function benchRows(g: any, meta: any) {
-  const recipes = CRAFTS.map((c: any) => {
-    const level = stationLevel(g, "bench"), locked = level < (c.benchTier || 0);
-    const owned = !!g.crafts[c.id];
-    const cost = stationCraftCost(g, c);
-    const total = g.player.wood + g.stored;
-    const enabled = !locked && !owned && total >= cost;
-    const confirm = g.craftConfirm === c.id && enabled;
-    return {
-      label: c.name.toUpperCase(),
-      right: locked ? "BENCH LV" + c.benchTier : owned ? "OWNED" : confirm ? "CONFIRM?" : cost + " WOOD",
-      desc: locked ? "UPGRADE WORKBENCH IN BUILD" :
-        confirm ? "TAP AGAIN TO CRAFT - " + cost + " WOOD" : c.desc,
-      h: 15, enabled,
-      onDown: () => {
-        g.buildConfirm = null;
-        if (locked) { g.craftConfirm = null; toast(g, "UPGRADE WORKBENCH IN BUILD FIRST."); return; }
-        if (g.crafts[c.id]) { g.craftConfirm = null; toast(g, c.name.toUpperCase() + " is already crafted."); return; }
-        const realCost = stationCraftCost(g, c);
-        if (g.player.wood + g.stored < realCost) { g.craftConfirm = null; toast(g, "Not enough wood."); return; }
-        if (g.craftConfirm !== c.id) { g.craftConfirm = c.id; return; }
-        g.craftConfirm = null;
-        const fromCarried = Math.min(g.player.wood, realCost);
-        g.player.wood -= fromCarried;
-        g.stored -= realCost - fromCarried;
-        g.crafts[c.id] = true;
-        // Keep an already-equipped permanent Grandpa's Axe: crafting a
-        // weaker Wood Axe should never silently downgrade the player.
-        if(c.id==="maul" && g.equippedAxe!=="grandpas_axe")
-          g.equippedAxe="wood_axe";
-        toast(g, c.name.toUpperCase() + " crafted.");
-      },
-    };
-  });
-  // Station upgrades happen ONLY by selecting UPGRADE on the physical
-  // Workbench popup, not inside the crafting recipe list.
-  // Tools keep the starting essentials discoverable.
-  return g.craftTab === 1 ? recipes.slice(3) : recipes.slice(0,3);
-}
-
 /** Single authoritative Ash purchase. Unlike the old row's two-tap
  * confirmation, the new visible BUY button is a distinct intentional tap.
  * Recompute live balance and level so stale rendered rows cannot double buy,
@@ -1084,97 +1018,8 @@ function activateSel(g: any, meta: any) {
   else rows[g.menuSel].onDown();
 }
 
-function doBuildAction(g: any, meta: any) {
-  if (!campEstablished(g)) { toast(g,"BUILD BOTH CAMP POSTS FIRST."); return; }
-  if (g.stage >= 6) { g.menu = null; return; }
-  if (g.stage === 5 && g.guideLevel < 4) { toast(g, "FINISH GROOTYS FIRST FOUR MISSIONS BEFORE THE CABIN."); return; }
-  if (g.stage === 5 && !canCompleteCabin(g)) { toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
-  const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
-  if (g.player.wood + g.stored < cost) { toast(g, "Not enough wood."); return; }
-  const fromCarried = Math.min(g.player.wood, cost);
-  g.player.wood -= fromCarried;
-  g.stored -= cost - fromCarried;
-  g.stage++;
-  grantRunAsh(g,"structures",4);
-  AUDIO.effect("build");
-  g.menu = null;
-  g.keys.act = false;
-  toast(g, STAGES[g.stage - 1].name + " built.");
-  if (g.stage === 4) toast(g, "The shed is up. The wood pile holds 40 now.");
-  if (g.stage === 6) {
-    g.longNightPending = true;
-    toast(g, "The cabin is complete. Something howls in the distance.");
-    toast(g, "THE LONG NIGHT comes at nightfall. Stock up on wood.");
-  }
-}
-
 function drawListMenu(ctx: any, g: any, title: string, right: string, rows: any[]) {
   drawListMenuFrame(ctx, g, title, right, rows, () => closeMenu(g));
-}
-
-function buildRows(g: any, meta: any) {
-  const rows: any[] = [];
-  const total = () => g.player.wood + g.stored;
-  if (g.stage < 6) {
-    const cost = Math.round(STAGES[g.stage].cost * (meta.up.blue ? 0.8 : 1));
-    const needsStations = g.stage === 5 && !canCompleteCabin(g);
-    const needsGuide = g.stage === 5 && g.guideLevel < 4;
-    const needsFence = !campEstablished(g);
-    rows.push({
-      label: STAGES[g.stage].name.toUpperCase(),
-      right: needsFence ? "BUILD FENCE" : needsGuide ? "FINISH M1-4" : needsStations ? "3 STATIONS LV1" : g.buildConfirm === "stage" ? "CONFIRM?" : cost + " WOOD",
-      desc: needsFence ? "PLACE ONE LOG AT EACH CAMP BOUNDARY" : needsGuide ? "COMPLETE GROOTYS FIRST FOUR MISSIONS" : needsStations ? "HEARTH, BENCH AND STORAGE LV1 FIRST" :
-        g.buildConfirm === "stage" ? "TAP AGAIN TO BUILD" : STAGES[g.stage].desc.toUpperCase(),
-      h: 15, enabled: !needsFence && !needsGuide && !needsStations && total() >= cost,
-      onDown: () => {
-        if (needsFence) { g.buildConfirm = null; toast(g, "BUILD BOTH CAMP POSTS FIRST."); return; }
-        if (needsGuide) { g.buildConfirm = null; toast(g, "FINISH GROOTYS FIRST FOUR MISSIONS."); return; }
-        if (needsStations) { g.buildConfirm = null; toast(g, "UPGRADE FIREPLACE, WORKBENCH & LOG STORAGE TO LV1 FIRST."); return; }
-        if (total() < cost) { g.buildConfirm = null; toast(g, "NOT ENOUGH WOOD."); return; }
-        if (g.buildConfirm !== "stage") { g.buildConfirm = "stage"; return; }
-        g.buildConfirm = null;
-        doBuildAction(g, meta);
-      },
-    });
-  }
-  if (campEstablished(g) && g.campExpansion < 1) {
-    rows.push({
-      label: "EASTERN CAMP EXPANSION",
-      right: EXPANSION_COST + " WOOD",
-      desc: "PLACE FIVE LOGS AT THE EAST FENCE MARKER",
-      h: 15, enabled: total() >= EXPANSION_COST,
-      onDown: () => toast(g,"WALK TO THE EAST FENCE MARKER AND PRESS ACT."),
-    });
-  }
-  // One-time permanent structure: once purchased it appears in every later
-  // run and the unique log collection lives in persistent meta, not run wood.
-  const museumLocked = !meta.museumBuilt && g.campExpansion < 1;
-  rows.push({
-    label:meta.museumBuilt ? "VISIT LOG MUSEUM" : "BUILD LOG MUSEUM",
-    right:meta.museumBuilt ? museumCount(meta)+"/4 FOUND"
-      : museumLocked ? "EXPAND CAMP" : g.buildConfirm==="museum" ? "CONFIRM?" : MUSEUM_COST+" WOOD",
-    desc:meta.museumBuilt ? "PERMANENT COLLECTION - TAP TO VIEW" :
-      museumLocked ? "CLAIM EASTERN LAND BEFORE BUILDING HERE" :
-      g.buildConfirm==="museum" ? "TAP AGAIN TO BUILD PERMANENT MUSEUM"
-      : "KEEP SPECIAL LOGS THROUGH ALL RUNS",
-    h:15,enabled:!!meta.museumBuilt || (!museumLocked && total()>=MUSEUM_COST),
-    onDown:()=>{
-      if(meta.museumBuilt){g.buildConfirm=null;g.menu="museum";return;}
-      if(museumLocked){g.buildConfirm=null;toast(g,"EXPAND CAMP EAST TO UNLOCK THE MUSEUM SITE.");return;}
-      if(total()<MUSEUM_COST){g.buildConfirm=null;toast(g,"NOT ENOUGH WOOD.");return;}
-      if(g.buildConfirm!=="museum"){g.buildConfirm="museum";return;}
-      g.buildConfirm=null;
-      const fromCarried=Math.min(g.player.wood,MUSEUM_COST);
-      g.player.wood-=fromCarried;
-      g.stored-=MUSEUM_COST-fromCarried;
-      meta.museumBuilt=true;
-      g.museumBuilt=true;
-      saveMeta(meta);
-      AUDIO.effect("build");
-      toast(g,"LOG MUSEUM BUILT FOREVER! VIEW YOUR COLLECTION.");
-    }
-  });
-  return rows;
 }
 
 function resetAllProgress(g: any, meta: any) {

@@ -152,7 +152,7 @@ export function updateAmbient(g: any, dt: number): void {
           c.state = "fly";
           c.vx = (c.x > pxr ? 1 : -1) * (26 + Math.random() * 14);
           c.dir = c.vx > 0 ? 1 : -1;
-          if (g.ui === "run" && Math.random() < 0.1) toast(g, "A bird flutters away.");
+          if (g.ui === "run" && Math.random() < 0.1) addStatusMessage(g, "A bird flutters away.");
         } else if (c.t <= 0) { g.critters.splice(i, 1); continue; }
       } else {
         c.x += c.vx * dt;
@@ -165,7 +165,7 @@ export function updateAmbient(g: any, dt: number): void {
           c.state = "hop";
           c.dir = c.x > pxr ? 1 : -1;
           c.t = 2.2;
-          if (g.ui === "run" && Math.random() < 0.12) toast(g, "A rabbit darts away.");
+          if (g.ui === "run" && Math.random() < 0.12) addStatusMessage(g, "A rabbit darts away.");
         } else if (c.t <= 0) { g.critters.splice(i, 1); continue; }
       } else {
         c.x += c.dir * 52 * dt;

@@ -8,7 +8,8 @@ This is the **current planning view**, not a historical list of every completed 
 | --- | --- | --- |
 | High | Make the next campaign stage playable with clear missions, rewards and progression after First Settlement | Planned |
 | High | Review Ash Shop readability and touch scrolling on an actual landscape Android phone | Needs real-device QA |
-| High | Test Fire Capacity levels, 50% fence-torch Warmth-loss shelter and Cold/Warmth balance in winter and Long Night play | Needs gameplay QA |
+| High | Test Fire Capacity, fence torch protection and new Debris Hut sleep survival in winter and Long Night play on a real phone | Needs gameplay QA |
+| Medium | Review debris hut depth/overlap alongside the existing Log Bench, Storage and later Cabin artwork | Review |
 | Medium | Polish the visual scale of heavily fueled fires and check their impact on the camp scene | Review |
 | Medium | Test inventory, pet actions, carry weight and restore-from-checkpoint after longer runs | Needs QA |
 | Medium | Continue extracting scene/menu composition and focused run-simulation logic from `src/game/game.ts` in tested slices; station actions, menu navigation, crafting and construction are now isolated | Ongoing |

@@ -68,7 +68,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     if (k === "e" || k === " ") { g.keys.act = false; g.chopBlocked = false; }
     return;
   }
-  const isList = ["station", "bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause", "toolbar", "quickslot"].includes(g.menu);
+  const isList = ["station", "bench", "shop", "build", "settings", "audio", "reset1", "reset2", "pause", "toolbar", "quickslot", "hut"].includes(g.menu);
   if (k === "arrowup" || k === "w") {
     if (isList) moveSel(g, meta, -1);
     else if (g.ui === "title" && !g.menu) g.titleSel = (g.titleSel + titleActions(g, meta).length - 1) % titleActions(g, meta).length;

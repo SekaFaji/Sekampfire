@@ -14,6 +14,7 @@ import { campEstablished, clearClaimedTrees, keepFencePostsClear } from "./campB
 import { normalizeFenceTorches } from "./fenceTorches47";
 import { addStatusMessage } from "./statusMessages";
 import { fireFuelCapacity63, FIRE_MAX_LEVEL63 } from "./fireCapacity63";
+import { HUT_LOG_COST } from "./debrisHut";
 
 /** Restore only validated v1 checkpoints. The factory is injected to avoid
  * circular imports with the main engine. Saved fields, fallback values,
@@ -76,6 +77,12 @@ export function hydrateSavedRun(g: any, data: any, meta: any, newEngine: () => a
   g.pileLogs = n("pileLogs", 0, SITE_COST, 0);
   g.benchBuildT = n("benchBuildT", -1, BUILD_TIME, -1);
   g.pileBuildT = n("pileBuildT", -1, BUILD_TIME, -1);
+  // Optional v1 checkpoint fields; pre-hut saves resume outside untouched.
+  g.hutBuilt = flag("hutBuilt");
+  g.hutLogs = Math.floor(n("hutLogs", 0, HUT_LOG_COST, 0));
+  g.hutBuildT = g.hutBuilt ? -1 : n("hutBuildT", -1, BUILD_TIME, -1);
+  g.hutInside = g.hutBuilt && flag("hutInside");
+  if (g.hutBuilt) g.hutLogs = HUT_LOG_COST;
   g.campUpgrades = Object.fromEntries(stationIds.map(id => [
     id, Math.floor(finiteRange(data.campUpgrades?.[id], 0, 2, 0))
   ]));
@@ -159,7 +166,7 @@ export function hydrateSavedRun(g: any, data: any, meta: any, newEngine: () => a
   g.ui = g.victoryPending ? "win" : g.levelCompletePending ? "levelComplete" : "run";
   if (g.victoryPending) g.lastResult = {kind:"won",nights:g.night,ash:Math.floor(g.ashEarned)};
   g.won = flag("won") || g.victoryPending;
-  g.menu = null;
+  g.menu = g.hutInside && g.ui === "run" ? "hut" : null;
   g.resumeData = null;
   g.keys = {};
   g.pointers = {};

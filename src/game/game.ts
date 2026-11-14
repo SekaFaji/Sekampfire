@@ -49,6 +49,8 @@ import { nearbyStation, selectedStation, selectStation, dismissStationSelection,
 import { drawQuickSlot, normalizeQuickSlots, openQuickSlotPicker, assignQuickSlot } from "./quickSlots";
 import { localTemperature } from "./thermometer";
 import { advanceHeatSoak, fireWarmthRate } from "./warmth";
+import { HUT_DOOR_X, HUT_LOG_COST, nearDebrisHut, interactDebrisHut,
+  advanceDebrisHutBuild, sleepUntilDawn, debrisHutRows, drawDebrisHutInterior } from "./debrisHut";
 import { guideTarget, drawWorldFireflies, drawOffscreenGuide, drawScreenFireflies } from "./guidance";
 import { WEST_POST_X, EAST_POST_X, EXPANSION_MARKER_X, EXPANSION_COST,
   campEstablished, campClaimBounds, placeFencePost,
@@ -81,6 +83,7 @@ function createEngine(): any {
     fenceLeft: false, fenceRight: false, campExpansion: 0,
     fenceTorches: {left:0,right:0,outer:0},
     builtBench: false, builtPile: false, benchLogs: 0, pileLogs: 0,
+    hutBuilt: false, hutLogs: 0, hutBuildT: -1, hutInside: false, hutSleepMessage: "",
     stationId: "hearth", stationFrom: false, selectedStation: null,
     campUpgrades: { hearth: 0, bench: 0, pile: 0 }, fenceMastery62: 0, buildConfirm: null,
     benchBuildT: -1, pileBuildT: -1, dust: [] as any[], footprints: [] as any[], footstepT: 0, walkSoundT: 0,
@@ -199,7 +202,9 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // held after moving, it must be released before another chop can begin.
   const moveLeft = !!(g.keys.left || g.pleft);
   const moveRight = !!(g.keys.right || g.pright);
-  const wantsToMove = moveLeft !== moveRight;
+  // A real hut interior keeps the survival clock running, not world controls.
+  const inHut = g.menu === "hut" && g.hutInside;
+  const wantsToMove = !inHut && (moveLeft !== moveRight);
   if (!g.keys.act) g.chopBlocked = false;
   if (wantsToMove) {
     if (p.chopT > 0) {
@@ -287,6 +292,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   }
 
   // ---- zones ----
+  const nearHut = nearDebrisHut(g);
   const nearPit = Math.abs(p.x - CX) < 22;
   const nearBench = Math.abs(p.x - BENCH_X) < 22;
   const nearPile = Math.abs(p.x - PILE_X) < 22;
@@ -307,7 +313,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   // ---- context action (single press) ----
   if (g.pressE) {
     g.pressE = false;
-    if (!wantsToMove && !g.chopBlocked && p.chopT <= 0) {
+    if (!inHut && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
       if (leftPost || rightPost) {
         g.keys.act = false;
         const result = placeFencePost(g, leftPost ? "left" : "right");
@@ -344,6 +350,13 @@ function update(g: any, meta: any, dt: number, cb: any) {
       } else if (!campEstablished(g) && (nearBench || nearPile)) {
         g.keys.act = false;
         cb.toast("BUILD THE LEFT AND RIGHT CAMP POSTS FIRST.");
+      } else if (nearHut) {
+        g.keys.act = false;
+        const wasBuilt = g.hutBuilt;
+        const message = interactDebrisHut(g);
+        cb.toast(message);
+        if (g.hutBuildT === 0 && g.hutLogs >= HUT_LOG_COST) AUDIO.effect("build");
+        if (!wasBuilt && g.hutBuilt) AUDIO.effect("build");
       } else if (nearBench && !g.builtBench) {
         g.keys.act = false;
         if (g.benchBuildT >= 0) {
@@ -390,7 +403,7 @@ function update(g: any, meta: any, dt: number, cb: any) {
   }
 
   // ---- hold action: keep chopping / stoking ----
-  if (g.keys.act && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
+  if (g.keys.act && !inHut && !wantsToMove && !g.chopBlocked && p.chopT <= 0) {
     if (!nearPit && !nearBench && !nearPile && tree) {
       p.chopTree = tree;
       p.chopTime = choppingSeconds(g,meta);
@@ -474,6 +487,10 @@ function update(g: any, meta: any, dt: number, cb: any) {
   };
   stepBuild(true);
   stepBuild(false);
+  if (advanceDebrisHutBuild(g, dt)) {
+    AUDIO.effect("build");
+    cb.toast("DEBRIS HUT LV1 FINISHED. PRESS ACT TO ENTER.");
+  }
   for (let i = g.dust.length - 1; i >= 0; i--) {
     const du = g.dust[i];
     du.life -= dt; du.x += du.vx * dt; du.y += du.vy * dt; du.vy += 14 * dt;
@@ -533,7 +550,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   advanceCold(g, dt, meta);
   let d = coldWarmthDrain(g, meta);
   const wr = fireHeatRadius63(g);
-  const byFire = g.fireLit && Math.abs(p.x - CX) < wr;
+  // The debris roof insulates but does not transmit the fire's heat-soak.
+  const byFire = !inHut && g.fireLit && Math.abs(p.x - CX) < wr;
   g.heatSoak = advanceHeatSoak(g.heatSoak, dt, byFire);
   if (byFire) d -= fireWarmthRate(g);
   if (g.aurora && g.isNight) d -= 0.3;
@@ -569,6 +587,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (nearMuseum) g.actionLabel = "MUSEUM";
   else if (nearGrooty) g.actionLabel = "TALK";
   else if (!campEstablished(g) && (nearBench || nearPile)) g.actionLabel = "BUILD POSTS";
+  else if (nearHut) g.actionLabel = g.hutBuilt ? "ENTER HUT" : g.hutBuildT >= 0
+    ? "BUILDING" : g.hutLogs >= HUT_LOG_COST ? "RAISE HUT" : "HUT " + g.hutLogs + "/25";
   else if (nearBench) g.actionLabel = g.builtBench ? "USE BENCH" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (nearPit) g.actionLabel = "FIREPLACE";
   else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : "STORAGE";
@@ -798,6 +818,8 @@ function shopRows(g:any,meta:any) {
 }
 
 function menuRows(g: any, meta: any): any[] {
+  if (g.menu === "hut") return debrisHutRows(g, () =>
+    sleepUntilDawn(g, dt => update(g, meta, dt, g.cb || {toast:(t:string)=>toast(g,t),end:()=>{}})));
   if (g.menu === "station") return stationRows(g, meta);
   if (g.menu === "bench") return benchRows(g, meta);
   if (g.menu === "shop") return g.shopTab === 2 ? [] : shopRows(g, meta);
@@ -921,6 +943,8 @@ function drawMenu(ctx: any, g: any, meta: any) {
   ctx.fillRect(0, 0, W, H);
   if (g.menu === "inventory") {
     drawInventoryMenu(ctx,g,meta,()=>closeMenu(g));
+  } else if (g.menu === "hut") {
+    drawDebrisHutInterior(ctx, g, menuRows(g, meta));
   } else if (g.menu === "station") {
     drawStationPopup(ctx,g,stationRows(g,meta),()=>closeMenu(g));
   } else if (g.menu === "bench") {
@@ -1494,6 +1518,7 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
   if (inRun && g.player.chopT <= 0 && !g.over && !g.menu) {
     const p = g.player;
     const bob = Math.sin(g.animT * 4) > 0 ? 0 : 1;
+    const nearHut2 = nearDebrisHut(g);
     const nearPit2 = Math.abs(p.x - CX) < 22;
     const nearBench2 = Math.abs(p.x - BENCH_X) < 22;
     const nearPile2 = Math.abs(p.x - PILE_X) < 22;
@@ -1518,6 +1543,10 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
       drawTextO(ctx,"GROOTY",GROOTY_X-10,103-bob,"#ffe9a0","#060a18");
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
+    } else if (nearHut2) {
+      const label = g.hutBuilt ? "ENTER HUT" : g.hutBuildT >= 0 ? "BUILDING"
+        : g.hutLogs >= HUT_LOG_COST ? "RAISE HUT" : g.hutLogs + "/25 LOGS";
+      drawTextO(ctx,label,HUT_DOOR_X - Math.floor(textW(label)/2),110-bob,"#ffe9a0","#060a18");
     } else if (nearBench2 && selectedStation(g)!=="bench") {
       const lbl = g.builtBench ? "ACCESS" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");

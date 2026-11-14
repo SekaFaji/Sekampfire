@@ -7,6 +7,7 @@ import { protectedByFenceTorches } from "./fenceTorches47";
 import { activePet } from "./companion";
 import { fenceProtection62 } from "./campMastery62";
 import { fireHeatRadius63 } from "./fireCapacity63";
+import { HUT_WARMTH_DRAIN_FACTOR } from "./debrisHut";
 
 /** Cold represents environmental exposure (0-100), NOT a second life bar.
  * It replaces the weather-specific warmth drain additions in game.ts. */
@@ -17,12 +18,12 @@ export const AMBIENT_DRY_RATE = 1.8;
 
 export function shelteredFromRain(g: any): boolean {
   // A built Lean-to keeps the player dry only near the actual campsite.
-  return g.stage >= 3 && Math.abs(g.player.x - CX) < 52;
+  return g.hutInside === true || (g.stage >= 3 && Math.abs(g.player.x - CX) < 52);
 }
 
 export function fireSheltered(g: any): boolean {
   // Same fire-radius rule used by warmth recovery, not an invented larger area.
-  return g.fireLit && Math.abs(g.player.x - CX) < fireHeatRadius63(g);
+  return !g.hutInside && g.fireLit && Math.abs(g.player.x - CX) < fireHeatRadius63(g);
 }
 
 /** Equipment and nearby companions reduce Cold exposure; they do not
@@ -101,5 +102,8 @@ export function coldWarmthDrain(g: any, meta: any): number {
   // Apply after the existing insulation/torch/cabin factors so protection
   // stacks predictably but cannot grant unlimited Warmth without a fire.
   if (protectedByFenceTorches(g)) drain *= 1 - FENCE_TORCH_DRAIN_REDUCTION;
+  // Shelter doesn't generate heat. Even asleep the surviving Warmth reserve
+  // is consumed; storms can still kill a poorly prepared camper.
+  if (g.hutInside && g.hutBuilt) drain *= HUT_WARMTH_DRAIN_FACTOR;
   return Math.max(0, drain);
 }

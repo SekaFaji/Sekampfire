@@ -1,6 +1,7 @@
 import { clamp } from "./math";
 import { revealShopCard58 } from "./shopScroll58";
 import { dismissStationSelection } from "./proximity45";
+import { leaveDebrisHut } from "./debrisHut";
 
 /** Menu close rules and keyboard selection state live outside the engine.
  * Rendering owns row construction; selection receives its current rows.
@@ -12,6 +13,10 @@ export function closeMenu(g: any) {
   g.craftConfirm = null;
   g.buildConfirm = null;
   g.endRunConfirm = false;
+  if (g.menu === "hut") {
+    leaveDebrisHut(g);
+    return;
+  }
   if (g.menu === "inventory") {
     g.menu = g.inventoryFrom === "pause" ? "pause" : null;
     g.inventoryFrom = "run";

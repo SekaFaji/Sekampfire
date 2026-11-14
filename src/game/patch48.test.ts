@@ -102,7 +102,7 @@ describe("Patch #48: real post corners, independent seven-dawn fence torches",()
     g.player.x=EAST_POST_X;buildFenceTorch(g,"right");
     g.player.x=CX;
     expect(protectedByFenceTorches(g)).toBe(true);
-    expect(coldWarmthDrain(g,m)).toBe(0);
+    expect(coldWarmthDrain(g,m)).toBeGreaterThan(0); // partial shelter, no immunity
     // A non-existent third flame must not protect the far expanded section.
     g.player.x=EAST_POST_X+61;
     expect(protectedByFenceTorches(g)).toBe(false);
@@ -110,7 +110,7 @@ describe("Patch #48: real post corners, independent seven-dawn fence torches",()
     g.player.x=EAST_EXPANDED_X;buildFenceTorch(g,"outer");
     g.player.x=EAST_POST_X+61;
     expect(protectedByFenceTorches(g)).toBe(true);
-    expect(coldWarmthDrain(g,m)).toBe(0);
+    expect(coldWarmthDrain(g,m)).toBeGreaterThan(0); // partial shelter, no immunity
     g.player.x=EAST_EXPANDED_X+2;
     expect(protectedByFenceTorches(g)).toBe(false);
     expect(coldWarmthDrain(g,m)).toBeGreaterThan(0);

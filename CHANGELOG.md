@@ -2,6 +2,14 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-14 - Debris Hut and sleep to dawn (Patch #71)
+
+- Added a level-one Debris Hut building site behind and right of the campfire, unlocked by both fence posts and paid with exactly 25 carried Pine Logs. Construction uses the existing 7-second build duration.
+- Added a hand-drawn, native-pixel, cramped interior with a leaf bed, touch and keyboard Rest/Exit actions, and shelter that blocks new rain dampness and reduces Warmth loss by 65%, without generating heat.
+- Sleeping is permitted at night and advances the actual game update in bounded 0.25-second steps: weather, Cold, dampness, fire fuel, torch lifetimes, real dawn Ash, death and Long Night outcomes remain active. It cannot teleport past a survival check.
+- Extended optional fields in the existing v1 run checkpoint so old saves remain compatible, including restoring a player who was inside the hut. Added focused physics, input and save tests; no Ash Shop or camp-stage progression changes.
+- Debris Hut art placement relative to later Cabin stages remains a visual QA item.
+
 ## 2026-11-14 - Fence torch Warmth balance (Patch #70)
 
 - Lit fence torches now reduce Warmth loss by **50%** inside their existing protected camp areas instead of preventing it completely. Outdoor temperature, Cold exposure, weather, torch placement and campfire heat recovery remain independent.

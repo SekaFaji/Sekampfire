@@ -15,8 +15,8 @@ A replayable, pixel-art survival game about collecting wood, tending a campfire 
 
 Chop trees, carry real logs home and keep your fire burning through changing days and nights. As you survive, expand your camp and invest earned Ash in improvements for future runs.
 
-- **Fire and survival:** Feed Pine Logs to the campfire, manage fuel and Warmth, and survive changing weather and Cold exposure.
-- **Build and craft:** Establish fences, a Workbench and Log Storage; improve camp stations and craft useful gear.
+- **Fire and survival:** Feed Pine Logs to the campfire, manage fuel and Warmth, and survive changing weather and Cold exposure. Rest in the Debris Hut until dawn, but stay prepared: sleeping still consumes Warmth and can be fatal.
+- **Build and craft:** Establish fences, a Workbench, Log Storage and a 25-log Debris Hut; improve camp stations and craft useful gear.
 - **Progress between runs:** Bank Ash, buy permanent upgrades and gradually improve your starting conditions. Fire Capacity can grow from 100 to 500 fuel.
 - **A living forest:** Four seasons, wildlife, environmental effects, auroras and shooting stars.
 - **Companions and collectibles:** Bingsu, the loyal Dogo Argentino, helps retrieve logs; discover unique logs for the camp Museum.

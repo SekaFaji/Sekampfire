@@ -5,6 +5,7 @@ import { cleanLogCollection } from "./museum";
 import { snapshotInventory } from "./inventory";
 import { validatedAshLedger } from "./campaign44";
 import { normalizeFenceTorches } from "./fenceTorches47";
+import { HUT_LOG_COST } from "./debrisHut";
 
 function saveMeta(m: any) { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) { } }
 function safeCount(v: any): number {
@@ -58,6 +59,7 @@ function captureRunSnapshot(g: any): any {
     "guideLevel","guideChops","guideStokes","guideStoredTen",
     "guideTalked","scoutVisited","scoutReturned","depth","builtBench","builtPile","benchLogs","pileLogs",
     "benchBuildT","pileBuildT","stored","treeId","scenerySeed","campUpgrades",
+    "hutBuilt","hutLogs","hutBuildT","hutInside",
     "fenceLeft","fenceRight","campExpansion","fenceTorches","fenceMastery62","fireCapacityTier63","heatSoak","cold","dampness"];
   const state: any = {};
   for (const key of keys) state[key] = g[key];
@@ -73,6 +75,12 @@ function captureRunSnapshot(g: any): any {
   state.campaignRunId = typeof g.campaignRunId === "string" && g.campaignRunId.length < 100
     ? g.campaignRunId : null;
   state.levelCompletePending = g.levelCompletePending === true;
+  state.hutBuilt = g.hutBuilt === true;
+  state.hutLogs = Number.isFinite(g.hutLogs)
+    ? Math.max(0, Math.min(HUT_LOG_COST, Math.floor(g.hutLogs))) : 0;
+  state.hutBuildT = Number.isFinite(g.hutBuildT)
+    ? clamp(g.hutBuildT, -1, 7) : -1;
+  state.hutInside = state.hutBuilt && g.hutInside === true && g.menu === "hut";
   state.campUpgrades = Object.fromEntries(stationIds.map(id => [
     id, Math.min(2, Math.max(0, Math.floor(Number(g.campUpgrades?.[id]) || 0)))
   ]));

@@ -25,6 +25,7 @@ Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **Re
 | `src/game/campLegacy53.ts`, `campMastery62.ts` | Permanent prebuilt foundations and masteries for new runs |
 | `src/game/firewood52.ts`, `fireCapacity63.ts` | Wood fuel rolls, consumption, maximum fuel and heat strength |
 | `src/game/cold.ts`, `warmth.ts`, `thermometer.ts` | Cold exposure, Warmth recovery and local air temperature |
+| `src/game/debrisHut.ts` | Physical 25-log shelter, pixel exterior and cramped interior, reduced Warmth drain, and fixed-step sleep-until-dawn with real survival checks |
 | `src/game/inventory.ts`, `equipment50.ts`, `companion.ts` | Items, equipment and Bingsu's real-log delivery |
 | `src/game/save.ts` | Permanent meta storage, validation and unfinished-run checkpoints |
 | `src/game/render*.ts`, `hud.ts`, `font.ts`, `palette.ts` | World art, HUD, pixel font and seasonal palettes |

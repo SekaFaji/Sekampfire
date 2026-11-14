@@ -157,7 +157,8 @@ function App() {
         last = now;
         // Pause all simulation and ambient events while a menu is open.
         if (!g.menu) g.animT += dt;
-        const active = g.ui === "run" && !g.over && !g.menu;
+        // Only the hut interior continues real survival time while its own view is open.
+        const active = g.ui === "run" && !g.over && (!g.menu || g.menu === "hut");
         if (active) update(g, metaRef.current, dt, cb);
         if (!g.menu) updateAmbient(g, dt);
         if(g.menu==="shop"&&g.shopTab===0)

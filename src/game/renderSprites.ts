@@ -9,6 +9,7 @@ import { drawSeasonalWildlife } from "./renderWildlife";
 import { drawMuseumHut } from "./museum";
 import { drawWoodlandSilhouettes } from "./renderAtmosphere";
 import { fireHeatStrength63 } from "./fireCapacity63";
+import { drawDebrisHutExterior } from "./debrisHut";
 
 // ============ sprites ============
 function drawFlame(ctx: any, x: number, y: number, t: number, strength: number) {
@@ -488,6 +489,8 @@ function drawStructures(ctx: any, g: any) {
   const colors = visualPalette(g);
   const roofTrim = colors.name === "winter" ? "#eef4fa" : colors.ridge;
   const x0 = CX - 42;
+  // Draw the hut behind foreground camp stations, not over their controls.
+  drawDebrisHutExterior(ctx, g);
   if (g.builtBench) drawBench(ctx, g);
   else if (g.benchBuildT >= 0) drawConstruction(ctx, g, BENCH_X, true);
   else drawSite(ctx, g, BENCH_X, g.benchLogs);

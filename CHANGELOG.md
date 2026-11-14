@@ -2,6 +2,13 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-14 - Visible Debris Hut construction site (Patch #72)
+
+- Replaced the indistinct hut foundation with a high-contrast A-frame build outline, a clearly marked ground footprint and a permanent `DEBRIS HUT` board showing live `0/25 LOGS` construction progress as soon as both fence posts exist.
+- Raised the site's drawing order above other camp buildings so the existing Cabin roof and neighboring structures cannot hide the construction marker. The fire and player still draw above it.
+- Improved nearby world prompts to state the actual ACT interaction and clearer context labels (`ADD LOGS`, `RAISE HUT`, `ENTER HUT`). No crafting, sleeping, costs, save fields, or campaign progression changed.
+- Added focused visual and ACT-interaction tests covering unlocked visibility, deposit progress, existing Cabin layering, Log Storage priority, and the finished shelter.
+
 ## 2026-11-14 - Debris Hut and sleep to dawn (Patch #71)
 
 - Added a level-one Debris Hut building site behind and right of the campfire, unlocked by both fence posts and paid with exactly 25 carried Pine Logs. Construction uses the existing 7-second build duration.

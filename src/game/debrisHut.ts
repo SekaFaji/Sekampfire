@@ -131,21 +131,51 @@ export function drawDebrisHutExterior(ctx: any, g: any): void {
   if (g.ui !== "run" || !campEstablished(g)) return;
   const x = HUT_DOOR_X;
   if (!g.hutBuilt) {
-    // A real, distinct building site behind the small campfire.
-    px(ctx, x - 15, 142, 30, 2, "#715236");
-    px(ctx, x - 13, 135, 2, 11, "#9a7650");
-    px(ctx, x + 11, 135, 2, 11, "#9a7650");
-    px(ctx, x - 13, 135, 26, 1, "#dfba7b");
-    const progress = Math.min(HUT_LOG_COST, Math.max(0, Number(g.hutLogs) || 0));
+    // High-contrast construction footprint; previously the tiny flat planks
+    // looked like ordinary camp debris and were hidden under nearby sprites.
+    px(ctx, x - 25, 145, 50, 4, "#3b3429");
+    px(ctx, x - 24, 144, 48, 1, "#d6aa71");
+    px(ctx, x - 23, 133, 3, 12, "#957047");
+    px(ctx, x + 20, 133, 3, 12, "#957047");
+    for (let i = 0; i < 23; i++) {
+      const beam = i % 5 === 0 ? "#e6c189" : "#af8653";
+      px(ctx, x - 23 + i, 141 - i, 3, 2, beam);
+      px(ctx, x + 21 - i, 141 - i, 3, 2, beam);
+    }
+    // Empty doorway makes it recognizable as a future shelter.
+    px(ctx, x - 5, 133, 10, 11, "#2b302c");
+    px(ctx, x - 4, 134, 8, 10, "#585342");
+    const progress = Math.min(HUT_LOG_COST,
+      Math.max(0, Math.floor(Number(g.hutLogs) || 0)));
+    // Each group corresponds to actual logs deposited at the site.
     for (let i = 0; i < Math.ceil(progress / 5); i++) {
-      px(ctx, x - 12 + i * 5, 139 - (i % 2), 5, 3, "#805535");
-      px(ctx, x - 11 + i * 5, 139 - (i % 2), 3, 1, "#c0935c");
+      px(ctx, x - 20 + i * 8, 141 - (i % 2) * 3, 7, 3, "#815534");
+      px(ctx, x - 19 + i * 8, 141 - (i % 2) * 3, 5, 1, "#ce9f6c");
     }
     if (g.hutBuildT >= 0) {
-      px(ctx, x - 17, 124, 34, 10, "#5f6640");
-      px(ctx, x - 11, 121, 22, 3, "#987d4a");
-      px(ctx, x - 12, 116, 24 * clamp(g.hutBuildT / BUILD_TIME, 0, 1), 2, "#f3cc82");
+      const portion = clamp(g.hutBuildT / BUILD_TIME, 0, 1);
+      for (let i = 0; i < Math.floor(portion * 12); i++)
+        px(ctx, x - 16 + i * 3, 125 - Math.floor(i / 3), 7, 3,
+          i % 2 ? "#63714a" : "#8d824e");
     }
+    // The sign is always present once both fence posts exist, even with zero
+    // logs and when the player is too far away for contextual ACT prompts.
+    const boardY = 80;
+    px(ctx, x - 31, boardY, 62, 23, "#302b25");
+    px(ctx, x - 30, boardY + 1, 60, 21, "#675038");
+    px(ctx, x - 30, boardY + 1, 60, 1, "#ebc78e");
+    px(ctx, x - 30, boardY + 21, 60, 1, "#a5784f");
+    px(ctx, x - 28, boardY + 3, 1, 17, "#ba9969");
+    px(ctx, x + 27, boardY + 3, 1, 17, "#ba9969");
+    drawTextC(ctx, "DEBRIS HUT", x, boardY + 5, "#ffe6af");
+    drawTextC(ctx, g.hutBuildT >= 0 ? "BUILDING..." :
+      progress >= HUT_LOG_COST ? "READY TO BUILD" :
+      progress + "/25 LOGS", x, boardY + 14, "#f5d49b");
+    // Point directly at the physical construction site, not the campfire.
+    px(ctx, x - 1, boardY + 23, 3, 7, "#caa16c");
+    px(ctx, x - 3, boardY + 28, 7, 2, "#e4bd7e");
+    px(ctx, x - 2, boardY + 30, 5, 2, "#e4bd7e");
+    px(ctx, x - 1, boardY + 32, 3, 2, "#e4bd7e");
     return;
   }
   // Low, asymmetrical A-frame of debris, moss, leaves and rough branches.

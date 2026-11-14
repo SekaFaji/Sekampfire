@@ -489,8 +489,6 @@ function drawStructures(ctx: any, g: any) {
   const colors = visualPalette(g);
   const roofTrim = colors.name === "winter" ? "#eef4fa" : colors.ridge;
   const x0 = CX - 42;
-  // Draw the hut behind foreground camp stations, not over their controls.
-  drawDebrisHutExterior(ctx, g);
   if (g.builtBench) drawBench(ctx, g);
   else if (g.benchBuildT >= 0) drawConstruction(ctx, g, BENCH_X, true);
   else drawSite(ctx, g, BENCH_X, g.benchLogs);
@@ -557,6 +555,10 @@ function drawStructures(ctx: any, g: any) {
       px(ctx, CX - w / 2, 119 - i * 2, w, 1, roofTrim);
     }
   }
+  // Draw the hut and its build-site sign last among structures so the
+  // Workbench, Storage and later Cabin roof never conceal its footprint.
+  // The campfire and moving player still render above this world layer.
+  drawDebrisHutExterior(ctx, g);
   for (const s of g.smoke) {
     ctx.fillStyle = `rgba(207,214,221,${clamp(s.life, 0, 1) * 0.5})`;
     ctx.fillRect(Math.round(s.x), Math.round(s.y), 2, 2);

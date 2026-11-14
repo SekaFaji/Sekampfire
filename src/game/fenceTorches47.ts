@@ -65,7 +65,7 @@ export function buildFenceTorch(g:any,side:FenceTorchSide):string {
   g.player.wood-=FENCE_TORCH_COST;
   if(!g.fenceTorches)g.fenceTorches=normalizeFenceTorches(null);
   g.fenceTorches[side]=FENCE_TORCH_DAWNS;
-  return "FENCE TORCH LIT! PROTECTS CAMP FOR 7 DAWNS.";
+  return "FENCE TORCH LIT! -50% WARMTH LOSS IN SHELTER FOR 7 DAWNS.";
 }
 
 /** All built corners tick once at sunrise, never per frame. */
@@ -80,7 +80,7 @@ export function advanceFenceTorchDawn(g:any):FenceTorchSide[] {
   return expired;
 }
 
-/** Protection follows actual lit fence sections, not invented spotlights.
+/** Partial Warmth-loss shelter follows actual lit fence sections, not invented spotlights.
  * Adjacent active posts shelter their segment; isolated flames protect only
  * nearby ground inside the fence. The expansion requires its own outer torch
  * for the extension to become fully sheltered. */

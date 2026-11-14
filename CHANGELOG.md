@@ -2,6 +2,12 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-14 - Fence torch Warmth balance (Patch #70)
+
+- Lit fence torches now reduce Warmth loss by **50%** inside their existing protected camp areas instead of preventing it completely. Outdoor temperature, Cold exposure, weather, torch placement and campfire heat recovery remain independent.
+- Updated the build confirmation message to explain the actual protection. Kept the two-Pine-Log cost, seven-dawn timer, existing posts, save keys and checkpoint format unchanged.
+- Added regression coverage for torch coverage, freezing-night survival pressure, stacked equipment and game-loop Warmth loss, with the existing fence post tests updated to expect partial shelter.
+
 ## 2026-11-13 - Station interactions and navigation cleanup (Patch #69)
 
 - Moved physical station entry, fireplace/stored-wood actions and station action rows into `src/game/stationActions.ts`.

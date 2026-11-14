@@ -144,14 +144,14 @@ describe("Patch #47: physical, seven-dawn fence torches",()=>{
     const g=run(),m=meta();g.player.wood=5;
     g.player.x=WEST_POST_X;buildFenceTorch(g,"left");
     expect(protectedByFenceTorches(g)).toBe(true);
-    expect(coldWarmthDrain(g,m)).toBe(0);
+    expect(coldWarmthDrain(g,m)).toBeGreaterThan(0); // partial shelter, no immunity
     g.player.x=CX;
     expect(protectedByFenceTorches(g)).toBe(false);
     expect(coldWarmthDrain(g,m)).toBeGreaterThan(0);
     g.player.x=EAST_POST_X;buildFenceTorch(g,"right");
     g.player.x=CX;
     expect(protectedByFenceTorches(g)).toBe(true);
-    expect(coldWarmthDrain(g,m)).toBe(0);
+    expect(coldWarmthDrain(g,m)).toBeGreaterThan(0); // partial shelter, no immunity
     g.player.x=EAST_POST_X+34;
     expect(protectedByFenceTorches(g)).toBe(false);
     expect(coldWarmthDrain(g,m)).toBeGreaterThan(0);

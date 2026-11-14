@@ -80,17 +80,16 @@ export function advanceCold(g: any, dt: number, meta?: any): void {
   g.cold = clamp(current + (target - current) * (1 - Math.exp(-elapsed / COLD_RESPONSE_SECONDS)), 0, 100);
 }
 
-/** Colder REAL local air directly raises warmth loss on top of the existing
- * Cold exposure meter. The bounded factor makes freezing nights threatening
- * without doubling the historical weather damage indiscriminately.
- * Fence torches block drain only in their lit, claimed safe area; they never
- * create the fire's replenishing heat-soak effect. */
+/** Colder REAL local air raises warmth loss on top of Cold exposure.
+ * Fence torches provide partial wind shelter in their actual lit, claimed
+ * area. They do not remove environmental Cold or create the campfire's
+ * replenishing heat-soak effect. */
+export const FENCE_TORCH_DRAIN_REDUCTION = 0.5;
 export function airTemperatureDrainFactor(g:any):number {
   const degrees=localTemperature(g); // genuine local Celsius, not damped HUD text
   return 1 + clamp((8-degrees)*0.022,0,0.72);
 }
 export function coldWarmthDrain(g: any, meta: any): number {
-  if(protectedByFenceTorches(g))return 0;
   const cold = clamp(Number.isFinite(g.cold) ? g.cold : coldTarget(g), 0, 100);
   let drain = 0.35 + cold * 0.045 + (Number(g.depth) || 0) * 0.15;
   drain *= airTemperatureDrainFactor(g);
@@ -98,5 +97,9 @@ export function coldWarmthDrain(g: any, meta: any): number {
   if (g.player.torchT > 0) drain *= 0.5;
   if (g.stage >= 6 && Math.abs(g.player.x - CX) < 44) drain *= 0.35;
   else if (g.stage >= 5 && Math.abs(g.player.x - CX) < 50) drain *= 0.6;
+  // Half the ordinary Warmth loss remains even under lit fence torches.
+  // Apply after the existing insulation/torch/cabin factors so protection
+  // stacks predictably but cannot grant unlimited Warmth without a fire.
+  if (protectedByFenceTorches(g)) drain *= 1 - FENCE_TORCH_DRAIN_REDUCTION;
   return Math.max(0, drain);
 }

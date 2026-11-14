@@ -588,7 +588,8 @@ function update(g: any, meta: any, dt: number, cb: any) {
   else if (nearGrooty) g.actionLabel = "TALK";
   else if (!campEstablished(g) && (nearBench || nearPile)) g.actionLabel = "BUILD POSTS";
   else if (nearHut) g.actionLabel = g.hutBuilt ? "ENTER HUT" : g.hutBuildT >= 0
-    ? "BUILDING" : g.hutLogs >= HUT_LOG_COST ? "RAISE HUT" : "HUT " + g.hutLogs + "/25";
+    ? "BUILDING" : g.hutLogs >= HUT_LOG_COST ? "RAISE HUT"
+      : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (nearBench) g.actionLabel = g.builtBench ? "USE BENCH" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS";
   else if (nearPit) g.actionLabel = "FIREPLACE";
   else if (nearPile) g.actionLabel = !g.builtPile ? (g.pileBuildT >= 0 ? "BUILDING" : g.pileLogs >= SITE_COST ? "BUILD" : p.wood > 0 ? "ADD LOGS" : "GET LOGS") : "STORAGE";
@@ -1544,9 +1545,13 @@ function draw(g: any, ctx: any, off: any, octx: any, reflection: any, rctx: any,
     } else if (nearMuseum2) {
       drawTextO(ctx,"MUSEUM",MUSEUM_X-11,116-bob,"#ffe9a0","#060a18");
     } else if (nearHut2) {
-      const label = g.hutBuilt ? "ENTER HUT" : g.hutBuildT >= 0 ? "BUILDING"
-        : g.hutLogs >= HUT_LOG_COST ? "RAISE HUT" : g.hutLogs + "/25 LOGS";
-      drawTextO(ctx,label,HUT_DOOR_X - Math.floor(textW(label)/2),110-bob,"#ffe9a0","#060a18");
+      // The permanent construction board is visible from afar. This extra
+      // context only appears at interaction distance and names the ACT input.
+      const label = g.hutBuilt ? "ACT - ENTER HUT" : g.hutBuildT >= 0
+        ? "HUT BUILDING" : g.hutLogs >= HUT_LOG_COST ? "ACT - RAISE HUT"
+        : p.wood > 0 ? "ACT - ADD LOGS" : "BRING PINE LOGS";
+      drawTextO(ctx,label,HUT_DOOR_X - Math.floor(textW(label)/2),
+        g.hutBuilt ? 103-bob : 67-bob,"#ffe9a0","#060a18");
     } else if (nearBench2 && selectedStation(g)!=="bench") {
       const lbl = g.builtBench ? "ACCESS" : g.benchBuildT >= 0 ? "BUILDING" : g.benchLogs >= SITE_COST ? "BUILD" : g.benchLogs + "/15 LOGS";
       drawTextO(ctx, lbl, BENCH_X - 7, 122 - bob, "#ffe9a0", "#060a18");

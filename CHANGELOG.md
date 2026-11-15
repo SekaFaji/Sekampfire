@@ -2,6 +2,13 @@
 
 This is a concise record of meaningful milestones, not a replacement for the complete [patch history](docs/DEVELOPMENT_HISTORY.md). The repository's pull requests are the source of truth for individual code changes.
 
+## 2026-11-15 - Pet Shop selection gallery (Patch #73)
+
+- Split Pets into a scrollable four-column selection gallery and the existing detailed pet profile. Bingsu remains the only currently available pet, retaining her approved full-size portrait, story, 40-Ash unlock and inventory equip behavior.
+- Tapping a gallery card or selecting it with Enter opens the profile without buying. Only the profile includes BUY; BACK TO PETS and Escape return to the gallery, while X closes the entire Shop.
+- The same tab and scroll controls now support both the upgrade cards and pet gallery; changing tabs resets the temporary pet selection. Future pets can be added via one explicit catalog entry and their real gameplay and upgrade IDs without inventing unimplemented pets.
+- Added focused keyboard, pointer, ownership, navigation and data-compatibility tests. No new save keys, currencies, pet behavior, Ash prices or automatic ZIP outputs.
+
 ## 2026-11-14 - Visible Debris Hut construction site (Patch #72)
 
 - Replaced the indistinct hut foundation with a high-contrast A-frame build outline, a clearly marked ground footprint and a permanent `DEBRIS HUT` board showing live `0/25 LOGS` construction progress as soon as both fence posts exist.

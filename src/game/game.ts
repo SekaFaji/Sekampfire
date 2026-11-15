@@ -7,6 +7,7 @@ import { buildRows } from "./buildingMenu";
 import { panel, drawListMenuFrame, isSettingsFamily, SETTINGS_VEIL_INK } from "./listMenuRenderer";
 import { createSettingsRows, createAudioRows } from "./settingsMenu";
 import { drawIllustratedGuide, drawShopTabs, drawEndlessNightPreview, drawLockedEndlessButton } from "./menuScreens";
+import { isPetShopItem } from "./petShop";
 import { visibleShopUpgrades60,shopCategory60 } from "./shopCategories60";
 import { clamp } from "./math";
 import { carryCap, pileCap, choppingToolTier, choppingSeconds } from "./rules";
@@ -90,7 +91,7 @@ function createEngine(): any {
     keys: {}, pressE: false, pressT: false, chopBlocked: false, packTier: 0,
     sparkAcc: 0, smokeAcc: 0, treeId: 1,
     // UI
-    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, shopCategory60:"all", shopScroll:0, shopVelocity:0, shopUpgradeCount58:0, ashTapFx:0,
+    ui: "title", menu: null, menuSel: 0, titleSel: 0, helpPage: 0, shopTab: 0, shopPetDetail:null, shopCategory60:"all", shopScroll:0, shopVelocity:0, shopUpgradeCount58:0, ashTapFx:0,
     craftTab: 0, buildTab: 0, craftConfirm: null, lastResult: null,
     zones: [] as any[], pointers: {} as any,
     toasts: [] as any[], critters: [] as any[], meteors: [] as any[],
@@ -781,7 +782,7 @@ function purchaseShopUpgrade51(g:any,meta:any,id:string):boolean {
 }
 function shopRows(g:any,meta:any) {
   if(g.shopTab===2)return [];
-  const available=UPGRADES.filter((u:any)=>g.shopTab===1?u.id==="dog":u.id!=="dog");
+  const available=UPGRADES.filter((u:any)=>g.shopTab===1?isPetShopItem(u.id):!isPetShopItem(u.id));
   const filtered=g.shopTab===0?visibleShopUpgrades60(available,shopCategory60(g)):available;
   return filtered.map((u:any)=>{
       const lvl=Math.max(0,Math.floor(Number(meta?.up?.[u.id])||0));

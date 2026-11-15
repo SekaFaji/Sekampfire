@@ -7,7 +7,7 @@ This is the **current planning view**, not a historical list of every completed 
 | Priority | Work | Status |
 | --- | --- | --- |
 | High | Make the next campaign stage playable with clear missions, rewards and progression after First Settlement | Planned |
-| High | Review Ash Shop readability and touch scrolling on an actual landscape Android phone | Needs real-device QA |
+| High | Verify Ash Shop Upgrades and new Pets gallery/profile, Back and touch scrolling on a landscape Android phone | Needs real-device QA |
 | High | Test Fire Capacity, fence torch protection and new Debris Hut sleep survival in winter and Long Night play on a real phone | Needs gameplay QA |
 | Medium | Review the new always-visible Debris Hut construction marker, proximity ACT label, and finished hut roof on real landscape Android gameplay | Needs real-device QA |
 | Medium | Polish the visual scale of heavily fueled fires and check their impact on the camp scene | Review |

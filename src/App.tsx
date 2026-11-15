@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { fitViewport } from "./ui/viewport";
 import { W, H, loadMeta, saveMeta, createEngine, setupTitleScene, loadRunSnapshot, clearRunSnapshot, toast, saveRunSnapshot, update, updateAmbient, draw, handleKey, handlePointer, handleWheel, AUDIO } from "./game/game";
-import { tickShopScroll58 } from "./game/shopScroll58";
+import { tickShopScroll58, isShopGridScrollable58 } from "./game/shopScroll58";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -161,7 +161,7 @@ function App() {
         const active = g.ui === "run" && !g.over && (!g.menu || g.menu === "hut");
         if (active) update(g, metaRef.current, dt, cb);
         if (!g.menu) updateAmbient(g, dt);
-        if(g.menu==="shop"&&g.shopTab===0)
+        if(isShopGridScrollable58(g))
           tickShopScroll58(g,dt,g.shopUpgradeCount58||0);
         if (g.ui === "run" && !g.over) {
           saveAccum += dt;

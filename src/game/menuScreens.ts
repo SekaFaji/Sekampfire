@@ -1,6 +1,7 @@
 import { drawText, drawTextC, drawTextWrap, textW } from "./font";
 import { drawTutorialArt, TUTORIAL_PAGES } from "./tutorial";
-import { BINGSU, drawBingsuPortrait } from "./bingsu";
+import { PET_CATALOG, selectedPetCatalogItem, openPetProfile, returnToPetGallery,
+  switchShopTab } from "./petShop";
 import { drawShopCardIcon51, SHOP_CARD_LABEL51, SHOP_CARD_BENEFIT51, type ShopId51 } from "./shopCards51";
 import { SHOP_CARD58,SHOP_VIEW58,SHOP_SCROLLBAR58,clampShopScroll58,shopMaxScroll58 } from "./shopScroll58";
 import { SHOP_CATEGORIES60, SHOP_SIDEBAR60, SHOP_TILE_NAME60,shopCategory60,chooseShopCategory60 } from "./shopCategories60";
@@ -251,62 +252,129 @@ function drawShopDetails51(ctx:any,g:any,meta:any,rows:any[]):void {
     canBuy?"#fff0c8":"#a6b0ad");
   if(canBuy)g.zones.push({...SHOP_BUY51,onDown:()=>selected.buy?.()});
 }
-/** Three native Shop tabs, scrollable illustrated upgrades, one pet portrait
+/** Like the Upgrades view, pets start as a scrollable collection of
+ * square, illustrated cards. Card taps only open a profile: purchase is never
+ * possible from the gallery. One real pet exists today; future entries come
+ * from PET_CATALOG rather than hard-coded tiles or invented purchases. */
+function drawPetGallery(ctx:any,g:any,meta:any,rows:any[]):void {
+  const s=SHOP_SIDEBAR60;
+  shopBox51(ctx,s.x,SHOP_VIEW58.y,s.w,SHOP_VIEW58.h,
+    "rgba(30,47,54,0.94)","#60747c");
+  drawTextC(ctx,"PETS",s.x+s.w/2,60,"#ffe6b8");
+  drawTextC(ctx,String(rows.length)+" READY",s.x+s.w/2,75,"#bdd2d1");
+  drawTextC(ctx,"TAP TO",s.x+s.w/2,97,"#e3cfaa");
+  drawTextC(ctx,"VIEW",s.x+s.w/2,106,"#e3cfaa");
+
+  const v=SHOP_VIEW58,c=SHOP_CARD58;
+  g.shopUpgradeCount58=rows.length;
+  const offset=clampShopScroll58(g,rows.length);
+  ctx.fillStyle="rgba(16,31,38,0.90)";
+  ctx.fillRect(v.x,v.y,v.w,v.h);
+  const canClip=typeof ctx.save==="function"&&
+    typeof ctx.beginPath==="function"&&typeof ctx.rect==="function"&&
+    typeof ctx.clip==="function"&&typeof ctx.restore==="function";
+  if(canClip){ctx.save();ctx.beginPath();ctx.rect(v.x,v.y,v.w,v.h);ctx.clip();}
+  for(let i=0;i<rows.length;i++){
+    const row=rows[i];
+    const pet=PET_CATALOG.find(p=>p.id===row.id);
+    if(!pet)continue;
+    const x=c.x+(i%c.cols)*(c.w+c.colGap);
+    const y=c.y+Math.floor(i/c.cols)*(c.h+c.rowGap)-offset;
+    const top=Math.max(y,v.y),bottom=Math.min(y+c.h,v.y+v.h);
+    if(bottom<=top)continue;
+    shopBox51(ctx,x,y,c.w,c.h,i===g.menuSel?
+      "rgba(92,67,43,0.95)":"rgba(29,46,55,0.94)",
+      i===g.menuSel?"#eac487":row.maxed?"#83a48e":"#687e87");
+    pet.drawPortrait(ctx,x+3,y+2,c.w-6,24);
+    drawTextC(ctx,compact51(pet.name,c.w-4),x+c.w/2,y+28,
+      i===g.menuSel?"#fff0ca":"#e6dbbc");
+    drawTextC(ctx,row.maxed?"OWNED":row.cost+" ASH",x+c.w/2,y+35,
+      row.maxed?"#a8d9af":"#d9bb85");
+    g.zones.push({x,y:top,w:c.w,h:bottom-top,shopCardIndex58:i,
+      onDown:()=>openPetProfile(g,row.id,rows)});
+  }
+  if(canClip)ctx.restore();
+  const max=shopMaxScroll58(rows.length);
+  if(max>0){
+    const bar=SHOP_SCROLLBAR58;
+    ctx.fillStyle="rgba(62,76,79,0.88)";
+    ctx.fillRect(bar.x,bar.y,bar.w,bar.h);
+    const thumbH=Math.max(12,Math.round(bar.h*v.h/(v.h+max)));
+    ctx.fillStyle="#d4b17c";
+    ctx.fillRect(bar.x,bar.y+Math.round((bar.h-thumbH)*offset/max),bar.w,thumbH);
+  }
+  const d=SHOP_DETAILS51;
+  shopBox51(ctx,d.x,d.y,d.w,d.h,"rgba(21,37,44,0.97)","#876e53");
+  if(!rows.length){
+    drawTextC(ctx,"NO AVAILABLE PETS YET.",160,d.y+11,"#9db1be");
+    return;
+  }
+  const index=Math.max(0,Math.min(rows.length-1,Math.floor(g.menuSel||0)));
+  const row=rows[index];
+  const pet=PET_CATALOG.find(p=>p.id===row.id);
+  if(pet){
+    drawText(ctx,pet.name+"  "+(row.maxed?"OWNED":row.cost+" ASH"),
+      d.x+6,d.y+4,"#ffe4b3");
+    drawText(ctx,"SELECT PET TO VIEW PROFILE AND ABILITIES",
+      d.x+6,d.y+16,"#bcd0cb");
+  }
+}
+
+/** The actual pet profile keeps the approved full Bingsu illustration and
+ * her historical BUY/OWNED inspector. A BACK control appears in the header
+ * without replacing any portrait, wording, or purchase hit area. */
+function drawSelectedPetProfile(ctx:any,g:any,meta:any,rows:any[]):void {
+  const pet=selectedPetCatalogItem(g,rows);
+  if(!pet){returnToPetGallery(g);drawPetGallery(ctx,g,meta,rows);return;}
+  const row=rows.find(r=>r.id===pet.id);
+  if(!row)return;
+  const card=BINGSU_PET_FIT57.card,art=BINGSU_PET_FIT57.art;
+  shopBox51(ctx,card.x,card.y,card.w,card.h,
+    "rgba(26,45,52,0.92)","#eac487");
+  ctx.fillStyle="#455150";
+  ctx.fillRect(card.x+2,card.y+2,card.w-4,card.h-4);
+  pet.drawPortrait(ctx,art.x,art.y,art.w,art.h);
+  // Keep the original non-purchasing portrait hit area for touch familiarity.
+  g.zones.push({...card,onDown:()=>{g.menuSel=rows.indexOf(row);g.upConfirm=null;}});
+  drawText(ctx,pet.name,137,56,"#f9e8c7");
+  drawText(ctx,pet.breed,137,66,"#bed2cd");
+  for(let i=0;i<Math.min(4,pet.profileLines.length);i++)
+    drawText(ctx,pet.profileLines[i],137,77+i*9,"#e6d9ba");
+  drawText(ctx,row.maxed?"OWNED - EQUIP IN BAG":"UNLOCK WITH ASH",
+    137,113,row.maxed?"#a7dcb8":"#e6c792");
+  drawShopDetails51(ctx,g,meta,[row]);
+}
+
+/** Three native Shop tabs, scrollable illustrated upgrades, pet gallery
  * card, a details inspector, and a single real BUY button. Selecting a card
  * never calls row.onDown (that historical function had double-tap purchase).
  */
 export function drawShopTabs(ctx:any,g:any,meta:any,rows:any[],close:()=>void):void {
   frame(ctx,24,8,272,164,"rgba(8,12,26,0.96)");
-  drawText(ctx,"ASH SHOP",32,13,"#ffd98a");
+  const tab=Math.max(0,Math.min(2,g.shopTab||0));
+  const petProfile=tab===1 && selectedPetCatalogItem(g,rows)!==null;
+  if(petProfile)
+    action(ctx,g,32,12,96,"BACK TO PETS",()=>returnToPetGallery(g));
+  else drawText(ctx,"ASH SHOP",32,13,"#ffd98a");
   const ash="BANKED "+bankedAsh51(meta)+" ASH";
   drawText(ctx,compact51(ash,134),270-textW(compact51(ash,134)),13,"#e6d2a2");
-  exit(ctx,g,close);
-  const tab=Math.max(0,Math.min(2,g.shopTab||0));
+  // X closes the whole Shop; Back and Escape from a profile return to Pets.
+  exit(ctx,g,()=>{ g.shopPetDetail=null;close(); });
   for(const [id,label,x] of [[0,"UPGRADES",30],[1,"PETS",116],[2,"COMING SOON",202]] as const)
-    action(ctx,g,x,33,82,label,()=>{
-      g.shopTab=id;g.menuSel=0;g.shopScroll=0;g.shopVelocity=0;g.upConfirm=null;
-    },true,tab===id);
+    action(ctx,g,x,33,82,label,()=>switchShopTab(g,id),true,tab===id);
   if(tab===2){
     drawTextC(ctx,"MORE TO DISCOVER",160,78,"#e6cf98");
     drawTextC(ctx,"COMING SOON",160,96,"#aab7ca");
     drawTextC(ctx,"NOTHING TO BUY HERE YET.",160,113,"#8496b2");
   }else if(tab===1){
-    // Bingsu has one personal featured card with her authentic Dogo portrait.
-    if(rows.length){
-      const chosen=(g.menuSel||0)===0;
-      // The approved artwork previously drew flush against and over the
-      // frame edge. Keep a visible border and even matting all around it.
-      // Nearest-neighbor fit preserves the complete 94x68 image, not a crop.
-      const card=BINGSU_PET_FIT57.card,art=BINGSU_PET_FIT57.art;
-      shopBox51(ctx,card.x,card.y,card.w,card.h,
-        "rgba(26,45,52,0.92)",chosen?"#eac487":"#61798b");
-      ctx.fillStyle="#455150";
-      ctx.fillRect(card.x+2,card.y+2,card.w-4,card.h-4);
-      drawBingsuPortrait(ctx,art.x,art.y,art.w,art.h);
-      g.zones.push({...card,onDown:()=>{
-        g.menuSel=0;g.upConfirm=null;
-      }});
-      drawText(ctx,"BINGSU",137,56,"#f9e8c7");
-      drawText(ctx,"DOGO ARGENTINO",137,66,"#bed2cd");
-      drawText(ctx,"SWEET, CALM & LOVING",137,77,"#e6d9ba");
-      drawText(ctx,"ALWAYS READY FOR HUGS",137,86,"#e6d9ba");
-      drawText(ctx,"RARELY BARKS. STUBBORN",137,95,"#e6d9ba");
-      drawText(ctx,"FEARLESSLY LOYAL",137,104,"#e6d9ba");
-      drawText(ctx,rows[0].maxed?"OWNED - EQUIP IN BAG":"UNLOCK WITH ASH",
-        137,113,rows[0].maxed?"#a7dcb8":"#e6c792");
-      g.menuSel=0;
-      drawShopDetails51(ctx,g,meta,rows);
-    }else{
-      drawTextC(ctx,"NO PETS YET.",160,100,"#93aabb");
-    }
+    if(petProfile) drawSelectedPetProfile(ctx,g,meta,rows);
+    else drawPetGallery(ctx,g,meta,rows);
   }else{
     g.menuSel=Math.max(0,Math.min(rows.length-1,g.menuSel||0));
     drawShopCategories60(ctx,g);
     drawScrollableShop58(ctx,g,rows);
     drawShopDetails51(ctx,g,meta,rows);
   }
-  // Patch #63: footer removed. The inspector now uses the extra height for
-  // actionable upgrade effects; the banked Ash balance is already in header.
 }
 
 /** Informational preview only. This is NOT a playable mode or an unlock;

@@ -73,7 +73,7 @@ describe("Patch #55-56: approved Bingsu portrait, now with more chest visible",(
    }
  });
  it("draws the new matte and intact card border in the actual Shop",()=>{
-   const g=createEngine(),m=meta();g.shopTab=1;g.menu="shop";g.ui="run";g.zones=[];
+   const g=createEngine(),m=meta();g.shopTab=1;g.shopPetDetail="dog";g.menu="shop";g.ui="run";g.zones=[];
    const v=surface();drawShopTabs(v.ctx,g,m,shopRows(g,m),()=>{g.menu=null});
    const c=BINGSU_PET_FIT57.card;
    expect(v.rectangles.some(r=>r.x===c.x&&r.y===c.y&&
@@ -102,7 +102,7 @@ describe("Patch #55-56: approved Bingsu portrait, now with more chest visible",(
    expect(BINGSU.loyalty).toContain("FIGHT TO THE DEATH");
  });
  it("puts the portrait beside the story, not over the Shop tabs or BUY",()=>{
-   const g=createEngine(),m=meta();g.shopTab=1;g.menu="shop";g.ui="run";g.zones=[];
+   const g=createEngine(),m=meta();g.shopTab=1;g.shopPetDetail="dog";g.menu="shop";g.ui="run";g.zones=[];
    const v=surface();drawShopTabs(v.ctx,g,m,shopRows(g,m),()=>{g.menu=null});
    const card=g.zones.find((z:any)=>z.x===31&&z.y===50&&z.w===100&&z.h===68);
    expect(card).toBeDefined();

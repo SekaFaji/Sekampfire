@@ -158,7 +158,7 @@ describe("station and navigation extraction", () => {
     expect(g.buildConfirm).toBeNull();
     activateSelection(g, [{onDown:left}]);
     expect(left).toHaveBeenCalledTimes(1);
-    g.menu = "shop";g.shopTab = 1;g.menuSel = 0;g.upConfirm = "dog";
+    g.menu = "shop";g.shopTab = 0;g.menuSel = 0;g.upConfirm = "blood";
     moveSelection(g, [{buy, onDown:left}, {buy, onDown:left}], 1);
     expect(g.menuSel).toBe(1);
     expect(g.upConfirm).toBeNull();

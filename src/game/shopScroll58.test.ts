@@ -154,6 +154,8 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(g.shopUpgradeCount58).toBe(2);
    g.shopTab=1;render(g,m);
    expect(shopRows(g,m).map((r:any)=>r.id)).toEqual(["dog"]);
+   expect(find(g,SHOP_BUY51.x+5,SHOP_BUY51.y+6)).toBeUndefined();
+   g.shopPetDetail="dog";render(g,m);
    expect(find(g,SHOP_BUY51.x+5,SHOP_BUY51.y+6)).toBeDefined();
    expect(m.ash).toBe(200);
    g.shopTab=0;chooseShopCategory60(g,"all");render(g,m);
@@ -254,7 +256,10 @@ describe("Patch #60: sidebar and compact two-row Ash Shop",()=>{
    expect(handleWheel(g,70,150,40)).toBe(false);
    expect(g.shopScroll).toBe(0);
    g.shopTab=1;render(g,m);
-   expect(handleWheel(g,70,100,70)).toBe(false);
+   expect(handleWheel(g,70,100,70)).toBe(true); // gallery can scroll when populated
+   expect(g.shopScroll).toBe(0); // one pet never exceeds viewport
+   g.shopPetDetail="dog";render(g,m);
+   expect(handleWheel(g,70,100,70)).toBe(false); // fixed portrait
    expect(wheelShop58(g,20,16)).toBe(false);
  });
  it("partial off-screen hitboxes remain clipped and never overlap the inspector",()=>{

@@ -38,10 +38,15 @@ export function revealShopCard58(g:any,index:number,count:number):void{
  clampShopScroll58(g,count);
  g.shopVelocity=0;
 }
-/** Applies a gentle momentum tail while the Shop is open, not the game
+/** The Upgrades grid and pet gallery share scrolling but pet profile pages
+ * are fixed: swipes on portraits never select a card underneath them. */
+export function isShopGridScrollable58(g:any):boolean {
+  return g.menu==="shop" && (g.shopTab===0 || (g.shopTab===1 && !g.shopPetDetail));
+}
+/** Applies a gentle momentum tail while a card gallery is open, not the game
  * simulation. Exponentially decays speed and respects hard scroll bounds. */
 export function tickShopScroll58(g:any,dt:number,count:number):void{
- if(!Number.isFinite(dt)||dt<=0||g.shopTab!==0||g.menu!=="shop")return;
+ if(!Number.isFinite(dt)||dt<=0||!isShopGridScrollable58(g))return;
  const speed=Number(g.shopVelocity)||0;
  if(!Number.isFinite(speed)||Math.abs(speed)<0.2){
    g.shopVelocity=0;clampShopScroll58(g,count);return;
@@ -54,7 +59,7 @@ export function tickShopScroll58(g:any,dt:number,count:number):void{
 }
 /** Clamp and scale native wheel deltas in logical game pixels. */
 export function wheelShop58(g:any,delta:number,count:number):boolean{
- if(g.menu!=="shop"||g.shopTab!==0||!Number.isFinite(delta))return false;
+ if(!isShopGridScrollable58(g)||!Number.isFinite(delta))return false;
  g.shopVelocity=0;
  moveShopScroll58(g,Math.max(-48,Math.min(48,delta)),count);
  return true;

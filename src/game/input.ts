@@ -1,8 +1,9 @@
 import { W } from "./config";
 import { tickQuickSlotHolds, useQuickSlot } from "./quickSlots";
 import { navigateEquipment50, activateEquipment50, chooseEquipmentCategory50 } from "./inventoryMenu";
-import { insideShopViewport58,moveShopScroll58,wheelShop58 } from "./shopScroll58";
+import { insideShopViewport58,moveShopScroll58,wheelShop58,isShopGridScrollable58 } from "./shopScroll58";
 import {cycleShopCategory60} from "./shopCategories60";
+import { switchShopTab } from "./petShop";
 
 /** In-canvas keyboard and pointer controls; callbacks are injected to avoid
  * a cycle between the input adapter and the gameplay/menus module.
@@ -33,8 +34,7 @@ function handleKey(g: any, meta: any, k: string, down: boolean) {
     return;
   }
   if (down && g.menu === "shop" && ["arrowleft", "a", "arrowright", "d"].includes(k)) {
-    g.shopTab = Math.max(0,Math.min(2,(g.shopTab||0)+(k==="arrowleft"||k==="a"?-1:1)));
-    g.menuSel = 0; g.shopScroll=0; g.shopVelocity=0; g.upConfirm = null;
+    switchShopTab(g,(g.shopTab||0)+(k==="arrowleft"||k==="a"?-1:1));
     return;
   }
   // Inventory has its own real grid-navigation model, not the linear
@@ -139,7 +139,7 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
       // The scrolling viewport handles pointer DOWN as a pending TAP.
       // A vertical drag cancels selection; it can never land on BUY since
       // that button is in the fixed, separate details pane below y119.
-      if(currentMenu==="shop"&&g.shopTab===0&&insideShopViewport58(mx,my)){
+      if(currentMenu==="shop"&&isShopGridScrollable58(g)&&insideShopViewport58(mx,my)){
         const zone=g.zones.slice(from).reverse().find((z:any)=>
           z.shopCardIndex58!==undefined&&mx>=z.x&&mx<z.x+z.w&&
           my>=z.y&&my<z.y+z.h);
@@ -183,7 +183,7 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
   } else if (type === "move") {
     const pt = g.pointers[id];
     if(pt?.shopScroll58){
-      if(pt.menu!==g.menu||g.shopTab!==0){delete g.pointers[id];return;}
+      if(pt.menu!==g.menu||!isShopGridScrollable58(g)){delete g.pointers[id];return;}
       const delta=my-pt.lastY;
       if(Math.abs(my-pt.startY)>4||Math.abs(mx-pt.startX)>9)
         pt.dragged=true;
@@ -210,7 +210,7 @@ function handlePointer(g: any, type: string, id: number, mx: number, my: number)
     if(pt?.shopScroll58){
       // A tap selects one card; releasing a drag only coasts the list.
       // Never call the stored onDown if the Shop changed underneath it.
-      if(pt.menu===g.menu&&g.shopTab===0){
+      if(pt.menu===g.menu&&isShopGridScrollable58(g)){
         if(pt.dragged)g.shopVelocity=Number(pt.velocity)||0;
         else pt.zone?.onDown?.();
       }

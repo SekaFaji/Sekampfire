@@ -2,6 +2,7 @@ import { clamp } from "./math";
 import { revealShopCard58 } from "./shopScroll58";
 import { dismissStationSelection } from "./proximity45";
 import { leaveDebrisHut } from "./debrisHut";
+import { openPetProfile, returnToPetGallery } from "./petShop";
 
 /** Menu close rules and keyboard selection state live outside the engine.
  * Rendering owns row construction; selection receives its current rows.
@@ -13,6 +14,9 @@ export function closeMenu(g: any) {
   g.craftConfirm = null;
   g.buildConfirm = null;
   g.endRunConfirm = false;
+  // The preview's Back / keyboard Escape returns to the pet collection;
+  // only the second Back closes the Ash Shop itself.
+  if (returnToPetGallery(g)) return;
   if (g.menu === "hut") {
     leaveDebrisHut(g);
     return;
@@ -60,6 +64,7 @@ export function closeMenu(g: any) {
     g.menuSel = 0;
     return;
   }
+  if (g.menu === "shop") g.shopPetDetail = null;
   g.menu = null;
   g.keys.act = false;
 }
@@ -79,7 +84,10 @@ export function moveSelection(g: any, rows: any[], dir: number): void {
 export function activateSelection(g: any, rows: any[]): void {
   if (!rows.length) return;
   g.menuSel = clamp(g.menuSel, 0, rows.length - 1);
-  if(g.menu==="shop")rows[g.menuSel].buy?.();
-  else rows[g.menuSel].onDown();
+  if(g.menu==="shop"){
+    if(g.shopTab===1 && !g.shopPetDetail){
+      openPetProfile(g,rows[g.menuSel]?.id,rows);
+    }else rows[g.menuSel].buy?.();
+  }else rows[g.menuSel].onDown();
 }
 

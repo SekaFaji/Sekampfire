@@ -165,13 +165,19 @@ describe("Patch #51 / #58: scrollable illustrated Ash Shop cards",()=>{
 describe("Patch #51: Bingsu is SHE, no collar, authentic white Dogo Argentino",()=>{
  it("pet is a large portrait card with a distinct buy button and exact 40 Ash",()=>{
   const g=world(),m=meta();g.shopTab=1;m.ash=40;
+  render(g,m);
+  expect(g.shopPetDetail).toBeNull();
+  expect(g.zones.some((z:any)=>z.shopCardIndex58===0)).toBe(true);
+  expect(g.zones.some((z:any)=>z.x===SHOP_BUY51.x&&z.y===SHOP_BUY51.y))
+    .toBe(false);
+  const tile=cardCenter(0);
+  tap(g,tile.x,tile.y);
+  expect(g.shopPetDetail).toBe("dog");
+  expect(m.ash).toBe(40);expect(m.up.dog).toBeUndefined();
   const v=render(g,m);
   expect(g.zones.some((z:any)=>z.x===31&&z.y===50&&z.w===100&&z.h===68))
    .toBe(true);
   expect(v.pixels.some(p=>p.ink==="#fcf6e8")).toBe(true);
-  tap(g,55,64);
-  expect(m.ash).toBe(40);expect(m.up.dog).toBeUndefined();
-  render(g,m);
   tap(g,SHOP_BUY51.x+6,SHOP_BUY51.y+7);
   expect(m.ash).toBe(0);
   expect(m.up.dog).toBe(1);

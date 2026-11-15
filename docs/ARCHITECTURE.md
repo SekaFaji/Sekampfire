@@ -20,6 +20,7 @@ Sekampfire is a browser-first, landscape-oriented 320 x 180 Canvas 2D game. **Re
 | `src/game/buildingMenu.ts` | Station upgrade confirmation, build-plan actions, camp construction and permanent Log Museum ownership |
 | `src/game/stationActions.ts` | Physical station reach checks, fireplace/storage interaction and station action routing |
 | `src/game/menuNavigation.ts` | Shared Back behavior, keyboard menu selection and confirmation reset rules |
+| `src/game/petShop.ts` | Catalog of genuinely available pets plus transient Pets gallery/profile and tab navigation; no persisted selection or fake pet IDs |
 | `src/game/shopCategories60.ts`, `shopCards51.ts`, `shopScroll58.ts` | Ash Shop categories, card art, movement and selection |
 | `src/game/campBoundary.ts`, `campProgress.ts` | Physical camp placement and run-scoped station upgrades |
 | `src/game/campLegacy53.ts`, `campMastery62.ts` | Permanent prebuilt foundations and masteries for new runs |
